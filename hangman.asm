@@ -55,29 +55,27 @@ Loop:
   jsr CheckWin
   jmp Loop
 
-; initizalize the current word ( banana ) starting in address $0203 ( first letter ) and the size of the word in address $0200
+; the size of the word in address $0200
 ; $0201 will be the current letter choosed, to check in the word
 ; $0202 will store how many parts of the body will be displayed ( how many errors )
+; $0203 will store if a letter was correctly guessed during that round
+; initizalize the current word ( banana ) starting in address $0204 ( first letter ) 
 ; $0200 + the letter choosed will be the place to store if the current letter was guessed right, beginning in $0241
 Initialize:
-  lda #$05 ; word size - 1
+  lda #$06 ; word size
   sta $0200
   lda #$42 ; B
-  sta $0203
-  lda #$41 ; A
   sta $0204
-  lda #$42 ; N
+  lda #$41 ; A
   sta $0205
-  lda #$41 ; A
+  lda #$4E ; N
   sta $0206
-  lda #$42 ; N
-  sta $0207
   lda #$41 ; A
+  sta $0207
+  lda #$4E ; N
   sta $0208
-  ; test
-  lda #$01
-  ldx $0204
-  sta $0200, x
+  lda #$41 ; A
+  sta $0209
   rts
 
 EnableSound:
@@ -110,22 +108,28 @@ LoadPallete:
 CheckCurrentLetter:
   ldx #$00
 CheckCurrentLetterLoop:
-  lda $0203, x
+  lda $0204, x
   cmp $0201
-  beq CheckCurrenterLetterIncSuccess
-CheckCurrenterLetterIncSuccess:
+  bne CheckCurrenterLetterIncX
   ; set letter as correct
   tay
   lda #$01
   sta $0200, y
-  jmp CheckCurrenterLetterIncX
-CheckCurrenterLetterIncError:
-  jsr MakeSound
-  inc $0202
+  sta $0203 ; set that a letter was guessed
 CheckCurrenterLetterIncX:
   inx
-  cpx $0200
+  cpx $0200 ; iterate with the size of the word to guess
   bne CheckCurrentLetterLoop
+  ; check if a letter was guessed
+  lda $0203
+  cmp #$01
+  beq CheckCurrentLetterEnd ; if equals a letter was guessed and the value is equal to one, don't make a sound
+  ;if an error happened
+  inc $0202 ; inc how many erros ocurred
+  jsr MakeSound
+CheckCurrentLetterEnd:
+  lda #$00
+  sta $0203
   rts
 
 
@@ -193,7 +197,7 @@ DrawLetterSuccess:
   sta $2004 ; store Y value
 
   ; tile number will change with the letter ascii code
-  lda #$0203, x ; pick tile for that letter ( maybe we will need to calculate that)
+  lda #$0204, x ; pick tile for that letter ( maybe we will need to calculate that)
   sta $2004 ; store tile number
 
   ; pass this info always as 0
