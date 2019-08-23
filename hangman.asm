@@ -191,7 +191,176 @@ DrawScreen:
   jsr DrawHanger
   jsr DrawAlphabet
   jsr DrawHead
+  jsr DrawBody
+  jsr DrawLeftArm
+  jsr DrawRightArm
+  jsr DrawLeftLeg
+  jsr DrawRightLeg
   ; jsr DrawDeadHead
+
+  rts
+
+DrawLeftLeg:
+
+  lda #72
+  sta $2004
+  lda #0024
+  sta $2004
+  lda #00
+  sta $2004
+  lda #48
+  sta $2004
+
+  lda #80
+  sta $2004
+  lda #0026
+  sta $2004
+  lda #00
+  sta $2004
+  lda #48
+  sta $2004
+
+  rts
+
+DrawRightLeg:
+
+  lda #80
+  sta $2004
+  lda #0027
+  sta $2004
+  lda #00
+  sta $2004
+  lda #56
+  sta $2004
+
+  lda #72
+  sta $2004
+  lda #0025
+  sta $2004
+  lda #00
+  sta $2004
+  lda #56
+  sta $2004
+
+  rts
+
+DrawLeftArm:
+
+  lda #48
+  sta $2004
+  lda #0018
+  sta $2004
+  lda #00
+  sta $2004
+  lda #48
+  sta $2004
+
+  lda #56
+  sta $2004
+  lda #0021
+  sta $2004
+  lda #00
+  sta $2004
+  lda #40
+  sta $2004
+
+  lda #56
+  sta $2004
+  lda #0020
+  sta $2004
+  lda #00
+  sta $2004
+  lda #48
+  sta $2004
+
+  rts
+
+DrawRightArm:
+
+  lda #48
+  sta $2004
+  lda #0019
+  sta $2004
+  lda #00
+  sta $2004
+  lda #56
+  sta $2004
+
+  lda #56
+  sta $2004
+  lda #0022
+  sta $2004
+  lda #00
+  sta $2004
+  lda #56
+  sta $2004
+
+  lda #56
+  sta $2004
+  lda #0023
+  sta $2004
+  lda #00
+  sta $2004
+  lda #64
+  sta $2004
+
+  rts
+
+DrawBody:
+
+  lda #48
+  sta $2004
+  lda #0016
+  sta $2004
+  lda #00
+  sta $2004
+  lda #48
+  sta $2004
+
+  lda #48
+  sta $2004
+  lda #0017
+  sta $2004
+  lda #00
+  sta $2004
+  lda #56
+  sta $2004
+
+  lda #56
+  sta $2004
+  lda #0016
+  sta $2004
+  lda #00
+  sta $2004
+  lda #48
+  sta $2004
+
+  lda #56
+  sta $2004
+  lda #0017
+  sta $2004
+  lda #00
+  sta $2004
+  lda #56
+  sta $2004
+
+  lda #64
+  sta $2004
+  lda #0016
+  sta $2004
+  lda #00
+  sta $2004
+  lda #48
+  sta $2004
+
+  lda #64
+  sta $2004
+  lda #0017
+  sta $2004
+  lda #00
+  sta $2004
+  lda #56
+  sta $2004
 
   rts
 
@@ -463,185 +632,203 @@ DrawHead:
   lda #48   ; decimal value of x
   sta $2004 ; X value
 
-  lda #32   ; decimal value of y
-  sta $2004 ; Y value
-  lda #0009 ; number of the tile of the sprite
-  sta $2004 ; store tile number
-  lda #00   ; store junk
-  sta $2004 ; store number again (no special junk)
-  lda #56   ; decimal value of x
-  sta $2004 ; X value
+  lda #32
+  sta $2004
+  lda #0009
+  sta $2004
+  lda #00
+  sta $2004
+  lda #56
+  sta $2004
 
-  lda #40   ; decimal value of y
-  sta $2004 ; Y value
-  lda #0010 ; number of the tile of the sprite
-  sta $2004 ; store tile number
-  lda #00   ; store junk
-  sta $2004 ; store number again (no special junk)
-  lda #48   ; decimal value of x
-  sta $2004 ; X value
+  lda #40
+  sta $2004
+  lda #0010
+  sta $2004
+  lda #00
+  sta $2004
+  lda #48
+  sta $2004
 
-  lda #40   ; decimal value of y
-  sta $2004 ; Y value
-  lda #0011 ; number of the tile of the sprite
-  sta $2004 ; store tile number
-  lda #00   ; store junk
-  sta $2004 ; store number again (no special junk)
-  lda #56   ; decimal value of x
-  sta $2004 ; X value
+  lda #40
+  sta $2004
+  lda #0011
+  sta $2004
+  lda #00
+  sta $2004
+  lda #56
+  sta $2004
 
   rts
 
 DrawDeadHead:
-  lda #32   ; decimal value of y
-  sta $2004 ; Y value
-  lda #0012 ; number of the tile of the sprite
-  sta $2004 ; store tile number
-  lda #00   ; store junk
-  sta $2004 ; store number again (no special junk)
-  lda #48   ; decimal value of x
-  sta $2004 ; X value
+  lda #32
+  sta $2004
+  lda #0012
+  sta $2004
+  lda #00
+  sta $2004
+  lda #48
+  sta $2004
 
-  lda #32   ; decimal value of y
-  sta $2004 ; Y value
-  lda #0013 ; number of the tile of the sprite
-  sta $2004 ; store tile number
-  lda #00   ; store junk
-  sta $2004 ; store number again (no special junk)
-  lda #56   ; decimal value of x
-  sta $2004 ; X value
+  lda #32
+  sta $2004
+  lda #0013
+  sta $2004
+  lda #00
+  sta $2004
+  lda #56
+  sta $2004
 
-  lda #40   ; decimal value of y
-  sta $2004 ; Y value
-  lda #0014 ; number of the tile of the sprite
-  sta $2004 ; store tile number
-  lda #00   ; store junk
-  sta $2004 ; store number again (no special junk)
-  lda #48   ; decimal value of x
-  sta $2004 ; X value
+  lda #40
+  sta $2004
+  lda #0014
+  sta $2004
+  lda #00
+  sta $2004
+  lda #48
+  sta $2004
 
-  lda #40   ; decimal value of y
-  sta $2004 ; Y value
-  lda #0015 ; number of the tile of the sprite
-  sta $2004 ; store tile number
-  lda #00   ; store junk
-  sta $2004 ; store number again (no special junk)
-  lda #56   ; decimal value of x
-  sta $2004 ; X value
+  lda #40
+  sta $2004
+  lda #0015
+  sta $2004
+  lda #00
+  sta $2004
+  lda #56
+  sta $2004
 
   rts
 
 DrawHanger:
 
   ; Hanger corner (will be the base value)
-  lda #24   ; decimal value of y
-  sta $2004 ; Y value
-  lda #00   ; number of the tile of the sprite
-  sta $2004 ; store tile number
-  lda #00   ; store junk
-  sta $2004 ; store number again (no special junk)
-  lda #24   ; decimal value of x
-  sta $2004 ; X value
+  lda #24
+  sta $2004
+  lda #00
+  sta $2004
+  lda #00
+  sta $2004
+  lda #24
+  sta $2004
 
-  lda #24   ; decimal value of y
-  sta $2004 ; Y value
-  lda #0001 ; number of the tile of the sprite
-  sta $2004 ; store tile number
-  lda #00   ; store junk
-  sta $2004 ; store number again (no special junk)
-  lda #32   ; decimal value of x
-  sta $2004 ; X value
+  lda #24
+  sta $2004
+  lda #0001
+  sta $2004
+  lda #00
+  sta $2004
+  lda #32
+  sta $2004
 
-  lda #24   ; decimal value of y
-  sta $2004 ; Y value
-  lda #0001 ; number of the tile of the sprite
-  sta $2004 ; store tile number
-  lda #00   ; store junk
-  sta $2004 ; store number again (no special junk)
-  lda #40   ; decimal value of x
-  sta $2004 ; X value
+  lda #24
+  sta $2004
+  lda #0001
+  sta $2004
+  lda #00
+  sta $2004
+  lda #40
+  sta $2004
 
-  lda #24   ; decimal value of y
-  sta $2004 ; Y value
-  lda #0003 ; number of the tile of the sprite
-  sta $2004 ; store tile number
-  lda #00   ; store junk
-  sta $2004 ; store number again (no special junk)
-  lda #48   ; decimal value of x
-  sta $2004 ; X value
+  lda #24
+  sta $2004
+  lda #0003
+  sta $2004
+  lda #00
+  sta $2004
+  lda #48
+  sta $2004
 
-  lda #24   ; decimal value of y
-  sta $2004 ; Y value
-  lda #0006 ; number of the tile of the sprite
-  sta $2004 ; store tile number
-  lda #00   ; store junk
-  sta $2004 ; store number again (no special junk)
-  lda #56   ; decimal value of x
-  sta $2004 ; X value
+  lda #24
+  sta $2004
+  lda #0006
+  sta $2004
+  lda #00
+  sta $2004
+  lda #56
+  sta $2004
 
   ; Vertical bar (make loop?)
-  lda #32   ; decimal value of y
-  sta $2004 ; Y value
-  lda #0002 ; number of the tile of the sprite
-  sta $2004 ; store tile number
-  lda #00   ; store junk
-  sta $2004 ; store number again (no special junk)
-  lda #24   ; decimal value of x
-  sta $2004 ; X value
+  lda #32
+  sta $2004
+  lda #0002
+  sta $2004
+  lda #00
+  sta $2004
+  lda #24
+  sta $2004
 
-  lda #40   ; decimal value of y
-  sta $2004 ; Y value
-  lda #0002 ; number of the tile of the sprite
-  sta $2004 ; store tile number
-  lda #00   ; store junk
-  sta $2004 ; store number again (no special junk)
-  lda #24   ; decimal value of x
-  sta $2004 ; X value
+  lda #40
+  sta $2004
+  lda #0002
+  sta $2004
+  lda #00
+  sta $2004
+  lda #24
+  sta $2004
 
-  lda #48   ; decimal value of y
-  sta $2004 ; Y value
-  lda #0002 ; number of the tile of the sprite
-  sta $2004 ; store tile number
-  lda #00   ; store junk
-  sta $2004 ; store number again (no special junk)
-  lda #24   ; decimal value of x
-  sta $2004 ; X value
+  lda #48
+  sta $2004
+  lda #0002
+  sta $2004
+  lda #00
+  sta $2004
+  lda #24
+  sta $2004
 
-  lda #56   ; decimal value of y
-  sta $2004 ; Y value
-  lda #0002 ; number of the tile of the sprite
-  sta $2004 ; store tile number
-  lda #00   ; store junk
-  sta $2004 ; store number again (no special junk)
-  lda #24   ; decimal value of x
-  sta $2004 ; X value
+  lda #56
+  sta $2004
+  lda #0002
+  sta $2004
+  lda #00
+  sta $2004
+  lda #24
+  sta $2004
 
-  lda #64   ; decimal value of y
-  sta $2004 ; Y value
-  lda #0002 ; number of the tile of the sprite
-  sta $2004 ; store tile number
-  lda #00   ; store junk
-  sta $2004 ; store number again (no special junk)
-  lda #24   ; decimal value of x
-  sta $2004 ; X value
+  lda #64
+  sta $2004
+  lda #0002
+  sta $2004
+  lda #00
+  sta $2004
+  lda #24
+  sta $2004
 
-  lda #72   ; decimal value of y
-  sta $2004 ; Y value
-  lda #0002 ; number of the tile of the sprite
-  sta $2004 ; store tile number
-  lda #00   ; store junk
-  sta $2004 ; store number again (no special junk)
-  lda #24   ; decimal value of x
-  sta $2004 ; X value
+  lda #72
+  sta $2004
+  lda #0002
+  sta $2004
+  lda #00
+  sta $2004
+  lda #24
+  sta $2004
 
-  lda #80   ; decimal value of y
-  sta $2004 ; Y value
-  lda #0004 ; number of the tile of the sprite
-  sta $2004 ; store tile number
-  lda #00   ; store junk
-  sta $2004 ; store number again (no special junk)
-  lda #24   ; decimal value of x
-  sta $2004 ; X value
+  lda #80
+  sta $2004
+  lda #0002
+  sta $2004
+  lda #00
+  sta $2004
+  lda #24
+  sta $2004
+
+  lda #88
+  sta $2004
+  lda #0002
+  sta $2004
+  lda #00
+  sta $2004
+  lda #24
+  sta $2004
+
+  lda #96
+  sta $2004
+  lda #0004
+  sta $2004
+  lda #00
+  sta $2004
+  lda #24
+  sta $2004
 
   rts
 
