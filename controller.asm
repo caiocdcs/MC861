@@ -119,10 +119,6 @@ ReadB:
   AND #%00000001  ; only look at bit 0
   BEQ ReadBDone   ; branch to ReadBDone if button is NOT pressed (0)
                   ; add instructions here to do something when button IS pressed (1)
-  LDA $0203       ; load sprite X position
-  SEC             ; make sure carry flag is set
-  SBC #$01        ; A = A - 1
-  STA $0203       ; save sprite X position
 ReadBDone:        ; handling this button is done
 
 ReadSelect: 
@@ -130,10 +126,6 @@ ReadSelect:
   AND #%00000001  ; only look at bit 0
   BEQ ReadSelectDone   ; branch to ReadBDone if button is NOT pressed (0)
                   ; add instructions here to do something when button IS pressed (1)
-  LDA $0203       ; load sprite X position
-  SEC             ; make sure carry flag is set
-  SBC #$01        ; A = A - 1
-  STA $0203       ; save sprite X position
 ReadSelectDone:        ; handling this button is done
 
 ReadStart: 
