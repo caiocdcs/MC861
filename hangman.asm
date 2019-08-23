@@ -45,9 +45,15 @@ MIRRORING = %0001 ;%0000 = horizontal, %0001 = vertical, %1000 = four-screen
 Reset:
   jsr LoadPalettes
   jsr ConfigurePPU
+  jsr WaitBlank
   jsr EnableSound
   jsr Initialize
   jsr Loop
+
+; Makes safe update of screen
+WaitBlank:
+  lda $2002
+  bpl WaitBlank ; keet checking until bit is 7 (VBlank)
 
 ; main loop
 Loop:
@@ -186,34 +192,110 @@ DrawScreen:
 
   rts
 
-; Makes safe update of screen
-WaitBlank:
-  lda $2002
-  bpl WaitBlank ; keet checking until bit is 7 (VBlank)
-
 DrawHanger:
 
-  lda #20   ; decimal value of y
+  ; Hanger corner (will be the base value)
+  lda #24   ; decimal value of y
   sta $2004 ; Y value
   lda #00   ; number of the tile of the sprite
   sta $2004 ; store tile number
+  lda #00   ; store junk
   sta $2004 ; store number again (no special junk)
-  lda #20   ; decimal value of x
+  lda #24   ; decimal value of x
   sta $2004 ; X value
 
-  ; lda $2002
-  ; bpl WaitBlank ; keet checking until bit is 7 (VBlank)
+  lda #24   ; decimal value of y
+  sta $2004 ; Y value
+  lda #0001 ; number of the tile of the sprite
+  sta $2004 ; store tile number
+  lda #00   ; store junk
+  sta $2004 ; store number again (no special junk)
+  lda #32   ; decimal value of x
+  sta $2004 ; X value
 
-  ; lda #20   ; decimal value of y
-  ; sta $2004 ; Y value
-  ; lda #00   ; number of the tile of the sprite
-  ; sta $2004 ; store tile number
-  ; sta $2004 ; store number again (no special junk)
-  ; lda #20   ; decimal value of x
-  ; sta $2004 ; X value
+  lda #24   ; decimal value of y
+  sta $2004 ; Y value
+  lda #0001 ; number of the tile of the sprite
+  sta $2004 ; store tile number
+  lda #00   ; store junk
+  sta $2004 ; store number again (no special junk)
+  lda #40   ; decimal value of x
+  sta $2004 ; X value
+
+  lda #24   ; decimal value of y
+  sta $2004 ; Y value
+  lda #0003 ; number of the tile of the sprite
+  sta $2004 ; store tile number
+  lda #00   ; store junk
+  sta $2004 ; store number again (no special junk)
+  lda #48   ; decimal value of x
+  sta $2004 ; X value
+
+  ; Vertical bar (make loop?)
+  lda #32   ; decimal value of y
+  sta $2004 ; Y value
+  lda #0002 ; number of the tile of the sprite
+  sta $2004 ; store tile number
+  lda #00   ; store junk
+  sta $2004 ; store number again (no special junk)
+  lda #24   ; decimal value of x
+  sta $2004 ; X value
+
+  lda #40   ; decimal value of y
+  sta $2004 ; Y value
+  lda #0002 ; number of the tile of the sprite
+  sta $2004 ; store tile number
+  lda #00   ; store junk
+  sta $2004 ; store number again (no special junk)
+  lda #24   ; decimal value of x
+  sta $2004 ; X value
+
+  lda #48   ; decimal value of y
+  sta $2004 ; Y value
+  lda #0002 ; number of the tile of the sprite
+  sta $2004 ; store tile number
+  lda #00   ; store junk
+  sta $2004 ; store number again (no special junk)
+  lda #24   ; decimal value of x
+  sta $2004 ; X value
+
+  lda #56   ; decimal value of y
+  sta $2004 ; Y value
+  lda #0002 ; number of the tile of the sprite
+  sta $2004 ; store tile number
+  lda #00   ; store junk
+  sta $2004 ; store number again (no special junk)
+  lda #24   ; decimal value of x
+  sta $2004 ; X value
+
+  lda #64   ; decimal value of y
+  sta $2004 ; Y value
+  lda #0002 ; number of the tile of the sprite
+  sta $2004 ; store tile number
+  lda #00   ; store junk
+  sta $2004 ; store number again (no special junk)
+  lda #24   ; decimal value of x
+  sta $2004 ; X value
+
+  lda #72   ; decimal value of y
+  sta $2004 ; Y value
+  lda #0002 ; number of the tile of the sprite
+  sta $2004 ; store tile number
+  lda #00   ; store junk
+  sta $2004 ; store number again (no special junk)
+  lda #24   ; decimal value of x
+  sta $2004 ; X value
+
+  lda #80   ; decimal value of y
+  sta $2004 ; Y value
+  lda #0004 ; number of the tile of the sprite
+  sta $2004 ; store tile number
+  lda #00   ; store junk
+  sta $2004 ; store number again (no special junk)
+  lda #24   ; decimal value of x
+  sta $2004 ; X value
 
   rts
-
 
 DrawWord:
   ldx #$00
