@@ -197,8 +197,24 @@ DrawScreen:
 
 DrawAlphabet:
 
+; TODO: Loop through 4 rows to optimize code
+; LoopRow1:
+;   ldx #07
+
+;   lda #120
+;   sta $2004
+;   lda #0032
+;   sta $2004
+;   lda #00
+;   sta $2004
+;   lda (#80, X)
+;   sta $2004
+
+;   dex
+;   bne LoopRow1
+
   ; letter A (base)
-  lda #120  ; decimal value of y
+  lda #128  ; decimal value of y
   sta $2004 ; Y value
   lda #0032 ; number of the tile of the sprite
   sta $2004 ; store tile number
@@ -207,7 +223,7 @@ DrawAlphabet:
   lda #80   ; decimal value of x
   sta $2004 ; X value
 
-  lda #120
+  lda #128
   sta $2004
   lda #0034
   sta $2004
@@ -216,13 +232,223 @@ DrawAlphabet:
   lda #96
   sta $2004
 
-  lda #120
+  lda #128
   sta $2004
   lda #0036
   sta $2004
   lda #00
   sta $2004
   lda #112
+  sta $2004
+
+  lda #128
+  sta $2004
+  lda #0038
+  sta $2004
+  lda #00
+  sta $2004
+  lda #128
+  sta $2004
+
+  lda #128
+  sta $2004
+  lda #0040
+  sta $2004
+  lda #00
+  sta $2004
+  lda #144
+  sta $2004
+
+  lda #128
+  sta $2004
+  lda #0042
+  sta $2004
+  lda #00
+  sta $2004
+  lda #160
+  sta $2004
+
+  lda #128
+  sta $2004
+  lda #0044
+  sta $2004
+  lda #00
+  sta $2004
+  lda #176
+  sta $2004
+
+  ; make loop 2nd row
+  lda #144
+  sta $2004
+  lda #0046
+  sta $2004
+  lda #00
+  sta $2004
+  lda #80
+  sta $2004
+
+  lda #144
+  sta $2004
+  lda #0048
+  sta $2004
+  lda #00
+  sta $2004
+  lda #96
+  sta $2004
+
+  lda #144
+  sta $2004
+  lda #0050
+  sta $2004
+  lda #00
+  sta $2004
+  lda #112
+  sta $2004
+
+  lda #144
+  sta $2004
+  lda #0052
+  sta $2004
+  lda #00
+  sta $2004
+  lda #128
+  sta $2004
+
+  lda #144
+  sta $2004
+  lda #0054
+  sta $2004
+  lda #00
+  sta $2004
+  lda #144
+  sta $2004
+
+  lda #144
+  sta $2004
+  lda #0056
+  sta $2004
+  lda #00
+  sta $2004
+  lda #160
+  sta $2004
+
+  lda #144
+  sta $2004
+  lda #0058
+  sta $2004
+  lda #00
+  sta $2004
+  lda #176
+  sta $2004
+
+  ; make loop 3rd row
+  lda #160
+  sta $2004
+  lda #0060
+  sta $2004
+  lda #00
+  sta $2004
+  lda #80
+  sta $2004
+
+  lda #160
+  sta $2004
+  lda #0062
+  sta $2004
+  lda #00
+  sta $2004
+  lda #96
+  sta $2004
+
+  lda #160
+  sta $2004
+  lda #0064
+  sta $2004
+  lda #00
+  sta $2004
+  lda #112
+  sta $2004
+
+  lda #160
+  sta $2004
+  lda #0066
+  sta $2004
+  lda #00
+  sta $2004
+  lda #128
+  sta $2004
+
+  lda #160
+  sta $2004
+  lda #0068
+  sta $2004
+  lda #00
+  sta $2004
+  lda #144
+  sta $2004
+
+  lda #160
+  sta $2004
+  lda #0070
+  sta $2004
+  lda #00
+  sta $2004
+  lda #160
+  sta $2004
+
+  lda #160
+  sta $2004
+  lda #0072
+  sta $2004
+  lda #00
+  sta $2004
+  lda #176
+  sta $2004
+
+  ; make loop 4th row
+  lda #176
+  sta $2004
+  lda #0074
+  sta $2004
+  lda #00
+  sta $2004
+  lda #80
+  sta $2004
+
+  lda #176
+  sta $2004
+  lda #0076
+  sta $2004
+  lda #00
+  sta $2004
+  lda #96
+  sta $2004
+
+  lda #176
+  sta $2004
+  lda #0078
+  sta $2004
+  lda #00
+  sta $2004
+  lda #112
+  sta $2004
+
+  lda #176
+  sta $2004
+  lda #0080
+  sta $2004
+  lda #00
+  sta $2004
+  lda #128
+  sta $2004
+
+  lda #176
+  sta $2004
+  lda #0082
+  sta $2004
+  lda #00
+  sta $2004
+  lda #144
   sta $2004
 
   rts
