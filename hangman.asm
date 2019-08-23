@@ -181,13 +181,8 @@ DrawScreen:
   sta $2003 ; store first part in 2003
   lda #$00  ; load $00 to A (not really necessary, just for learning purposes)
   sta $2003 ; store second part in 2003
-  lda #50 ; note we load a decimal number
-  sta $2004 ; Y value
-  lda #00   ; number of the tile of the sprite (currently 0)
-  sta $2004 ; store tile number
-  sta $2004 ; store number again (no special junk)
-  lda #20
-  sta $2004 ; X value
+
+  jsr DrawHanger
 
   rts
 
@@ -195,6 +190,30 @@ DrawScreen:
 WaitBlank:
   lda $2002
   bpl WaitBlank ; keet checking until bit is 7 (VBlank)
+
+DrawHanger:
+
+  lda #20   ; decimal value of y
+  sta $2004 ; Y value
+  lda #00   ; number of the tile of the sprite
+  sta $2004 ; store tile number
+  sta $2004 ; store number again (no special junk)
+  lda #20   ; decimal value of x
+  sta $2004 ; X value
+
+  ; lda $2002
+  ; bpl WaitBlank ; keet checking until bit is 7 (VBlank)
+
+  ; lda #20   ; decimal value of y
+  ; sta $2004 ; Y value
+  ; lda #00   ; number of the tile of the sprite
+  ; sta $2004 ; store tile number
+  ; sta $2004 ; store number again (no special junk)
+  ; lda #20   ; decimal value of x
+  ; sta $2004 ; X value
+
+  rts
+
 
 DrawWord:
   ldx #$00
@@ -244,7 +263,9 @@ IRQ:
   .org $E000
 palette:
   .db $0F,$31,$32,$33,$0F,$35,$36,$37,$0F,$39,$3A,$3B,$0F,$3D,$3E,$0F
-  .db $0F,$1C,$15,$14,$0F,$02,$38,$3C,$0F,$1C,$15,$14,$0F,$02,$38,$3C
+  .db $0F,$18,$10,$20,$0F,$02,$38,$3C,$0F,$1C,$15,$14,$0F,$02,$38,$3C
+  ;   Whi,LGr,MGr,DGr <-- Sprites color mapping
+  ;   BG
 ;----------------------------------------------------------------
 ; interrupt vectors
 ;----------------------------------------------------------------
