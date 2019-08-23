@@ -126,7 +126,7 @@ CheckCurrenterLetterIncX:
   beq CheckCurrentLetterEnd ; if equals a letter was guessed and the value is equal to one, don't make a sound
   ;if an error happened
   inc $0202 ; inc how many erros ocurred
-  jsr MakeSound
+  ; jsr MakeSound
 CheckCurrentLetterEnd:
   lda #$00
   sta $0203
@@ -177,7 +177,24 @@ NMI:
   jmp EndNMI
 
 DrawScreen:
+  lda #$00  ; load $00 to A
+  sta $2003 ; store first part in 2003
+  lda #$00  ; load $00 to A (not really necessary, just for learning purposes)
+  sta $2003 ; store second part in 2003
+  lda #50 ; note we load a decimal number
+  sta $2004 ; Y value
+  lda #00   ; number of the tile of the sprite (currently 0)
+  sta $2004 ; store tile number
+  sta $2004 ; store number again (no special junk)
+  lda #20
+  sta $2004 ; X value
+
   rts
+
+; Makes safe update of screen
+WaitBlank:
+  lda $2002
+  bpl WaitBlank ; keet checking until bit is 7 (VBlank)
 
 DrawWord:
   ldx #$00
@@ -242,4 +259,4 @@ palette:
 ; CHR-ROM bank
 ;----------------------------------------------------------------
   .base $0000
-  .incbin "mario.chr"
+  .incbin "sprites.chr"
