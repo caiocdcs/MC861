@@ -40,6 +40,25 @@ MIRRORING = %0001 ;%0000 = horizontal, %0001 = vertical, %1000 = four-screen
 ; program bank(s)
 ;----------------------------------------------------------------
 
+  .base 0  ; code bank
+  .org $0000 ; variable ORG location $0000
+
+  ; normally variables defined here
+
+  ; .org $0300 ; OAM Copy location $0300 / TODO: correct
+
+  ; Sprite1_Y: .db 0 ; sprite #1’s Y value
+  ; Sprite1_T: .db 0 ; sprite #1’s Tile Number
+  ; Sprite1_S: .db 0 ; sprite #1’s special byte
+  ; Sprite1_X: .db 0 ; sprite #1’s X value
+  ; Sprite2_Y: .db 0 ; same thing, same order for sprite #2
+  ; Sprite2_T: .db 0 ; note that I numbered 1 2 … 
+  ; Sprite2_S: .db 0 ; some people may actually prefer starting 
+  ; Sprite2_X: .db 0 ; the count at 0, but it doesn’t really matter. 
+  ; ; this would just go on and on for however many sprites you have
+
+  ; .org $8000 ; code ORG location $8000
+
   .base $10000-(PRG_COUNT*$4000)
 
 Reset:
@@ -895,7 +914,7 @@ IRQ:
   .org $E000
 palette:
   .db $0F,$31,$32,$33,$0F,$35,$36,$37,$0F,$39,$3A,$3B,$0F,$3D,$3E,$0F
-  .db $0F,$29,$10,$20,$0F,$02,$38,$3C,$0F,$1C,$15,$14,$0F,$02,$38,$3C
+  .db $0F,$29,$00,$20,$0F,$02,$38,$3C,$0F,$1C,$15,$14,$0F,$02,$38,$3C
   ;   Whi,LGr,MGr,DGr <-- Sprites color mapping
   ;   BG
 ;----------------------------------------------------------------
