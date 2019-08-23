@@ -76,7 +76,6 @@ LoadSpritesLoop:
                         ; if compare was equal to 32, keep going down
               
               
-
   LDA #%10000000   ; enable NMI, sprites from Pattern Table 1
   STA $2000
 
@@ -95,6 +94,18 @@ NMI:
   STA $4014       ; set the high byte (02) of the RAM address, start the transfer
 
 
+;;;;;;;;;;;;;;;;;;
+;;   Alphabet   ;; 
+
+
+; $0301 will be x position of the selector
+; $0302 will be y position of the selector
+; $0303 will be the pointer of the array
+
+
+;;;;;;;;;;;;;;:::: 
+:: Controllers  ::  
+
 LatchController:
   LDA #$01
   STA $4016
@@ -107,10 +118,6 @@ ReadA:
   AND #%00000001  ; only look at bit 0
   BEQ ReadADone   ; branch to ReadADone if button is NOT pressed (0)
                   ; add instructions here to do something when button IS pressed (1)
-  LDA $0203       ; load sprite X position
-  CLC             ; make sure the carry flag is clear
-  ADC #$01        ; A = A + 1
-  STA $0203       ; save sprite X position
 ReadADone:        ; handling this button is done
   
 
@@ -133,10 +140,6 @@ ReadStart:
   AND #%00000001  ; only look at bit 0
   BEQ ReadStartDone   ; branch to ReadBDone if button is NOT pressed (0)
                   ; add instructions here to do something when button IS pressed (1)
-  LDA $0203       ; load sprite X position
-  SEC             ; make sure carry flag is set
-  SBC #$01        ; A = A - 1
-  STA $0203       ; save sprite X position
 ReadStartDone:        ; handling this button is done
 
 ReadUp: 
@@ -144,50 +147,54 @@ ReadUp:
   AND #%00000001  ; only look at bit 0
   BEQ ReadUpDone   ; branch to ReadUpDone if button is NOT pressed (0)
                   ; add instructions here to do something when button IS pressed (1)
+MoveUp:
   LDA $0200       ; load sprite Y position
   SEC             ; make sure carry flag is set
   SBC #$01        ; A = A - 1
   STA $0200       ; save sprite Y position
-ReadUpDone:        ; handling this button is done
 
+ReadUpDone:        ; handling this button is done
 ReadDown: 
   LDA $4016       ; player 1 - Down
   AND #%00000001  ; only look at bit 0
   BEQ ReadDownDone   ; branch to ReadDownDone if button is NOT pressed (0)
                   ; add instructions here to do something when button IS pressed (1)
+MoveDown:
   LDA $0200       ; load sprite Y position
   CLC             ; make sure carry flag is set
   ADC #$01        ; A = A + 1
   STA $0200       ; save sprite Y position
-ReadDownDone:        ; handling this button is done
 
+ReadDownDone:        ; handling this button is done
 ReadLeft: 
   LDA $4016       ; player 1 - Left
   AND #%00000001  ; only look at bit 0
   BEQ ReadLeftDone   ; branch to ReadLeftDone if button is NOT pressed (0)
                   ; add instructions here to do something when button IS pressed (1)
+MoveLeft:
   LDA $0203       ; load sprite X position
   SEC             ; make sure carry flag is set
   SBC #$01        ; A = A - 1
   STA $0203       ; save sprite X position
-ReadLeftDone:        ; handling this button is done
 
+ReadLeftDone:        ; handling this button is done
 ReadRight: 
   LDA $4016       ; player 1 - Right
   AND #%00000001  ; only look at bit 0
   BEQ ReadRightDone   ; branch to ReadRightDone if button is NOT pressed (0)
                   ; add instructions here to do something when button IS pressed (1)
+MoveRight:           
   LDA $0203       ; load sprite X position
   CLC             ; make sure carry flag is set
   ADC #$01        ; A = A + 1
   STA $0203       ; save sprite X position
+
 ReadRightDone:        ; handling this button is done
 
   
   RTI             ; return from interrupt
  
 ;;;;;;;;;;;;;;  
-  
   
   
   ;.bank 1
@@ -197,11 +204,8 @@ palette:
   .db $0F,$1C,$15,$14,$31,$02,$38,$3C,$0F,$1C,$15,$14,$31,$02,$38,$3C
 
 sprites:
-     ;vert tile attr horiz
-  .db $80, $32, $00, $80   ;sprite 0
-  .db $80, $33, $00, $88   ;sprite 1
-  .db $88, $34, $00, $80   ;sprite 2
-  .db $88, $35, $00, $88   ;sprite 3
+  ;vert tile attr horiz
+  .db #130, #86, #00, #80   ;seletor
 
   .org $FFFA     ;first of the three vectors starts here
   .dw NMI        ;when an NMI happens (once per frame if enabled) the 
@@ -216,4 +220,4 @@ sprites:
   
   ;.bank 2
   ;.org $0000
-  .incbin "mario.chr"   ;includes 8KB graphics file from SMB1
+  .incbin "sprites.chr"   ;includes 8KB graphics file from SMB1

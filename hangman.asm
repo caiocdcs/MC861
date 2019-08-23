@@ -59,6 +59,7 @@ WaitBlank:
 Loop:
   jsr CheckCurrentLetter
   jsr CheckWin
+  jsr LatchController
   jmp Loop
 
 ; the size of the word in address $0200
@@ -96,6 +97,28 @@ ConfigurePPU:
   sta $2001
   rts
 
+vblankwait1:       ; First wait for vblank to make sure PPU is ready
+  BIT $2002
+  BPL vblankwait1
+
+clrmem:
+  LDA #$00
+  STA $0000, x
+  STA $0100, x
+  STA $0200, x
+  STA $0400, x
+  STA $0500, x
+  STA $0600, x
+  STA $0700, x
+  LDA #$FE
+  STA $0300, x
+  INX
+  BNE clrmem
+   
+vblankwait2:      ; Second wait for vblank, PPU is ready after this
+  BIT $2002
+  BPL vblankwait2
+
 LoadPalettes:
   lda $2002    ; read PPU status to reset the high/low latch
   lda #$3F
@@ -109,6 +132,22 @@ LoadPallete:
   inx
   cpx #$20
   bne LoadPallete
+
+LoadSprites:
+  LDX #$00              ; start at 0
+LoadSpritesLoop:
+  LDA sprites, x        ; load data from address (sprites +  x)
+  STA $0200, x          ; store into RAM address ($0200 + x)
+  INX                   ; X = X + 1
+  CPX #$20              ; Compare X to hex $20, decimal 32
+  BNE LoadSpritesLoop   ; Branch to LoadSpritesLoop if compare was Not Equal to zero
+                        ; if compare was equal to 32, keep going down
+
+  LDA #%10000000   ; enable NMI, sprites from Pattern Table 1
+  STA $2000
+
+  LDA #%00010000   ; enable sprites
+  STA $2001
   rts
 
 CheckCurrentLetter:
@@ -169,30 +208,13 @@ MakeSound:
   ;sta $4015
   rts
 
-CheckWin:
-
-Win:
-
-GameOver:
-  brk
-
-NMI:
-  ;NOTE: NMI code goes here
-  jsr DrawScreen
-  jsr DrawWord
-  jmp EndNMI
-
-LDA #$00
-  STA $2003       ; set the low byte (00) of the RAM address
-  LDA #$02
-  STA $4014       ; set the high byte (02) of the RAM address, start the transfer
-
-
 ;;;;;;;;;;;;;;;;;;
 ;;   Alphabet   ;; 
 
 
-; set array pointer to zero
+; $0301 will be x position of the selector
+; $0302 will be y position of the selector
+; $0303 will be the pointer of the array
 
 
 ;;;;;;;;;;;;;;:::: 
@@ -210,10 +232,6 @@ ReadA:
   AND #%00000001  ; only look at bit 0
   BEQ ReadADone   ; branch to ReadADone if button is NOT pressed (0)
                   ; add instructions here to do something when button IS pressed (1)
-  LDA $0203       ; load sprite X position
-  CLC             ; make sure the carry flag is clear
-  ADC #$01        ; A = A + 1
-  STA $0203       ; save sprite X position
 ReadADone:        ; handling this button is done
   
 
@@ -253,13 +271,6 @@ MoveUp:
   SBC #$01        ; A = A - 1
   STA $0200       ; save sprite Y position
 
-AlphabetUp:
-  LDA $100
-  SEC             ; make sure carry flag is set
-  SBC #$09        ; X = X - 9 
-                  ; check if X < 0
-  STA $0100       ; save position of vector
-
 ReadUpDone:        ; handling this button is done
 ReadDown: 
   LDA $4016       ; player 1 - Down
@@ -271,13 +282,6 @@ MoveDown:
   CLC             ; make sure carry flag is set
   ADC #$01        ; A = A + 1
   STA $0200       ; save sprite Y position
-
-AlphabetDown: 
-  LDA $100
-  CLC             ; make sure carry flag is set
-  ADC #$09        ; X = X + 9 
-                  ; check if X > 26
-  STA $0100       ; save position of vector
 
 ReadDownDone:        ; handling this button is done
 ReadLeft: 
@@ -291,14 +295,6 @@ MoveLeft:
   SBC #$01        ; A = A - 1
   STA $0203       ; save sprite X position
 
-AlphabetLeft:
-  LDA $100
-  SEC             ; make sure carry flag is set
-  SBC #$01        ; X = X - 1
-                  ; check if X < 0
-  STA $0100       ; save position of vector
-
-
 ReadLeftDone:        ; handling this button is done
 ReadRight: 
   LDA $4016       ; player 1 - Right
@@ -311,15 +307,21 @@ MoveRight:
   ADC #$01        ; A = A + 1
   STA $0203       ; save sprite X position
 
-AlphabetRight:
-  LDA $100
-  CLC             ; make sure carry flag is set
-  ADC #$01        ; X = X + 1
-                  ; check if X > 26 
-  STA $0100       ; save position of vector
-
 ReadRightDone:        ; handling this button is done
+  rts
 
+CheckWin:
+
+Win:
+
+GameOver:
+  brk
+
+NMI:
+  ;NOTE: NMI code goes here
+  jsr DrawScreen
+  jsr DrawWord
+  jmp EndNMI
 
 DrawScreen:
   lda #$00  ; load $00 to A
@@ -329,7 +331,7 @@ DrawScreen:
 
   jsr DrawHanger
   jsr DrawAlphabet
-  jsr DrawSelector
+  ; jsr DrawSelector
   ; jsr DrawHead
   ; jsr DrawBody
   ; jsr DrawLeftArm
@@ -506,13 +508,13 @@ DrawBody:
 
 DrawSelector:
 
-  lda #130
+  lda #130  ; posicao y
   sta $2004
-  lda #0086
+  lda #0086 ; mapa do sprite
   sta $2004
-  lda #00
-  sta $2004
-  lda #80
+  lda #00   
+  sta $2004 
+  lda #80   ; posicao x
   sta $2004
 
   rts
@@ -1036,6 +1038,10 @@ palette:
   .db $0F,$29,$10,$20,$0F,$02,$38,$3C,$0F,$1C,$15,$14,$0F,$02,$38,$3C
   ;   Whi,LGr,MGr,DGr <-- Sprites color mapping
   ;   BG
+
+sprites:
+  ;vert tile attr horiz
+  .db #130, #86, #00, #80   ;seletor
 ;----------------------------------------------------------------
 ; interrupt vectors
 ;----------------------------------------------------------------
