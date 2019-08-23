@@ -190,12 +190,13 @@ DrawScreen:
 
   jsr DrawHanger
   jsr DrawAlphabet
-  jsr DrawHead
-  jsr DrawBody
-  jsr DrawLeftArm
-  jsr DrawRightArm
-  jsr DrawLeftLeg
-  jsr DrawRightLeg
+  jsr DrawSelector
+  ; jsr DrawHead
+  ; jsr DrawBody
+  ; jsr DrawLeftArm
+  ; jsr DrawRightArm
+  ; jsr DrawLeftLeg
+  ; jsr DrawRightLeg
   ; jsr DrawDeadHead
 
   rts
@@ -360,6 +361,19 @@ DrawBody:
   lda #00
   sta $2004
   lda #56
+  sta $2004
+
+  rts
+
+DrawSelector:
+
+  lda #130
+  sta $2004
+  lda #0086
+  sta $2004
+  lda #00
+  sta $2004
+  lda #80
   sta $2004
 
   rts
@@ -880,7 +894,7 @@ IRQ:
   .org $E000
 palette:
   .db $0F,$31,$32,$33,$0F,$35,$36,$37,$0F,$39,$3A,$3B,$0F,$3D,$3E,$0F
-  .db $0F,$18,$10,$20,$0F,$02,$38,$3C,$0F,$1C,$15,$14,$0F,$02,$38,$3C
+  .db $0F,$29,$10,$20,$0F,$02,$38,$3C,$0F,$1C,$15,$14,$0F,$02,$38,$3C
   ;   Whi,LGr,MGr,DGr <-- Sprites color mapping
   ;   BG
 ;----------------------------------------------------------------
