@@ -35,20 +35,71 @@ MIRRORING = %0001 ;%0000 = horizontal, %0001 = vertical, %1000 = four-screen
    .db $01 ;number of 8KB CHR-ROM pages
    .db $00|MIRRORING ;mapper 0 and mirroring
    .dsb 9, $00 ;clear the remaining bytes
+   .inesprg 1   ; 1x 16KB PRG code
+   .ineschr 1   ; 1x  8KB CHR data
+   .inesmap 0   ; mapper 0 = NROM, no bank swapping
+   .inesmir 2   ; background mirroring - 2 is single screen
 
 ;----------------------------------------------------------------
 ; program bank(s)
 ;----------------------------------------------------------------
 
    .base $10000-(PRG_COUNT*$4000)
+   ; additional code of tutorial, is it necessary?
 
 Reset:
+   
+   SEI          ; disable IRQs
+	CLD          ; disable decimal mode
+	LDX #$40	
+	STX $4017    ; disable APU frame IRQ
+	LDX #$FF	
+	TXS          ; Set up stack
+	INX          ; now X = 0
+	STX $2000    ; disable NMI
+	STX $2001    ; disable rendering
+	STX $4010    ; disable DMC IRQs
 
-   ;NOTE: initialization code goes here
+   vblankwait1:       ; First wait for vblank to make sure PPU is ready
+      BIT $2002
+      BPL vblankwait1
+
+   clrmem:
+      LDA #$00
+      STA $0000, x
+      STA $0100, x
+      STA $0200, x
+      STA $0400, x
+      STA $0500, x
+      STA $0600, x
+      STA $0700, x
+      LDA #$FE
+      STA $0300, x
+      INX
+      BNE clrmem
+      
+   vblankwait2:      ; Second wait for vblank, PPU is ready after this
+      BIT $2002
+      BPL vblankwait2
+
+   Foreverloop:
+	   JMP Foreverloop     ;jump back to Forever, infinite loop
 
 NMI:
 
-   ;NOTE: NMI code goes here
+   RTI
+
+   background_palette:
+      .db $22,$29,$1A,$0F	;background palette 1
+      .db $22,$36,$17,$0F	;background palette 2
+      .db $22,$30,$21,$0F	;background palette 3
+      .db $22,$27,$17,$0F	;background palette 4
+   
+   sprite_palette:
+      .db $22,$16,$27,$18	;sprite palette 1
+      .db $22,$1A,$30,$27	;sprite palette 2
+      .db $22,$16,$30,$27	;sprite palette 3
+      .db $22,$0F,$36,$17  ;sprite palette 4
 
 IRQ:
 
@@ -68,4 +119,4 @@ IRQ:
 ; CHR-ROM bank
 ;----------------------------------------------------------------
 
-;    .incbin "tiles.chr"
+   .incbin "sprites.chr"
