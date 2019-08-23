@@ -191,13 +191,14 @@ DrawScreen:
   jsr DrawHanger
   jsr DrawAlphabet
   jsr DrawSelector
-  ; jsr DrawHead
-  ; jsr DrawBody
-  ; jsr DrawLeftArm
-  ; jsr DrawRightArm
-  ; jsr DrawLeftLeg
-  ; jsr DrawRightLeg
+  jsr DrawHead
+  jsr DrawBody
+  jsr DrawLeftArm
+  jsr DrawRightArm
+  jsr DrawLeftLeg
+  jsr DrawRightLeg
   ; jsr DrawDeadHead
+  ; TODO: Optmize sprites since there is a limit
 
   rts
 
