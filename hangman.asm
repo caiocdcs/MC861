@@ -233,22 +233,10 @@ NMI:
 DrawScreen:
   lda #$00  ; load $00 to A
   sta $2003 ; store first part in 2003
-  lda #$00  ; load $00 to A (not really necessary, just for learning purposes)
-  sta $2003 ; store second part in 2003  
 
   LDA #$02
   STA $4014       ; set the high byte (02) of the RAM address, start the transfer
   jsr SetUpControllers
-
-  ; jsr DrawHanger
-  ; jsr DrawHead
-  ; jsr DrawBody
-  ; jsr DrawLeftArm
-  ; jsr DrawRightArm
-  ; jsr DrawLeftLeg
-  ; jsr DrawRightLeg
-  ; jsr DrawDeadHead
-  ; TODO: Optmize sprites since there is a limit
 
   rts
 
@@ -353,379 +341,18 @@ ReadRightDone:        ; handling this button is done
 ; DRAWING FUNCTIONS
 ;----------------------------------------------------------------
 
-DrawLeftLeg:
+; TODO: Base memory is $0204 - letter A, iterates each 4 then
+; disableLetter:           
+;   lda $0205           ; load sprite tile
+;   clc                 ; make sure carry flag is set
+;   adc #$01            ; A = A + 1 (which is the disable tile for the letter)
+;   sta $0205           ; save sprite tile
 
-  lda #72
-  sta $2004
-  lda #0024
-  sta $2004
-  lda #00
-  sta $2004
-  lda #48
-  sta $2004
-
-  lda #80
-  sta $2004
-  lda #0026
-  sta $2004
-  lda #00
-  sta $2004
-  lda #48
-  sta $2004
-
-  rts
-
-DrawRightLeg:
-
-  lda #80
-  sta $2004
-  lda #0027
-  sta $2004
-  lda #00
-  sta $2004
-  lda #56
-  sta $2004
-
-  lda #72
-  sta $2004
-  lda #0025
-  sta $2004
-  lda #00
-  sta $2004
-  lda #56
-  sta $2004
-
-  rts
-
-DrawLeftArm:
-
-  lda #48
-  sta $2004
-  lda #0018
-  sta $2004
-  lda #00
-  sta $2004
-  lda #48
-  sta $2004
-
-  lda #56
-  sta $2004
-  lda #0021
-  sta $2004
-  lda #00
-  sta $2004
-  lda #40
-  sta $2004
-
-  lda #56
-  sta $2004
-  lda #0020
-  sta $2004
-  lda #00
-  sta $2004
-  lda #48
-  sta $2004
-
-  rts
-
-DrawRightArm:
-
-  lda #48
-  sta $2004
-  lda #0019
-  sta $2004
-  lda #00
-  sta $2004
-  lda #56
-  sta $2004
-
-  lda #56
-  sta $2004
-  lda #0022
-  sta $2004
-  lda #00
-  sta $2004
-  lda #56
-  sta $2004
-
-  lda #56
-  sta $2004
-  lda #0023
-  sta $2004
-  lda #00
-  sta $2004
-  lda #64
-  sta $2004
-
-  rts
-
-DrawBody:
-
-  lda #48
-  sta $2004
-  lda #0016
-  sta $2004
-  lda #00
-  sta $2004
-  lda #48
-  sta $2004
-
-  lda #48
-  sta $2004
-  lda #0017
-  sta $2004
-  lda #00
-  sta $2004
-  lda #56
-  sta $2004
-
-  lda #56
-  sta $2004
-  lda #0016
-  sta $2004
-  lda #00
-  sta $2004
-  lda #48
-  sta $2004
-
-  lda #56
-  sta $2004
-  lda #0017
-  sta $2004
-  lda #00
-  sta $2004
-  lda #56
-  sta $2004
-
-  lda #64
-  sta $2004
-  lda #0016
-  sta $2004
-  lda #00
-  sta $2004
-  lda #48
-  sta $2004
-
-  lda #64
-  sta $2004
-  lda #0017
-  sta $2004
-  lda #00
-  sta $2004
-  lda #56
-  sta $2004
-
-  rts
-
-DrawHead:
-  lda #32   ; decimal value of y
-  sta $2004 ; Y value
-  lda #0008 ; number of the tile of the sprite
-  sta $2004 ; store tile number
-  lda #00   ; store junk
-  sta $2004 ; store number again (no special junk)
-  lda #48   ; decimal value of x
-  sta $2004 ; X value
-
-  lda #32
-  sta $2004
-  lda #0009
-  sta $2004
-  lda #00
-  sta $2004
-  lda #56
-  sta $2004
-
-  lda #40
-  sta $2004
-  lda #0010
-  sta $2004
-  lda #00
-  sta $2004
-  lda #48
-  sta $2004
-
-  lda #40
-  sta $2004
-  lda #0011
-  sta $2004
-  lda #00
-  sta $2004
-  lda #56
-  sta $2004
-
-  rts
-
-DrawDeadHead:
-  lda #32
-  sta $2004
-  lda #0012
-  sta $2004
-  lda #00
-  sta $2004
-  lda #48
-  sta $2004
-
-  lda #32
-  sta $2004
-  lda #0013
-  sta $2004
-  lda #00
-  sta $2004
-  lda #56
-  sta $2004
-
-  lda #40
-  sta $2004
-  lda #0014
-  sta $2004
-  lda #00
-  sta $2004
-  lda #48
-  sta $2004
-
-  lda #40
-  sta $2004
-  lda #0015
-  sta $2004
-  lda #00
-  sta $2004
-  lda #56
-  sta $2004
-
-  rts
-
-DrawHanger:
-
-  ; Hanger corner (will be the base value)
-  lda #24
-  sta $2004
-  lda #00
-  sta $2004
-  lda #00
-  sta $2004
-  lda #24
-  sta $2004
-
-  lda #24
-  sta $2004
-  lda #0001
-  sta $2004
-  lda #00
-  sta $2004
-  lda #32
-  sta $2004
-
-  lda #24
-  sta $2004
-  lda #0001
-  sta $2004
-  lda #00
-  sta $2004
-  lda #40
-  sta $2004
-
-  lda #24
-  sta $2004
-  lda #0003
-  sta $2004
-  lda #00
-  sta $2004
-  lda #48
-  sta $2004
-
-  lda #24
-  sta $2004
-  lda #0006
-  sta $2004
-  lda #00
-  sta $2004
-  lda #56
-  sta $2004
-
-  ; Vertical bar (make loop?)
-  lda #32
-  sta $2004
-  lda #0002
-  sta $2004
-  lda #00
-  sta $2004
-  lda #24
-  sta $2004
-
-  lda #40
-  sta $2004
-  lda #0002
-  sta $2004
-  lda #00
-  sta $2004
-  lda #24
-  sta $2004
-
-  lda #48
-  sta $2004
-  lda #0002
-  sta $2004
-  lda #00
-  sta $2004
-  lda #24
-  sta $2004
-
-  lda #56
-  sta $2004
-  lda #0002
-  sta $2004
-  lda #00
-  sta $2004
-  lda #24
-  sta $2004
-
-  lda #64
-  sta $2004
-  lda #0002
-  sta $2004
-  lda #00
-  sta $2004
-  lda #24
-  sta $2004
-
-  lda #72
-  sta $2004
-  lda #0002
-  sta $2004
-  lda #00
-  sta $2004
-  lda #24
-  sta $2004
-
-  lda #80
-  sta $2004
-  lda #0002
-  sta $2004
-  lda #00
-  sta $2004
-  lda #24
-  sta $2004
-
-  lda #88
-  sta $2004
-  lda #0002
-  sta $2004
-  lda #00
-  sta $2004
-  lda #24
-  sta $2004
-
-  lda #96
-  sta $2004
-  lda #0004
-  sta $2004
-  lda #00
-  sta $2004
-  lda #24
-  sta $2004
-
-  rts
+disableA: 
+  lda $0205           ; load sprite tile
+  clc                 ; make sure carry flag is set
+  adc #$01            ; A = A + 1 (which is the disable tile for the letter)
+  sta $0205           ; save sprite tile
 
 ;----------------------------------------------------------------
 ; DRAW WORD
@@ -796,39 +423,41 @@ palette:
 
 ;----------------------------------------------------------------
 ; SPRITES
+;
+; Using adresses ($0200 - $0307)
 ;----------------------------------------------------------------
 
 sprites:
   ;vert tile attr horiz
-  .db #130, #86, #00, #80 ; Y, tile, junk, X
+  .db #130, #86, #00, #80 ; Y, tile, junk, X (Selector: $0200-$0203)
 
   ; Alphabet
-  .db #128, #32, #00, #80   ; A
-  .db #128, #34, #00, #96   ; B
-  .db #128, #36, #00, #112  ; C
-  .db #128, #38, #00, #128  ; D
-  .db #128, #40, #00, #144  ; E
-  .db #128, #42, #00, #160  ; F
-  .db #128, #44, #00, #176  ; G
-  .db #144, #46, #00, #80   ; H
-  .db #144, #48, #00, #96   ; I
-  .db #144, #50, #00, #112  ; J
-  .db #144, #52, #00, #128  ; K
-  .db #144, #54, #00, #144  ; L
-  .db #144, #56, #00, #160  ; M
-  .db #144, #58, #00, #176  ; N
-  .db #160, #60, #00, #80   ; O
-  .db #160, #62, #00, #96   ; P
-  .db #160, #64, #00, #112  ; Q
-  .db #160, #66, #00, #128  ; R
-  .db #160, #68, #00, #144  ; S
-  .db #160, #70, #00, #160  ; T
-  .db #160, #72, #00, #176  ; U
-  .db #176, #74, #00, #80   ; V
-  .db #176, #76, #00, #96   ; W
-  .db #176, #78, #00, #112  ; X
-  .db #176, #80, #00, #128  ; Y
-  .db #176, #82, #00, #144  ; Z
+  .db #128, #32, #00, #80   ; A ($0204-$0207)
+  .db #128, #34, #00, #96   ; B ($0208-$0211)
+  .db #128, #36, #00, #112  ; C ($0212-$0215)
+  .db #128, #38, #00, #128  ; D ($0216-$0219)
+  .db #128, #40, #00, #144  ; E ($0220-$0223)
+  .db #128, #42, #00, #160  ; F ($0224-$0227)
+  .db #128, #44, #00, #176  ; G ($0228-$0231)
+  .db #144, #46, #00, #80   ; H ($0232-$0235)
+  .db #144, #48, #00, #96   ; I ($0236-$0239)
+  .db #144, #50, #00, #112  ; J ($0240-$0243)
+  .db #144, #52, #00, #128  ; K ($0244-$0247)
+  .db #144, #54, #00, #144  ; L ($0248-$0251)
+  .db #144, #56, #00, #160  ; M ($0252-$0255)
+  .db #144, #58, #00, #176  ; N ($0256-$0259)
+  .db #160, #60, #00, #80   ; O ($0260-$0263)
+  .db #160, #62, #00, #96   ; P ($0264-$0267)
+  .db #160, #64, #00, #112  ; Q ($0268-$0271)
+  .db #160, #66, #00, #128  ; R ($0272-$0275)
+  .db #160, #68, #00, #144  ; S ($0276-$0279)
+  .db #160, #70, #00, #160  ; T ($0280-$0283)
+  .db #160, #72, #00, #176  ; U ($0284-$0287)
+  .db #176, #74, #00, #80   ; V ($0288-$0291)
+  .db #176, #76, #00, #96   ; W ($0292-$0295)
+  .db #176, #78, #00, #112  ; X ($0296-$0299)
+  .db #176, #80, #00, #128  ; Y ($0300-$0303)
+  .db #176, #82, #00, #144  ; Z ($0304-$0307)
 
 ;----------------------------------------------------------------
 ; INTERRUPT VECTORS
