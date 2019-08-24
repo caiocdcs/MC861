@@ -1,12 +1,12 @@
 ;----------------------------------------------------------------
-; constants
+; CONSTANTS
 ;----------------------------------------------------------------
 
 PRG_COUNT = 1 ;1 = 16KB, 2 = 32KB
 MIRRORING = %0001 ;%0000 = horizontal, %0001 = vertical, %1000 = four-screen
 
 ;----------------------------------------------------------------
-; variables
+; VARIABLES
 ;----------------------------------------------------------------
 
   .enum $0000
@@ -27,7 +27,7 @@ MIRRORING = %0001 ;%0000 = horizontal, %0001 = vertical, %1000 = four-screen
   ;.ende
 
 ;----------------------------------------------------------------
-; iNES header
+; HEADER
 ;----------------------------------------------------------------
 
   .db "NES", $1a ;identification of the iNES header
@@ -37,24 +37,102 @@ MIRRORING = %0001 ;%0000 = horizontal, %0001 = vertical, %1000 = four-screen
   .dsb 9, $00 ;clear the remaining bytes
 
 ;----------------------------------------------------------------
-; program bank(s)
+; PROGRAM BANK (BASE)
 ;----------------------------------------------------------------
 
   .base $10000-(PRG_COUNT*$4000)
 
+;----------------------------------------------------------------
+; RESET
+;----------------------------------------------------------------
+
 Reset:
+
   jsr LoadPalettes
   jsr LoadSprites
   jsr ConfigurePPU
   jsr WaitBlank
   jsr EnableSound
-  jsr Initialize
+  ; jsr Initialize
   jsr Loop
+
+;----------------------------------------------------------------
+; ENABLE SOUND
+;----------------------------------------------------------------
+
+EnableSound:
+  lda #%00000111  ;enable Sq1, Sq2 and Tri channels
+  sta $4015
+
+;----------------------------------------------------------------
+; PPU CONFIGURATION
+;----------------------------------------------------------------
+
+ConfigurePPU:
+  lda #%10000000   ; enable NMI, sprites from Pattern Table 0
+  sta $2000
+
+  lda #%00010000   ; enable sprites
+  sta $2001
+  rts
 
 ; Makes safe update of screen
 WaitBlank:
   lda $2002
   bpl WaitBlank ; keet checking until bit is 7 (VBlank)
+
+;----------------------------------------------------------------
+; LOAD PALETTES
+;----------------------------------------------------------------
+
+LoadPalettes:
+  lda $2002    ; read PPU status to reset the high/low latch
+  lda #$3F
+  sta $2006    ; write the high byte of $3F00 address
+  lda #$00
+  sta $2006    ; write the low byte of $3F00 address
+  ldx #$00
+LoadPallete:
+  lda palette, x
+  sta $2007
+  inx
+  cpx #$20
+  bne LoadPallete
+
+  rts
+
+;----------------------------------------------------------------
+; LOAD SPRITES
+;----------------------------------------------------------------
+
+LoadSprites:
+  LDX #$00              ; start at 0
+LoadSprite:
+  LDA sprites, x        ; load data from address (sprites +  x)
+  STA $0200, x          ; store into RAM address ($0300 + x)
+  INX                   ; X = X + 1
+  CPX #$08              ; Compare X to hex $08, decimal 8
+  BNE LoadSprite        ; Branch to LoadSprite if compare was Not Equal to zero
+                        ; if compare was equal to 32, keep going down
+
+  LDA #%10000000   ; enable NMI, sprites from Pattern Table 1
+  STA $2000
+
+  LDA #%00010000   ; enable sprites
+  STA $2001
+
+;----------------------------------------------------------------
+; TODO: HOW TO DISPLAY SPRITES (WEIRD FOREVER BELOW)
+;----------------------------------------------------------------
+
+Forever:
+  JMP Forever     ;jump back to Forever, infinite loop
+
+  ; rts ; TODO currently does nothing
+
+;----------------------------------------------------------------
+; GAME LOGIC
+;----------------------------------------------------------------
 
 ; main loop
 Loop:
@@ -86,73 +164,6 @@ Initialize:
   sta $0209
   rts
 
-EnableSound:
-  lda #%00000111  ;enable Sq1, Sq2 and Tri channels
-  sta $4015
-
-ConfigurePPU:
-  lda #%10000000   ; enable NMI, sprites from Pattern Table 0
-  sta $2000
-
-  lda #%00010000   ; enable sprites
-  sta $2001
-  rts
-
-vblankwait1:       ; First wait for vblank to make sure PPU is ready
-  BIT $2002
-  BPL vblankwait1
-
-clrmem:
-  LDA #$00
-  STA $0000, x
-  STA $0100, x
-  STA $0200, x
-  STA $0400, x
-  STA $0500, x
-  STA $0600, x
-  STA $0700, x
-  LDA #$FE
-  STA $0300, x
-  INX
-  BNE clrmem
-   
-vblankwait2:      ; Second wait for vblank, PPU is ready after this
-  BIT $2002
-  BPL vblankwait2
-
-LoadPalettes:
-  lda $2002    ; read PPU status to reset the high/low latch
-  lda #$3F
-  sta $2006    ; write the high byte of $3F00 address
-  lda #$00
-  sta $2006    ; write the low byte of $3F00 address
-  ldx #$00
-LoadPallete:
-  lda palette, x
-  sta $2007
-  inx
-  cpx #$20
-  bne LoadPallete
-
-  rts
-
-LoadSprites:
-  LDX #$00              ; start at 0
-LoadSpritesLoop:
-  LDA sprites, x        ; load data from address (sprites +  x)
-  STA $0200, x          ; store into RAM address ($0200 + x)
-  INX                   ; X = X + 1
-  CPX #$20              ; Compare X to hex $20, decimal 32
-  BNE LoadSpritesLoop   ; Branch to LoadSpritesLoop if compare was Not Equal to zero
-                        ; if compare was equal to 32, keep going down
-
-  LDA #%10000000   ; enable NMI, sprites from Pattern Table 1
-  STA $2000
-
-  LDA #%00010000   ; enable sprites
-  STA $2001
-  rts
-
 CheckCurrentLetter:
   ldx #$00
 CheckCurrentLetterLoop:
@@ -180,6 +191,16 @@ CheckCurrentLetterEnd:
   sta $0203
   rts
 
+CheckWin:
+
+Win:
+
+GameOver:
+  brk
+
+;----------------------------------------------------------------
+; SOUND
+;----------------------------------------------------------------
 
 MakeSound:
   ;Square 1
@@ -211,24 +232,53 @@ MakeSound:
   ;sta $4015
   rts
 
-;;;;;;;;;;;;;;;;;;
-;;   Alphabet   ;; 
+;----------------------------------------------------------------
+; NMI (Non-Maskable Interrupt)
+;----------------------------------------------------------------
 
+NMI:
+  jsr DrawScreen
+  jsr DrawWord
+  jmp EndNMI
 
-; $0301 will be x position of the selector
-; $0302 will be y position of the selector
-; $0303 will be the pointer of the array
+;----------------------------------------------------------------
+; MAIN SCREEN FUNCTION
+;----------------------------------------------------------------
 
+DrawScreen:
+  lda #$00  ; load $00 to A
+  sta $2003 ; store first part in 2003
+  lda #$00  ; load $00 to A (not really necessary, just for learning purposes)
+  sta $2003 ; store second part in 2003  
 
-;;;;;;;;;;;;;;:::: 
-;: Controllers  ::  
+  LDA #$02
+  STA $4014       ; set the high byte (02) of the RAM address, start the transfer
+  jsr SetUpControllers
+
+  ; jsr DrawHanger
+  ; jsr DrawAlphabet
+  ; jsr DrawHead
+  ; jsr DrawBody
+  ; jsr DrawLeftArm
+  ; jsr DrawRightArm
+  ; jsr DrawLeftLeg
+  ; jsr DrawRightLeg
+  ; jsr DrawDeadHead
+  ; TODO: Optmize sprites since there is a limit
+
+  rts
+
+;----------------------------------------------------------------
+; CONTROLLERS
+;----------------------------------------------------------------
+
+SetUpControllers:
 
 LatchController:
   LDA #$01
   STA $4016
   LDA #$00
   STA $4016       ; tell both the controllers to latch buttons
-
 
 ReadA: 
   LDA $4016       ; player 1 - A
@@ -237,7 +287,6 @@ ReadA:
                   ; add instructions here to do something when button IS pressed (1)
 ReadADone:        ; handling this button is done
   
-
 ReadB: 
   LDA $4016       ; player 1 - B
   AND #%00000001  ; only look at bit 0
@@ -313,38 +362,9 @@ MoveRight:
 ReadRightDone:        ; handling this button is done
   rts
 
-CheckWin:
-
-Win:
-
-GameOver:
-  brk
-
-NMI:
-  ;NOTE: NMI code goes here
-  jsr DrawScreen
-  jsr DrawWord
-  jmp EndNMI
-
-DrawScreen:
-  lda #$00  ; load $00 to A
-  sta $2003 ; store first part in 2003
-  lda #$00  ; load $00 to A (not really necessary, just for learning purposes)
-  sta $2003 ; store second part in 2003
-
-  jsr DrawHanger
-  jsr DrawAlphabet
-  jsr DrawSelector
-  jsr DrawHead
-  jsr DrawBody
-  jsr DrawLeftArm
-  jsr DrawRightArm
-  jsr DrawLeftLeg
-  jsr DrawRightLeg
-  jsr DrawDeadHead
-  ; TODO: Optmize sprites since there is a limit
-
-  rts
+;----------------------------------------------------------------
+; DRAWING FUNCTIONS
+;----------------------------------------------------------------
 
 DrawLeftLeg:
 
@@ -506,19 +526,6 @@ DrawBody:
   lda #00
   sta $2004
   lda #56
-  sta $2004
-
-  rts
-
-DrawSelector:
-
-  lda #130  ; posicao y
-  sta $2004
-  lda #0086 ; mapa do sprite
-  sta $2004
-  lda #00   
-  sta $2004 
-  lda #80   ; posicao x
   sta $2004
 
   rts
@@ -975,6 +982,10 @@ DrawHanger:
 
   rts
 
+;----------------------------------------------------------------
+; DRAW WORD
+;----------------------------------------------------------------
+
 DrawWord:
   ldx #$00
 DrawWordLoop:
@@ -1013,12 +1024,23 @@ DrawWordLoopIncX:
   bne DrawWordLoop
   rts
 
+;----------------------------------------------------------------
+; END NMI
+;----------------------------------------------------------------
+
 EndNMI:
-  RTI        ; return from interrupt
+  rti        ; return from interrupt
+
+;----------------------------------------------------------------
+; IRG
+;----------------------------------------------------------------
 
 IRQ:
    ;NOTE: IRQ code goes here
-  rti
+
+;----------------------------------------------------------------
+; COLOR PALETTE
+;----------------------------------------------------------------
 
   .org $E000
 palette:
@@ -1027,11 +1049,16 @@ palette:
   ;   Whi,LGr,MGr,DGr <-- Sprites color mapping
   ;   BG
 
+;----------------------------------------------------------------
+; SPRITES
+;----------------------------------------------------------------
+
 sprites:
   ;vert tile attr horiz
-  .db #130, #86, #00, #80   ;seletor
+  .db #130, #86, #00, #80 ; Y, tile, junk, X
+
 ;----------------------------------------------------------------
-; interrupt vectors
+; INTERRUPT VECTORS
 ;----------------------------------------------------------------
 
   .org $fffa
@@ -1043,5 +1070,6 @@ sprites:
 ;----------------------------------------------------------------
 ; CHR-ROM bank
 ;----------------------------------------------------------------
+
   .base $0000
   .incbin "sprites.chr"
