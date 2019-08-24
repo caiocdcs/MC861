@@ -191,13 +191,14 @@ DrawScreen:
   jsr DrawHanger
   jsr DrawAlphabet
   jsr DrawSelector
-  ; jsr DrawHead
-  ; jsr DrawBody
-  ; jsr DrawLeftArm
-  ; jsr DrawRightArm
-  ; jsr DrawLeftLeg
-  ; jsr DrawRightLeg
-  ; jsr DrawDeadHead
+  jsr DrawHead
+  jsr DrawBody
+  jsr DrawLeftArm
+  jsr DrawRightArm
+  jsr DrawLeftLeg
+  jsr DrawRightLeg
+  jsr DrawDeadHead
+  ; TODO: Optmize sprites since there is a limit
 
   rts
 
@@ -379,22 +380,6 @@ DrawSelector:
   rts
 
 DrawAlphabet:
-
-; TODO: Loop through 4 rows to optimize code
-; LoopRow1:
-;   ldx #07
-
-;   lda #120
-;   sta $2004
-;   lda #0032
-;   sta $2004
-;   lda #00
-;   sta $2004
-;   lda (#80, X)
-;   sta $2004
-
-;   dex
-;   bne LoopRow1
 
   ; letter A (base)
   lda #128  ; decimal value of y
@@ -894,7 +879,7 @@ IRQ:
   .org $E000
 palette:
   .db $0F,$31,$32,$33,$0F,$35,$36,$37,$0F,$39,$3A,$3B,$0F,$3D,$3E,$0F
-  .db $0F,$29,$10,$20,$0F,$02,$38,$3C,$0F,$1C,$15,$14,$0F,$02,$38,$3C
+  .db $0F,$29,$00,$20,$0F,$02,$38,$3C,$0F,$1C,$15,$14,$0F,$02,$38,$3C
   ;   Whi,LGr,MGr,DGr <-- Sprites color mapping
   ;   BG
 ;----------------------------------------------------------------
