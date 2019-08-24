@@ -59,6 +59,7 @@ WaitBlank:
 Loop:
   jsr CheckCurrentLetter
   jsr CheckWin
+  jsr LatchController
   jmp Loop
 
 ; the size of the word in address $0200
@@ -96,6 +97,28 @@ ConfigurePPU:
   sta $2001
   rts
 
+vblankwait1:       ; First wait for vblank to make sure PPU is ready
+  BIT $2002
+  BPL vblankwait1
+
+clrmem:
+  LDA #$00
+  STA $0000, x
+  STA $0100, x
+  STA $0200, x
+  STA $0400, x
+  STA $0500, x
+  STA $0600, x
+  STA $0700, x
+  LDA #$FE
+  STA $0300, x
+  INX
+  BNE clrmem
+   
+vblankwait2:      ; Second wait for vblank, PPU is ready after this
+  BIT $2002
+  BPL vblankwait2
+
 LoadPalettes:
   lda $2002    ; read PPU status to reset the high/low latch
   lda #$3F
@@ -109,6 +132,22 @@ LoadPallete:
   inx
   cpx #$20
   bne LoadPallete
+
+LoadSprites:
+  LDX #$00              ; start at 0
+LoadSpritesLoop:
+  LDA sprites, x        ; load data from address (sprites +  x)
+  STA $0200, x          ; store into RAM address ($0200 + x)
+  INX                   ; X = X + 1
+  CPX #$20              ; Compare X to hex $20, decimal 32
+  BNE LoadSpritesLoop   ; Branch to LoadSpritesLoop if compare was Not Equal to zero
+                        ; if compare was equal to 32, keep going down
+
+  LDA #%10000000   ; enable NMI, sprites from Pattern Table 1
+  STA $2000
+
+  LDA #%00010000   ; enable sprites
+  STA $2001
   rts
 
 CheckCurrentLetter:
@@ -167,6 +206,108 @@ MakeSound:
 ; stop sound
   ;lda #%00000000
   ;sta $4015
+  rts
+
+;;;;;;;;;;;;;;;;;;
+;;   Alphabet   ;; 
+
+
+; $0301 will be x position of the selector
+; $0302 will be y position of the selector
+; $0303 will be the pointer of the array
+
+
+;;;;;;;;;;;;;;:::: 
+:: Controllers  ::  
+
+LatchController:
+  LDA #$01
+  STA $4016
+  LDA #$00
+  STA $4016       ; tell both the controllers to latch buttons
+
+
+ReadA: 
+  LDA $4016       ; player 1 - A
+  AND #%00000001  ; only look at bit 0
+  BEQ ReadADone   ; branch to ReadADone if button is NOT pressed (0)
+                  ; add instructions here to do something when button IS pressed (1)
+ReadADone:        ; handling this button is done
+  
+
+ReadB: 
+  LDA $4016       ; player 1 - B
+  AND #%00000001  ; only look at bit 0
+  BEQ ReadBDone   ; branch to ReadBDone if button is NOT pressed (0)
+                  ; add instructions here to do something when button IS pressed (1)
+ReadBDone:        ; handling this button is done
+
+ReadSelect: 
+  LDA $4016       ; player 1 - Select
+  AND #%00000001  ; only look at bit 0
+  BEQ ReadSelectDone   ; branch to ReadBDone if button is NOT pressed (0)
+                  ; add instructions here to do something when button IS pressed (1)
+ReadSelectDone:        ; handling this button is done
+
+ReadStart: 
+  LDA $4016       ; player 1 - Select
+  AND #%00000001  ; only look at bit 0
+  BEQ ReadStartDone   ; branch to ReadBDone if button is NOT pressed (0)
+                  ; add instructions here to do something when button IS pressed (1)
+  LDA $0203       ; load sprite X position
+  SEC             ; make sure carry flag is set
+  SBC #$01        ; A = A - 1
+  STA $0203       ; save sprite X position
+ReadStartDone:        ; handling this button is done
+
+ReadUp: 
+  LDA $4016       ; player 1 - Up
+  AND #%00000001  ; only look at bit 0
+  BEQ ReadUpDone   ; branch to ReadUpDone if button is NOT pressed (0)
+                  ; add instructions here to do something when button IS pressed (1)
+MoveUp:
+  LDA $0200       ; load sprite Y position
+  SEC             ; make sure carry flag is set
+  SBC #$01        ; A = A - 1
+  STA $0200       ; save sprite Y position
+
+ReadUpDone:        ; handling this button is done
+ReadDown: 
+  LDA $4016       ; player 1 - Down
+  AND #%00000001  ; only look at bit 0
+  BEQ ReadDownDone   ; branch to ReadDownDone if button is NOT pressed (0)
+                  ; add instructions here to do something when button IS pressed (1)
+MoveDown:
+  LDA $0200       ; load sprite Y position
+  CLC             ; make sure carry flag is set
+  ADC #$01        ; A = A + 1
+  STA $0200       ; save sprite Y position
+
+ReadDownDone:        ; handling this button is done
+ReadLeft: 
+  LDA $4016       ; player 1 - Left
+  AND #%00000001  ; only look at bit 0
+  BEQ ReadLeftDone   ; branch to ReadLeftDone if button is NOT pressed (0)
+                  ; add instructions here to do something when button IS pressed (1)
+MoveLeft:
+  LDA $0203       ; load sprite X position
+  SEC             ; make sure carry flag is set
+  SBC #$01        ; A = A - 1
+  STA $0203       ; save sprite X position
+
+ReadLeftDone:        ; handling this button is done
+ReadRight: 
+  LDA $4016       ; player 1 - Right
+  AND #%00000001  ; only look at bit 0
+  BEQ ReadRightDone   ; branch to ReadRightDone if button is NOT pressed (0)
+                  ; add instructions here to do something when button IS pressed (1)
+MoveRight:           
+  LDA $0203       ; load sprite X position
+  CLC             ; make sure carry flag is set
+  ADC #$01        ; A = A + 1
+  STA $0203       ; save sprite X position
+
+ReadRightDone:        ; handling this button is done
   rts
 
 CheckWin:
@@ -368,13 +509,13 @@ DrawBody:
 
 DrawSelector:
 
-  lda #130
+  lda #130  ; posicao y
   sta $2004
-  lda #0086
+  lda #0086 ; mapa do sprite
   sta $2004
-  lda #00
-  sta $2004
-  lda #80
+  lda #00   
+  sta $2004 
+  lda #80   ; posicao x
   sta $2004
 
   rts
@@ -882,6 +1023,10 @@ palette:
   .db $0F,$29,$00,$20,$0F,$02,$38,$3C,$0F,$1C,$15,$14,$0F,$02,$38,$3C
   ;   Whi,LGr,MGr,DGr <-- Sprites color mapping
   ;   BG
+
+sprites:
+  ;vert tile attr horiz
+  .db #130, #86, #00, #80   ;seletor
 ;----------------------------------------------------------------
 ; interrupt vectors
 ;----------------------------------------------------------------
