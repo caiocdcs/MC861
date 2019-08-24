@@ -44,6 +44,7 @@ MIRRORING = %0001 ;%0000 = horizontal, %0001 = vertical, %1000 = four-screen
 
 Reset:
   jsr LoadPalettes
+  jsr LoadSprites
   jsr ConfigurePPU
   jsr WaitBlank
   jsr EnableSound
@@ -125,13 +126,15 @@ LoadPalettes:
   sta $2006    ; write the high byte of $3F00 address
   lda #$00
   sta $2006    ; write the low byte of $3F00 address
-  ldx #$00 
+  ldx #$00
 LoadPallete:
   lda palette, x
   sta $2007
   inx
   cpx #$20
   bne LoadPallete
+
+  rts
 
 LoadSprites:
   LDX #$00              ; start at 0
@@ -218,7 +221,7 @@ MakeSound:
 
 
 ;;;;;;;;;;;;;;:::: 
-:: Controllers  ::  
+;: Controllers  ::  
 
 LatchController:
   LDA #$01
