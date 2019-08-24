@@ -40,25 +40,6 @@ MIRRORING = %0001 ;%0000 = horizontal, %0001 = vertical, %1000 = four-screen
 ; program bank(s)
 ;----------------------------------------------------------------
 
-  .base 0  ; code bank
-  .org $0000 ; variable ORG location $0000
-
-  ; normally variables defined here
-
-  ; .org $0300 ; OAM Copy location $0300 / TODO: correct
-
-  ; Sprite1_Y: .db 0 ; sprite #1’s Y value
-  ; Sprite1_T: .db 0 ; sprite #1’s Tile Number
-  ; Sprite1_S: .db 0 ; sprite #1’s special byte
-  ; Sprite1_X: .db 0 ; sprite #1’s X value
-  ; Sprite2_Y: .db 0 ; same thing, same order for sprite #2
-  ; Sprite2_T: .db 0 ; note that I numbered 1 2 … 
-  ; Sprite2_S: .db 0 ; some people may actually prefer starting 
-  ; Sprite2_X: .db 0 ; the count at 0, but it doesn’t really matter. 
-  ; ; this would just go on and on for however many sprites you have
-
-  ; .org $8000 ; code ORG location $8000
-
   .base $10000-(PRG_COUNT*$4000)
 
 Reset:
@@ -216,7 +197,7 @@ DrawScreen:
   jsr DrawRightArm
   jsr DrawLeftLeg
   jsr DrawRightLeg
-  ; jsr DrawDeadHead
+  jsr DrawDeadHead
   ; TODO: Optmize sprites since there is a limit
 
   rts
@@ -399,22 +380,6 @@ DrawSelector:
   rts
 
 DrawAlphabet:
-
-; TODO: Loop through 4 rows to optimize code
-; LoopRow1:
-;   ldx #07
-
-;   lda #120
-;   sta $2004
-;   lda #0032
-;   sta $2004
-;   lda #00
-;   sta $2004
-;   lda (#80, X)
-;   sta $2004
-
-;   dex
-;   bne LoopRow1
 
   ; letter A (base)
   lda #128  ; decimal value of y
