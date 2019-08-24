@@ -33,13 +33,12 @@ MIRRORING = %0001 ;%0000 = horizontal, %0001 = vertical, %1000 = four-screen
 ;----------------------------------------------------------------
 
 RESET:
-
   jsr LoadPalettes
   jsr LoadSprites
   jsr ConfigurePPU
   jsr WaitBlank
   jsr EnableSound
-  ; jsr Initialize
+  jsr Initialize
   jsr Loop
 
 ;----------------------------------------------------------------
@@ -119,6 +118,8 @@ Loop:
   jsr CheckWin
   jsr LatchController
   jmp Loop
+
+; TODO: (Seiji) Caiao, estou usando o $0200 como base para carregar os sprites, rola mudar a logica para $0400 em diante?
 
 ; the size of the word in address $0200
 ; $0201 will be the current letter choosed, to check in the word
@@ -225,11 +226,9 @@ NMI:
 ;----------------------------------------------------------------
 
 DrawScreen:
-  lda #$00  ; load $00 to A
-  sta $2003 ; store first part in 2003
-
-  lda #$02
-  sta $4014       ; set the high byte (02) of the RAM address, start the transfer
+  lda #$00    ; load $00 to A
+  sta $2003   ; store first part in 2003
+  sta $2003   ; store second part in 2003
   jsr SetUpControllers
 
   rts
@@ -238,7 +237,11 @@ DrawScreen:
 ; CONTROLLERS
 ;----------------------------------------------------------------
 
+; TODO: (Seiji) Dessa, tenta ver como travar pro controle não sair do alfabeto, nao linkei tbm o botão A para selecionar a letra
+
 SetUpControllers:
+  lda #$02
+  sta $4014   ; set the high byte (02) of the RAM address, start the transfer
 
 LatchController:
   LDA #$01
@@ -290,7 +293,7 @@ ReadUp:
 MoveUp:
   LDA $0200           ; load sprite Y position
   SEC                 ; make sure carry flag is set
-  SBC #$01            ; A = A - 1
+  SBC #$10            ; A = A - 16
   STA $0200           ; save sprite Y position
 ReadUpDone:           ; handling this button is done
 
@@ -302,7 +305,7 @@ ReadDown:
 MoveDown:
   LDA $0200           ; load sprite Y position
   CLC                 ; make sure carry flag is set
-  ADC #$01            ; A = A + 1
+  ADC #$10            ; A = A + 16
   STA $0200           ; save sprite Y position
 ReadDownDone:         ; handling this button is done
 
@@ -314,7 +317,7 @@ ReadLeft:
 MoveLeft:
   LDA $0203           ; load sprite X position
   SEC                 ; make sure carry flag is set
-  SBC #$01            ; A = A - 1
+  SBC #$10            ; A = A - 16
   STA $0203           ; save sprite X position
 ReadLeftDone:         ; handling this button is done
 
@@ -326,16 +329,18 @@ ReadRight:
 MoveRight:           
   LDA $0203           ; load sprite X position
   CLC                 ; make sure carry flag is set
-  ADC #$01            ; A = A + 1
+  ADC #$10            ; A = A + 16
   STA $0203           ; save sprite X position
 ReadRightDone:        ; handling this button is done
+  ; TODO: (Seiji) logica/timeout para mover mais devagar
   rts
 
 ;----------------------------------------------------------------
 ; DRAWING FUNCTIONS
 ;----------------------------------------------------------------
 
-; TODO: Base memory is $0204 - letter A, iterates each 4 then
+; TODO: (Seiji) Metodo para trocar o sprite da letra por um cinza, poderia tbm trocar a cor ao invés do sprite.
+; Base memory is $0204 - letter A, iterates each 4 then
 ; disableLetter:           
 ;   lda $0205           ; load sprite tile
 ;   clc                 ; make sure carry flag is set
@@ -404,10 +409,12 @@ IRQ:
 
   .org $E000
 palette:
+  ; Background Colors
   .db $0F,$31,$32,$33,$0F,$35,$36,$37,$0F,$39,$3A,$3B,$0F,$3D,$3E,$0F
+
+  ; Sprite Colors
   .db $0F,$29,$00,$20,$0F,$02,$38,$3C,$0F,$1C,$15,$14,$0F,$02,$38,$3C
   ;   Whi,LGr,MGr,DGr <-- Sprites color mapping
-  ;   BG
 
 ;----------------------------------------------------------------
 ; SPRITES
