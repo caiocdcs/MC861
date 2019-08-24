@@ -10,21 +10,7 @@ MIRRORING = %0001 ;%0000 = horizontal, %0001 = vertical, %1000 = four-screen
 ;----------------------------------------------------------------
 
   .enum $0000
-
-  ;NOTE: declare variables using the DSB and DSW directives, like this:
-
-  ;MyVariable0 .dsb 1
-  ;MyVariable1 .dsb 3
-
   .ende
-
-  ;NOTE: you can also split the variable declarations into individual pages, like this:
-
-  ;.enum $0100
-  ;.ende
-
-  ;.enum $0200
-  ;.ende
 
 ;----------------------------------------------------------------
 ; HEADER
@@ -109,11 +95,10 @@ LoadSprites:
   LDX #$00              ; start at 0
 LoadSprite:
   LDA sprites, x        ; load data from address (sprites +  x)
-  STA $0200, x          ; store into RAM address ($0300 + x)
+  STA $0200, x          ; store into RAM address ($0200 + x)
   INX                   ; X = X + 1
   CPX #$08              ; Compare X to hex $08, decimal 8
   BNE LoadSprite        ; Branch to LoadSprite if compare was Not Equal to zero
-                        ; if compare was equal to 32, keep going down
 
   LDA #%10000000   ; enable NMI, sprites from Pattern Table 1
   STA $2000
@@ -278,87 +263,90 @@ LatchController:
   LDA #$01
   STA $4016
   LDA #$00
-  STA $4016       ; tell both the controllers to latch buttons
+  STA $4016
 
+; Pressed A
 ReadA: 
-  LDA $4016       ; player 1 - A
-  AND #%00000001  ; only look at bit 0
-  BEQ ReadADone   ; branch to ReadADone if button is NOT pressed (0)
-                  ; add instructions here to do something when button IS pressed (1)
-ReadADone:        ; handling this button is done
+  LDA $4016           ; player 1 - A
+  AND #%00000001      ; only look at bit 0
+  BEQ ReadADone       ; branch to ReadADone if button is NOT pressed (0)
+                      ; add instructions here to do something when button IS pressed (1)
+ReadADone:            ; handling this button is done
   
+; Pressed B
 ReadB: 
-  LDA $4016       ; player 1 - B
-  AND #%00000001  ; only look at bit 0
-  BEQ ReadBDone   ; branch to ReadBDone if button is NOT pressed (0)
-                  ; add instructions here to do something when button IS pressed (1)
-ReadBDone:        ; handling this button is done
+  LDA $4016           ; player 1 - B
+  AND #%00000001      ; only look at bit 0
+  BEQ ReadBDone       ; branch to ReadBDone if button is NOT pressed (0)
+                      ; add instructions here to do something when button IS pressed (1)
+ReadBDone:            ; handling this button is done
 
+; Pressed Select
 ReadSelect: 
-  LDA $4016       ; player 1 - Select
-  AND #%00000001  ; only look at bit 0
-  BEQ ReadSelectDone   ; branch to ReadBDone if button is NOT pressed (0)
-                  ; add instructions here to do something when button IS pressed (1)
-ReadSelectDone:        ; handling this button is done
+  LDA $4016           ; player 1 - Select
+  AND #%00000001      ; only look at bit 0
+  BEQ ReadSelectDone  ; branch to ReadBDone if button is NOT pressed (0)
+                      ; add instructions here to do something when button IS pressed (1)
+ReadSelectDone:       ; handling this button is done
 
+; Pressed Start
 ReadStart: 
-  LDA $4016       ; player 1 - Select
-  AND #%00000001  ; only look at bit 0
+  LDA $4016           ; player 1 - Select
+  AND #%00000001      ; only look at bit 0
   BEQ ReadStartDone   ; branch to ReadBDone if button is NOT pressed (0)
-                  ; add instructions here to do something when button IS pressed (1)
-  LDA $0203       ; load sprite X position
-  SEC             ; make sure carry flag is set
-  SBC #$01        ; A = A - 1
-  STA $0203       ; save sprite X position
+                      ; add instructions here to do something when button IS pressed (1)
+  LDA $0203           ; load sprite X position
+  SEC                 ; make sure carry flag is set
+  SBC #$01            ; A = A - 1
+  STA $0203           ; save sprite X position
 ReadStartDone:        ; handling this button is done
 
+; Pressed Up
 ReadUp: 
-  LDA $4016       ; player 1 - Up
-  AND #%00000001  ; only look at bit 0
-  BEQ ReadUpDone   ; branch to ReadUpDone if button is NOT pressed (0)
-                  ; add instructions here to do something when button IS pressed (1)
+  LDA $4016           ; player 1 - Up
+  AND #%00000001      ; only look at bit 0
+  BEQ ReadUpDone      ; branch to ReadUpDone if button is NOT pressed (0)
 MoveUp:
-  LDA $0200       ; load sprite Y position
-  SEC             ; make sure carry flag is set
-  SBC #$01        ; A = A - 1
-  STA $0200       ; save sprite Y position
+  LDA $0200           ; load sprite Y position
+  SEC                 ; make sure carry flag is set
+  SBC #$01            ; A = A - 1
+  STA $0200           ; save sprite Y position
+ReadUpDone:           ; handling this button is done
 
-ReadUpDone:        ; handling this button is done
+; Pressed Down
 ReadDown: 
-  LDA $4016       ; player 1 - Down
-  AND #%00000001  ; only look at bit 0
-  BEQ ReadDownDone   ; branch to ReadDownDone if button is NOT pressed (0)
-                  ; add instructions here to do something when button IS pressed (1)
+  LDA $4016           ; player 1 - Down
+  AND #%00000001      ; only look at bit 0
+  BEQ ReadDownDone    ; branch to ReadDownDone if button is NOT pressed (0)
 MoveDown:
-  LDA $0200       ; load sprite Y position
-  CLC             ; make sure carry flag is set
-  ADC #$01        ; A = A + 1
-  STA $0200       ; save sprite Y position
+  LDA $0200           ; load sprite Y position
+  CLC                 ; make sure carry flag is set
+  ADC #$01            ; A = A + 1
+  STA $0200           ; save sprite Y position
+ReadDownDone:         ; handling this button is done
 
-ReadDownDone:        ; handling this button is done
+; Pressed Left
 ReadLeft: 
-  LDA $4016       ; player 1 - Left
-  AND #%00000001  ; only look at bit 0
-  BEQ ReadLeftDone   ; branch to ReadLeftDone if button is NOT pressed (0)
-                  ; add instructions here to do something when button IS pressed (1)
+  LDA $4016           ; player 1 - Left
+  AND #%00000001      ; only look at bit 0
+  BEQ ReadLeftDone    ; branch to ReadLeftDone if button is NOT pressed (0)
 MoveLeft:
-  LDA $0203       ; load sprite X position
-  SEC             ; make sure carry flag is set
-  SBC #$01        ; A = A - 1
-  STA $0203       ; save sprite X position
+  LDA $0203           ; load sprite X position
+  SEC                 ; make sure carry flag is set
+  SBC #$01            ; A = A - 1
+  STA $0203           ; save sprite X position
+ReadLeftDone:         ; handling this button is done
 
-ReadLeftDone:        ; handling this button is done
+; Pressed Right
 ReadRight: 
-  LDA $4016       ; player 1 - Right
-  AND #%00000001  ; only look at bit 0
+  LDA $4016           ; player 1 - Right
+  AND #%00000001      ; only look at bit 0
   BEQ ReadRightDone   ; branch to ReadRightDone if button is NOT pressed (0)
-                  ; add instructions here to do something when button IS pressed (1)
 MoveRight:           
-  LDA $0203       ; load sprite X position
-  CLC             ; make sure carry flag is set
-  ADC #$01        ; A = A + 1
-  STA $0203       ; save sprite X position
-
+  LDA $0203           ; load sprite X position
+  CLC                 ; make sure carry flag is set
+  ADC #$01            ; A = A + 1
+  STA $0203           ; save sprite X position
 ReadRightDone:        ; handling this button is done
   rts
 
