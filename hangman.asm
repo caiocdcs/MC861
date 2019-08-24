@@ -92,26 +92,26 @@ LoadPallete:
 ;----------------------------------------------------------------
 
 LoadSprites:
-  LDX #$00              ; start at 0
+  ldx #$00              ; start at 0
 LoadSprite:
-  LDA sprites, x        ; load data from address (sprites +  x)
-  STA $0200, x          ; store into RAM address ($0200 + x)
-  INX                   ; X = X + 1
-  CPX #$08              ; Compare X to hex $08, decimal 8
-  BNE LoadSprite        ; Branch to LoadSprite if compare was Not Equal to zero
+  lda sprites, x        ; load data from address (sprites +  x)
+  sta $0200, x          ; store into RAM address ($0200 + x)
+  inx                   ; X = X + 1
+  cpx #$01b0            ; Compare X to hex $08, decimal 8 (each 4 is a sprite)
+  bne LoadSprite        ; Branch to LoadSprite if compare was Not Equal to zero
 
-  LDA #%10000000   ; enable NMI, sprites from Pattern Table 1
-  STA $2000
+  lda #%10000000   ; enable NMI, sprites from Pattern Table 1
+  sta $2000
 
-  LDA #%00010000   ; enable sprites
-  STA $2001
+  lda #%00010000   ; enable sprites
+  sta $2001
 
 ;----------------------------------------------------------------
 ; TODO: HOW TO DISPLAY SPRITES (WEIRD FOREVER BELOW)
 ;----------------------------------------------------------------
 
 Forever:
-  JMP Forever     ;jump back to Forever, infinite loop
+  jmp Forever     ;jump back to Forever, infinite loop
 
   ; rts ; TODO currently does nothing
 
@@ -241,7 +241,6 @@ DrawScreen:
   jsr SetUpControllers
 
   ; jsr DrawHanger
-  ; jsr DrawAlphabet
   ; jsr DrawHead
   ; jsr DrawBody
   ; jsr DrawLeftArm
@@ -514,248 +513,6 @@ DrawBody:
   lda #00
   sta $2004
   lda #56
-  sta $2004
-
-  rts
-
-DrawAlphabet:
-
-  ; letter A (base)
-  lda #128  ; decimal value of y
-  sta $2004 ; Y value
-  lda #0032 ; number of the tile of the sprite
-  sta $2004 ; store tile number
-  lda #00   ; store junk
-  sta $2004 ; store number again (no special junk)
-  lda #80   ; decimal value of x
-  sta $2004 ; X value
-
-  lda #128
-  sta $2004
-  lda #0034
-  sta $2004
-  lda #00
-  sta $2004
-  lda #96
-  sta $2004
-
-  lda #128
-  sta $2004
-  lda #0036
-  sta $2004
-  lda #00
-  sta $2004
-  lda #112
-  sta $2004
-
-  lda #128
-  sta $2004
-  lda #0038
-  sta $2004
-  lda #00
-  sta $2004
-  lda #128
-  sta $2004
-
-  lda #128
-  sta $2004
-  lda #0040
-  sta $2004
-  lda #00
-  sta $2004
-  lda #144
-  sta $2004
-
-  lda #128
-  sta $2004
-  lda #0042
-  sta $2004
-  lda #00
-  sta $2004
-  lda #160
-  sta $2004
-
-  lda #128
-  sta $2004
-  lda #0044
-  sta $2004
-  lda #00
-  sta $2004
-  lda #176
-  sta $2004
-
-  ; make loop 2nd row
-  lda #144
-  sta $2004
-  lda #0046
-  sta $2004
-  lda #00
-  sta $2004
-  lda #80
-  sta $2004
-
-  lda #144
-  sta $2004
-  lda #0048
-  sta $2004
-  lda #00
-  sta $2004
-  lda #96
-  sta $2004
-
-  lda #144
-  sta $2004
-  lda #0050
-  sta $2004
-  lda #00
-  sta $2004
-  lda #112
-  sta $2004
-
-  lda #144
-  sta $2004
-  lda #0052
-  sta $2004
-  lda #00
-  sta $2004
-  lda #128
-  sta $2004
-
-  lda #144
-  sta $2004
-  lda #0054
-  sta $2004
-  lda #00
-  sta $2004
-  lda #144
-  sta $2004
-
-  lda #144
-  sta $2004
-  lda #0056
-  sta $2004
-  lda #00
-  sta $2004
-  lda #160
-  sta $2004
-
-  lda #144
-  sta $2004
-  lda #0058
-  sta $2004
-  lda #00
-  sta $2004
-  lda #176
-  sta $2004
-
-  ; make loop 3rd row
-  lda #160
-  sta $2004
-  lda #0060
-  sta $2004
-  lda #00
-  sta $2004
-  lda #80
-  sta $2004
-
-  lda #160
-  sta $2004
-  lda #0062
-  sta $2004
-  lda #00
-  sta $2004
-  lda #96
-  sta $2004
-
-  lda #160
-  sta $2004
-  lda #0064
-  sta $2004
-  lda #00
-  sta $2004
-  lda #112
-  sta $2004
-
-  lda #160
-  sta $2004
-  lda #0066
-  sta $2004
-  lda #00
-  sta $2004
-  lda #128
-  sta $2004
-
-  lda #160
-  sta $2004
-  lda #0068
-  sta $2004
-  lda #00
-  sta $2004
-  lda #144
-  sta $2004
-
-  lda #160
-  sta $2004
-  lda #0070
-  sta $2004
-  lda #00
-  sta $2004
-  lda #160
-  sta $2004
-
-  lda #160
-  sta $2004
-  lda #0072
-  sta $2004
-  lda #00
-  sta $2004
-  lda #176
-  sta $2004
-
-  ; make loop 4th row
-  lda #176
-  sta $2004
-  lda #0074
-  sta $2004
-  lda #00
-  sta $2004
-  lda #80
-  sta $2004
-
-  lda #176
-  sta $2004
-  lda #0076
-  sta $2004
-  lda #00
-  sta $2004
-  lda #96
-  sta $2004
-
-  lda #176
-  sta $2004
-  lda #0078
-  sta $2004
-  lda #00
-  sta $2004
-  lda #112
-  sta $2004
-
-  lda #176
-  sta $2004
-  lda #0080
-  sta $2004
-  lda #00
-  sta $2004
-  lda #128
-  sta $2004
-
-  lda #176
-  sta $2004
-  lda #0082
-  sta $2004
-  lda #00
-  sta $2004
-  lda #144
   sta $2004
 
   rts
@@ -1044,6 +801,34 @@ palette:
 sprites:
   ;vert tile attr horiz
   .db #130, #86, #00, #80 ; Y, tile, junk, X
+
+  ; Alphabet
+  .db #128, #32, #00, #80   ; A
+  .db #128, #34, #00, #96   ; B
+  .db #128, #36, #00, #112  ; C
+  .db #128, #38, #00, #128  ; D
+  .db #128, #40, #00, #144  ; E
+  .db #128, #42, #00, #160  ; F
+  .db #128, #44, #00, #176  ; G
+  .db #144, #46, #00, #80   ; H
+  .db #144, #48, #00, #96   ; I
+  .db #144, #50, #00, #112  ; J
+  .db #144, #52, #00, #128  ; K
+  .db #144, #54, #00, #144  ; L
+  .db #144, #56, #00, #160  ; M
+  .db #144, #58, #00, #176  ; N
+  .db #160, #60, #00, #80   ; O
+  .db #160, #62, #00, #96   ; P
+  .db #160, #64, #00, #112  ; Q
+  .db #160, #66, #00, #128  ; R
+  .db #160, #68, #00, #144  ; S
+  .db #160, #70, #00, #160  ; T
+  .db #160, #72, #00, #176  ; U
+  .db #176, #74, #00, #80   ; V
+  .db #176, #76, #00, #96   ; W
+  .db #176, #78, #00, #112  ; X
+  .db #176, #80, #00, #128  ; Y
+  .db #176, #82, #00, #144  ; Z
 
 ;----------------------------------------------------------------
 ; INTERRUPT VECTORS
