@@ -1,33 +1,19 @@
 ;----------------------------------------------------------------
-; constants
+; CONSTANTS
 ;----------------------------------------------------------------
 
 PRG_COUNT = 1 ;1 = 16KB, 2 = 32KB
 MIRRORING = %0001 ;%0000 = horizontal, %0001 = vertical, %1000 = four-screen
 
 ;----------------------------------------------------------------
-; variables
+; VARIABLES
 ;----------------------------------------------------------------
 
   .enum $0000
-
-  ;NOTE: declare variables using the DSB and DSW directives, like this:
-
-  ;MyVariable0 .dsb 1
-  ;MyVariable1 .dsb 3
-
   .ende
 
-  ;NOTE: you can also split the variable declarations into individual pages, like this:
-
-  ;.enum $0100
-  ;.ende
-
-  ;.enum $0200
-  ;.ende
-
 ;----------------------------------------------------------------
-; iNES header
+; HEADER
 ;----------------------------------------------------------------
 
   .db "NES", $1a ;identification of the iNES header
@@ -37,28 +23,101 @@ MIRRORING = %0001 ;%0000 = horizontal, %0001 = vertical, %1000 = four-screen
   .dsb 9, $00 ;clear the remaining bytes
 
 ;----------------------------------------------------------------
-; program bank(s)
+; PROGRAM BANK (BASE)
 ;----------------------------------------------------------------
 
   .base $10000-(PRG_COUNT*$4000)
 
-Reset:
+;----------------------------------------------------------------
+; RESET
+;----------------------------------------------------------------
+
+RESET:
+
   jsr LoadPalettes
+  jsr LoadSprites
   jsr ConfigurePPU
   jsr WaitBlank
   jsr EnableSound
-  jsr Initialize
+  ; jsr Initialize
   jsr Loop
+
+;----------------------------------------------------------------
+; ENABLE SOUND
+;----------------------------------------------------------------
+
+EnableSound:
+  lda #%00000111  ;enable Sq1, Sq2 and Tri channels
+  sta $4015
+
+;----------------------------------------------------------------
+; PPU CONFIGURATION
+;----------------------------------------------------------------
+
+ConfigurePPU:
+  lda #%10000000   ; enable NMI, sprites from Pattern Table 0
+  sta $2000
+
+  lda #%00010000   ; enable sprites
+  sta $2001
+  rts
 
 ; Makes safe update of screen
 WaitBlank:
   lda $2002
   bpl WaitBlank ; keet checking until bit is 7 (VBlank)
 
+;----------------------------------------------------------------
+; LOAD PALETTES
+;----------------------------------------------------------------
+
+LoadPalettes:
+  lda $2002    ; read PPU status to reset the high/low latch
+  lda #$3F
+  sta $2006    ; write the high byte of $3F00 address
+  lda #$00
+  sta $2006    ; write the low byte of $3F00 address
+  ldx #$00
+LoadPallete:
+  lda palette, x
+  sta $2007
+  inx
+  cpx #$20
+  bne LoadPallete
+
+  rts
+
+;----------------------------------------------------------------
+; LOAD SPRITES
+;----------------------------------------------------------------
+
+LoadSprites:
+  ldx #$00              ; start at 0
+LoadSprite:
+  lda sprites, x        ; load data from address (sprites +  x)
+  sta $0200, x          ; store into RAM address ($0200 + x)
+  inx                   ; X = X + 1
+  cpx #$01b0            ; Compare X to hex $08, decimal 8 (each 4 is a sprite)
+  bne LoadSprite        ; Branch to LoadSprite if compare was Not Equal to zero
+
+  lda #%10000000   ; enable NMI, sprites from Pattern Table 1
+  sta $2000
+
+  lda #%00010000   ; enable sprites
+  sta $2001
+
+Forever:
+  jmp Forever     ;jump back to Forever, infinite loop
+
+;----------------------------------------------------------------
+; GAME LOGIC
+;----------------------------------------------------------------
+
 ; main loop
 Loop:
   jsr CheckCurrentLetter
   jsr CheckWin
+  jsr LatchController
   jmp Loop
 
 ; the size of the word in address $0200
@@ -82,33 +141,6 @@ Initialize:
   sta $0208
   lda #$41 ; A
   sta $0209
-  rts
-
-EnableSound:
-  lda #%00000111  ;enable Sq1, Sq2 and Tri channels
-  sta $4015
-
-ConfigurePPU:
-  lda #%10000000   ; enable NMI, sprites from Pattern Table 0
-  sta $2000
-
-  lda #%00010000   ; enable sprites
-  sta $2001
-  rts
-
-LoadPalettes:
-  lda $2002    ; read PPU status to reset the high/low latch
-  lda #$3F
-  sta $2006    ; write the high byte of $3F00 address
-  lda #$00
-  sta $2006    ; write the low byte of $3F00 address
-  ldx #$00 
-LoadPallete:
-  lda palette, x
-  sta $2007
-  inx
-  cpx #$20
-  bne LoadPallete
   rts
 
 CheckCurrentLetter:
@@ -138,6 +170,16 @@ CheckCurrentLetterEnd:
   sta $0203
   rts
 
+CheckWin:
+
+Win:
+
+GameOver:
+  brk
+
+;----------------------------------------------------------------
+; SOUND
+;----------------------------------------------------------------
 
 MakeSound:
   ;Square 1
@@ -169,667 +211,140 @@ MakeSound:
   ;sta $4015
   rts
 
-CheckWin:
-
-Win:
-
-GameOver:
-  brk
+;----------------------------------------------------------------
+; NMI (Non-Maskable Interrupt)
+;----------------------------------------------------------------
 
 NMI:
-  ;NOTE: NMI code goes here
   jsr DrawScreen
   jsr DrawWord
   jmp EndNMI
 
+;----------------------------------------------------------------
+; MAIN SCREEN FUNCTION
+;----------------------------------------------------------------
+
 DrawScreen:
   lda #$00  ; load $00 to A
   sta $2003 ; store first part in 2003
-  lda #$00  ; load $00 to A (not really necessary, just for learning purposes)
-  sta $2003 ; store second part in 2003
 
-  jsr DrawHanger
-  jsr DrawAlphabet
-  jsr DrawSelector
-  jsr DrawHead
-  jsr DrawBody
-  jsr DrawLeftArm
-  jsr DrawRightArm
-  jsr DrawLeftLeg
-  jsr DrawRightLeg
-  jsr DrawDeadHead
-  ; TODO: Optmize sprites since there is a limit
+  lda #$02
+  sta $4014       ; set the high byte (02) of the RAM address, start the transfer
+  jsr SetUpControllers
 
   rts
 
-DrawLeftLeg:
+;----------------------------------------------------------------
+; CONTROLLERS
+;----------------------------------------------------------------
 
-  lda #72
-  sta $2004
-  lda #0024
-  sta $2004
-  lda #00
-  sta $2004
-  lda #48
-  sta $2004
+SetUpControllers:
 
-  lda #80
-  sta $2004
-  lda #0026
-  sta $2004
-  lda #00
-  sta $2004
-  lda #48
-  sta $2004
+LatchController:
+  LDA #$01
+  STA $4016
+  LDA #$00
+  STA $4016
 
+; Pressed A
+ReadA: 
+  LDA $4016           ; player 1 - A
+  AND #%00000001      ; only look at bit 0
+  BEQ ReadADone       ; branch to ReadADone if button is NOT pressed (0)
+                      ; add instructions here to do something when button IS pressed (1)
+ReadADone:            ; handling this button is done
+  
+; Pressed B
+ReadB: 
+  LDA $4016           ; player 1 - B
+  AND #%00000001      ; only look at bit 0
+  BEQ ReadBDone       ; branch to ReadBDone if button is NOT pressed (0)
+                      ; add instructions here to do something when button IS pressed (1)
+ReadBDone:            ; handling this button is done
+
+; Pressed Select
+ReadSelect: 
+  LDA $4016           ; player 1 - Select
+  AND #%00000001      ; only look at bit 0
+  BEQ ReadSelectDone  ; branch to ReadBDone if button is NOT pressed (0)
+                      ; add instructions here to do something when button IS pressed (1)
+ReadSelectDone:       ; handling this button is done
+
+; Pressed Start
+ReadStart: 
+  LDA $4016           ; player 1 - Select
+  AND #%00000001      ; only look at bit 0
+  BEQ ReadStartDone   ; branch to ReadBDone if button is NOT pressed (0)
+                      ; add instructions here to do something when button IS pressed (1)
+  LDA $0203           ; load sprite X position
+  SEC                 ; make sure carry flag is set
+  SBC #$01            ; A = A - 1
+  STA $0203           ; save sprite X position
+ReadStartDone:        ; handling this button is done
+
+; Pressed Up
+ReadUp: 
+  LDA $4016           ; player 1 - Up
+  AND #%00000001      ; only look at bit 0
+  BEQ ReadUpDone      ; branch to ReadUpDone if button is NOT pressed (0)
+MoveUp:
+  LDA $0200           ; load sprite Y position
+  SEC                 ; make sure carry flag is set
+  SBC #$01            ; A = A - 1
+  STA $0200           ; save sprite Y position
+ReadUpDone:           ; handling this button is done
+
+; Pressed Down
+ReadDown: 
+  LDA $4016           ; player 1 - Down
+  AND #%00000001      ; only look at bit 0
+  BEQ ReadDownDone    ; branch to ReadDownDone if button is NOT pressed (0)
+MoveDown:
+  LDA $0200           ; load sprite Y position
+  CLC                 ; make sure carry flag is set
+  ADC #$01            ; A = A + 1
+  STA $0200           ; save sprite Y position
+ReadDownDone:         ; handling this button is done
+
+; Pressed Left
+ReadLeft: 
+  LDA $4016           ; player 1 - Left
+  AND #%00000001      ; only look at bit 0
+  BEQ ReadLeftDone    ; branch to ReadLeftDone if button is NOT pressed (0)
+MoveLeft:
+  LDA $0203           ; load sprite X position
+  SEC                 ; make sure carry flag is set
+  SBC #$01            ; A = A - 1
+  STA $0203           ; save sprite X position
+ReadLeftDone:         ; handling this button is done
+
+; Pressed Right
+ReadRight: 
+  LDA $4016           ; player 1 - Right
+  AND #%00000001      ; only look at bit 0
+  BEQ ReadRightDone   ; branch to ReadRightDone if button is NOT pressed (0)
+MoveRight:           
+  LDA $0203           ; load sprite X position
+  CLC                 ; make sure carry flag is set
+  ADC #$01            ; A = A + 1
+  STA $0203           ; save sprite X position
+ReadRightDone:        ; handling this button is done
   rts
 
-DrawRightLeg:
-
-  lda #80
-  sta $2004
-  lda #0027
-  sta $2004
-  lda #00
-  sta $2004
-  lda #56
-  sta $2004
-
-  lda #72
-  sta $2004
-  lda #0025
-  sta $2004
-  lda #00
-  sta $2004
-  lda #56
-  sta $2004
-
-  rts
-
-DrawLeftArm:
-
-  lda #48
-  sta $2004
-  lda #0018
-  sta $2004
-  lda #00
-  sta $2004
-  lda #48
-  sta $2004
-
-  lda #56
-  sta $2004
-  lda #0021
-  sta $2004
-  lda #00
-  sta $2004
-  lda #40
-  sta $2004
-
-  lda #56
-  sta $2004
-  lda #0020
-  sta $2004
-  lda #00
-  sta $2004
-  lda #48
-  sta $2004
-
-  rts
-
-DrawRightArm:
-
-  lda #48
-  sta $2004
-  lda #0019
-  sta $2004
-  lda #00
-  sta $2004
-  lda #56
-  sta $2004
-
-  lda #56
-  sta $2004
-  lda #0022
-  sta $2004
-  lda #00
-  sta $2004
-  lda #56
-  sta $2004
-
-  lda #56
-  sta $2004
-  lda #0023
-  sta $2004
-  lda #00
-  sta $2004
-  lda #64
-  sta $2004
-
-  rts
-
-DrawBody:
-
-  lda #48
-  sta $2004
-  lda #0016
-  sta $2004
-  lda #00
-  sta $2004
-  lda #48
-  sta $2004
-
-  lda #48
-  sta $2004
-  lda #0017
-  sta $2004
-  lda #00
-  sta $2004
-  lda #56
-  sta $2004
-
-  lda #56
-  sta $2004
-  lda #0016
-  sta $2004
-  lda #00
-  sta $2004
-  lda #48
-  sta $2004
-
-  lda #56
-  sta $2004
-  lda #0017
-  sta $2004
-  lda #00
-  sta $2004
-  lda #56
-  sta $2004
-
-  lda #64
-  sta $2004
-  lda #0016
-  sta $2004
-  lda #00
-  sta $2004
-  lda #48
-  sta $2004
-
-  lda #64
-  sta $2004
-  lda #0017
-  sta $2004
-  lda #00
-  sta $2004
-  lda #56
-  sta $2004
-
-  rts
-
-DrawSelector:
-
-  lda #130
-  sta $2004
-  lda #0086
-  sta $2004
-  lda #00
-  sta $2004
-  lda #80
-  sta $2004
-
-  rts
-
-DrawAlphabet:
-
-  ; letter A (base)
-  lda #128  ; decimal value of y
-  sta $2004 ; Y value
-  lda #0032 ; number of the tile of the sprite
-  sta $2004 ; store tile number
-  lda #00   ; store junk
-  sta $2004 ; store number again (no special junk)
-  lda #80   ; decimal value of x
-  sta $2004 ; X value
-
-  lda #128
-  sta $2004
-  lda #0034
-  sta $2004
-  lda #00
-  sta $2004
-  lda #96
-  sta $2004
-
-  lda #128
-  sta $2004
-  lda #0036
-  sta $2004
-  lda #00
-  sta $2004
-  lda #112
-  sta $2004
-
-  lda #128
-  sta $2004
-  lda #0038
-  sta $2004
-  lda #00
-  sta $2004
-  lda #128
-  sta $2004
-
-  lda #128
-  sta $2004
-  lda #0040
-  sta $2004
-  lda #00
-  sta $2004
-  lda #144
-  sta $2004
-
-  lda #128
-  sta $2004
-  lda #0042
-  sta $2004
-  lda #00
-  sta $2004
-  lda #160
-  sta $2004
-
-  lda #128
-  sta $2004
-  lda #0044
-  sta $2004
-  lda #00
-  sta $2004
-  lda #176
-  sta $2004
-
-  ; make loop 2nd row
-  lda #144
-  sta $2004
-  lda #0046
-  sta $2004
-  lda #00
-  sta $2004
-  lda #80
-  sta $2004
-
-  lda #144
-  sta $2004
-  lda #0048
-  sta $2004
-  lda #00
-  sta $2004
-  lda #96
-  sta $2004
-
-  lda #144
-  sta $2004
-  lda #0050
-  sta $2004
-  lda #00
-  sta $2004
-  lda #112
-  sta $2004
-
-  lda #144
-  sta $2004
-  lda #0052
-  sta $2004
-  lda #00
-  sta $2004
-  lda #128
-  sta $2004
-
-  lda #144
-  sta $2004
-  lda #0054
-  sta $2004
-  lda #00
-  sta $2004
-  lda #144
-  sta $2004
-
-  lda #144
-  sta $2004
-  lda #0056
-  sta $2004
-  lda #00
-  sta $2004
-  lda #160
-  sta $2004
-
-  lda #144
-  sta $2004
-  lda #0058
-  sta $2004
-  lda #00
-  sta $2004
-  lda #176
-  sta $2004
-
-  ; make loop 3rd row
-  lda #160
-  sta $2004
-  lda #0060
-  sta $2004
-  lda #00
-  sta $2004
-  lda #80
-  sta $2004
-
-  lda #160
-  sta $2004
-  lda #0062
-  sta $2004
-  lda #00
-  sta $2004
-  lda #96
-  sta $2004
-
-  lda #160
-  sta $2004
-  lda #0064
-  sta $2004
-  lda #00
-  sta $2004
-  lda #112
-  sta $2004
-
-  lda #160
-  sta $2004
-  lda #0066
-  sta $2004
-  lda #00
-  sta $2004
-  lda #128
-  sta $2004
-
-  lda #160
-  sta $2004
-  lda #0068
-  sta $2004
-  lda #00
-  sta $2004
-  lda #144
-  sta $2004
-
-  lda #160
-  sta $2004
-  lda #0070
-  sta $2004
-  lda #00
-  sta $2004
-  lda #160
-  sta $2004
-
-  lda #160
-  sta $2004
-  lda #0072
-  sta $2004
-  lda #00
-  sta $2004
-  lda #176
-  sta $2004
-
-  ; make loop 4th row
-  lda #176
-  sta $2004
-  lda #0074
-  sta $2004
-  lda #00
-  sta $2004
-  lda #80
-  sta $2004
-
-  lda #176
-  sta $2004
-  lda #0076
-  sta $2004
-  lda #00
-  sta $2004
-  lda #96
-  sta $2004
-
-  lda #176
-  sta $2004
-  lda #0078
-  sta $2004
-  lda #00
-  sta $2004
-  lda #112
-  sta $2004
-
-  lda #176
-  sta $2004
-  lda #0080
-  sta $2004
-  lda #00
-  sta $2004
-  lda #128
-  sta $2004
-
-  lda #176
-  sta $2004
-  lda #0082
-  sta $2004
-  lda #00
-  sta $2004
-  lda #144
-  sta $2004
-
-  rts
-
-DrawHead:
-  lda #32   ; decimal value of y
-  sta $2004 ; Y value
-  lda #0008 ; number of the tile of the sprite
-  sta $2004 ; store tile number
-  lda #00   ; store junk
-  sta $2004 ; store number again (no special junk)
-  lda #48   ; decimal value of x
-  sta $2004 ; X value
-
-  lda #32
-  sta $2004
-  lda #0009
-  sta $2004
-  lda #00
-  sta $2004
-  lda #56
-  sta $2004
-
-  lda #40
-  sta $2004
-  lda #0010
-  sta $2004
-  lda #00
-  sta $2004
-  lda #48
-  sta $2004
-
-  lda #40
-  sta $2004
-  lda #0011
-  sta $2004
-  lda #00
-  sta $2004
-  lda #56
-  sta $2004
-
-  rts
-
-DrawDeadHead:
-  lda #32
-  sta $2004
-  lda #0012
-  sta $2004
-  lda #00
-  sta $2004
-  lda #48
-  sta $2004
-
-  lda #32
-  sta $2004
-  lda #0013
-  sta $2004
-  lda #00
-  sta $2004
-  lda #56
-  sta $2004
-
-  lda #40
-  sta $2004
-  lda #0014
-  sta $2004
-  lda #00
-  sta $2004
-  lda #48
-  sta $2004
-
-  lda #40
-  sta $2004
-  lda #0015
-  sta $2004
-  lda #00
-  sta $2004
-  lda #56
-  sta $2004
-
-  rts
-
-DrawHanger:
-
-  ; Hanger corner (will be the base value)
-  lda #24
-  sta $2004
-  lda #00
-  sta $2004
-  lda #00
-  sta $2004
-  lda #24
-  sta $2004
-
-  lda #24
-  sta $2004
-  lda #0001
-  sta $2004
-  lda #00
-  sta $2004
-  lda #32
-  sta $2004
-
-  lda #24
-  sta $2004
-  lda #0001
-  sta $2004
-  lda #00
-  sta $2004
-  lda #40
-  sta $2004
-
-  lda #24
-  sta $2004
-  lda #0003
-  sta $2004
-  lda #00
-  sta $2004
-  lda #48
-  sta $2004
-
-  lda #24
-  sta $2004
-  lda #0006
-  sta $2004
-  lda #00
-  sta $2004
-  lda #56
-  sta $2004
-
-  ; Vertical bar (make loop?)
-  lda #32
-  sta $2004
-  lda #0002
-  sta $2004
-  lda #00
-  sta $2004
-  lda #24
-  sta $2004
-
-  lda #40
-  sta $2004
-  lda #0002
-  sta $2004
-  lda #00
-  sta $2004
-  lda #24
-  sta $2004
-
-  lda #48
-  sta $2004
-  lda #0002
-  sta $2004
-  lda #00
-  sta $2004
-  lda #24
-  sta $2004
-
-  lda #56
-  sta $2004
-  lda #0002
-  sta $2004
-  lda #00
-  sta $2004
-  lda #24
-  sta $2004
-
-  lda #64
-  sta $2004
-  lda #0002
-  sta $2004
-  lda #00
-  sta $2004
-  lda #24
-  sta $2004
-
-  lda #72
-  sta $2004
-  lda #0002
-  sta $2004
-  lda #00
-  sta $2004
-  lda #24
-  sta $2004
-
-  lda #80
-  sta $2004
-  lda #0002
-  sta $2004
-  lda #00
-  sta $2004
-  lda #24
-  sta $2004
-
-  lda #88
-  sta $2004
-  lda #0002
-  sta $2004
-  lda #00
-  sta $2004
-  lda #24
-  sta $2004
-
-  lda #96
-  sta $2004
-  lda #0004
-  sta $2004
-  lda #00
-  sta $2004
-  lda #24
-  sta $2004
-
-  rts
+;----------------------------------------------------------------
+; DRAWING FUNCTIONS
+;----------------------------------------------------------------
+
+; TODO: Base memory is $0204 - letter A, iterates each 4 then
+; disableLetter:           
+;   lda $0205           ; load sprite tile
+;   clc                 ; make sure carry flag is set
+;   adc #$01            ; A = A + 1 (which is the disable tile for the letter)
+;   sta $0205           ; save sprite tile
+
+;----------------------------------------------------------------
+; DRAW WORD
+;----------------------------------------------------------------
 
 DrawWord:
   ldx #$00
@@ -869,12 +384,23 @@ DrawWordLoopIncX:
   bne DrawWordLoop
   rts
 
+;----------------------------------------------------------------
+; END NMI
+;----------------------------------------------------------------
+
 EndNMI:
-  RTI        ; return from interrupt
+  rti        ; return from interrupt
+
+;----------------------------------------------------------------
+; IRQ
+;----------------------------------------------------------------
 
 IRQ:
    ;NOTE: IRQ code goes here
-  rti
+
+;----------------------------------------------------------------
+; COLOR PALETTE
+;----------------------------------------------------------------
 
   .org $E000
 palette:
@@ -882,18 +408,58 @@ palette:
   .db $0F,$29,$00,$20,$0F,$02,$38,$3C,$0F,$1C,$15,$14,$0F,$02,$38,$3C
   ;   Whi,LGr,MGr,DGr <-- Sprites color mapping
   ;   BG
+
 ;----------------------------------------------------------------
-; interrupt vectors
+; SPRITES
+;
+; Using adresses ($0200 - $0307)
+;----------------------------------------------------------------
+
+sprites:
+  ;vert tile attr horiz
+  .db #130, #86, #00, #80 ; Y, tile, junk, X (Selector: $0200-$0203)
+
+  ; Alphabet
+  .db #128, #32, #00, #80   ; A ($0204-$0207)
+  .db #128, #34, #00, #96   ; B ($0208-$0211)
+  .db #128, #36, #00, #112  ; C ($0212-$0215)
+  .db #128, #38, #00, #128  ; D ($0216-$0219)
+  .db #128, #40, #00, #144  ; E ($0220-$0223)
+  .db #128, #42, #00, #160  ; F ($0224-$0227)
+  .db #128, #44, #00, #176  ; G ($0228-$0231)
+  .db #144, #46, #00, #80   ; H ($0232-$0235)
+  .db #144, #48, #00, #96   ; I ($0236-$0239)
+  .db #144, #50, #00, #112  ; J ($0240-$0243)
+  .db #144, #52, #00, #128  ; K ($0244-$0247)
+  .db #144, #54, #00, #144  ; L ($0248-$0251)
+  .db #144, #56, #00, #160  ; M ($0252-$0255)
+  .db #144, #58, #00, #176  ; N ($0256-$0259)
+  .db #160, #60, #00, #80   ; O ($0260-$0263)
+  .db #160, #62, #00, #96   ; P ($0264-$0267)
+  .db #160, #64, #00, #112  ; Q ($0268-$0271)
+  .db #160, #66, #00, #128  ; R ($0272-$0275)
+  .db #160, #68, #00, #144  ; S ($0276-$0279)
+  .db #160, #70, #00, #160  ; T ($0280-$0283)
+  .db #160, #72, #00, #176  ; U ($0284-$0287)
+  .db #176, #74, #00, #80   ; V ($0288-$0291)
+  .db #176, #76, #00, #96   ; W ($0292-$0295)
+  .db #176, #78, #00, #112  ; X ($0296-$0299)
+  .db #176, #80, #00, #128  ; Y ($0300-$0303)
+  .db #176, #82, #00, #144  ; Z ($0304-$0307)
+
+;----------------------------------------------------------------
+; INTERRUPT VECTORS
 ;----------------------------------------------------------------
 
   .org $fffa
 
   .dw NMI
-  .dw Reset
+  .dw RESET
   .dw IRQ
 
 ;----------------------------------------------------------------
 ; CHR-ROM bank
 ;----------------------------------------------------------------
+
   .base $0000
   .incbin "sprites.chr"
