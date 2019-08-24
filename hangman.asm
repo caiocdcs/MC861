@@ -32,7 +32,7 @@ MIRRORING = %0001 ;%0000 = horizontal, %0001 = vertical, %1000 = four-screen
 ; RESET
 ;----------------------------------------------------------------
 
-Reset:
+RESET:
 
   jsr LoadPalettes
   jsr LoadSprites
@@ -106,14 +106,8 @@ LoadSprite:
   lda #%00010000   ; enable sprites
   sta $2001
 
-;----------------------------------------------------------------
-; TODO: HOW TO DISPLAY SPRITES (WEIRD FOREVER BELOW)
-;----------------------------------------------------------------
-
 Forever:
   jmp Forever     ;jump back to Forever, infinite loop
-
-  ; rts ; TODO currently does nothing
 
 ;----------------------------------------------------------------
 ; GAME LOGIC
@@ -234,8 +228,8 @@ DrawScreen:
   lda #$00  ; load $00 to A
   sta $2003 ; store first part in 2003
 
-  LDA #$02
-  STA $4014       ; set the high byte (02) of the RAM address, start the transfer
+  lda #$02
+  sta $4014       ; set the high byte (02) of the RAM address, start the transfer
   jsr SetUpControllers
 
   rts
@@ -348,12 +342,6 @@ ReadRightDone:        ; handling this button is done
 ;   adc #$01            ; A = A + 1 (which is the disable tile for the letter)
 ;   sta $0205           ; save sprite tile
 
-disableA: 
-  lda $0205           ; load sprite tile
-  clc                 ; make sure carry flag is set
-  adc #$01            ; A = A + 1 (which is the disable tile for the letter)
-  sta $0205           ; save sprite tile
-
 ;----------------------------------------------------------------
 ; DRAW WORD
 ;----------------------------------------------------------------
@@ -404,7 +392,7 @@ EndNMI:
   rti        ; return from interrupt
 
 ;----------------------------------------------------------------
-; IRG
+; IRQ
 ;----------------------------------------------------------------
 
 IRQ:
@@ -466,7 +454,7 @@ sprites:
   .org $fffa
 
   .dw NMI
-  .dw Reset
+  .dw RESET
   .dw IRQ
 
 ;----------------------------------------------------------------
