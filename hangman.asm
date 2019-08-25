@@ -12,6 +12,20 @@ MIRRORING = %0001 ;%0000 = horizontal, %0001 = vertical, %1000 = four-screen
   .enum $0000
   .ende
 
+  L_byte         = $0000
+  H_byte         = $0001
+
+  ; PPU
+
+  PPU_CTRL    =   $2000
+  PPU_MASK    =   $2001
+  PPU_STATUS  =   $2002
+  OAM_ADDR    =   $2003
+  OAM_DATA    =   $2004
+  PPU_SCROLL  =   $2005
+  PPU_ADDR    =   $2006
+  PPU_DATA    =   $2007
+
 ;----------------------------------------------------------------
 ; HEADER
 ;----------------------------------------------------------------
@@ -33,13 +47,95 @@ MIRRORING = %0001 ;%0000 = horizontal, %0001 = vertical, %1000 = four-screen
 ;----------------------------------------------------------------
 
 RESET:
+  sei
+  cld
+; Disable NMI and rendering
+  lda #%00000000
+  sta PPU_CTRL
+  lda #%00000000
+  sta PPU_MASK
+
+; Wait for PPU
+  lda PPU_STATUS
+vBlankWait1:
+  bit PPU_STATUS
+  bpl vBlankWait1
+vBlankWait2:
+  bit PPU_STATUS
+  bpl vBlankWait2
+  
+; Clear RAM
+  lda #$00
+  ldx #$00
+ClearLoop:
+  sta $0000, X
+  sta $0100, X
+  sta $0200, X
+  sta $0300, X
+  sta $0400, X
+  sta $0500, X
+  sta $0600, X
+  sta $0700, X
+  inx
+  cpx #$00
+  bne ClearLoop
+
+; Background was not working
+; ; Set name table + Attribute
+;   lda PPU_STATUS
+;   lda #$20
+;   sta PPU_ADDR
+;   lda #$00
+;   sta PPU_ADDR
+;   lda #<bg_nam
+;   sta L_byte
+;   lda #>bg_nam
+;   sta H_byte
+;   ldx #$00
+;   ldy #$00
+; NamLoop:
+;   lda ($00), Y
+;   sta PPU_DATA
+;   iny
+;   cpy #$00
+;   bne NamLoop
+;   inc H_byte
+;   inx
+;   cpx #$04
+;   bne NamLoop
+  
+; ; Background color setup
+;   lda PPU_STATUS
+;   lda #$3F
+;   sta PPU_ADDR
+;   lda #$00
+;   sta PPU_ADDR
+;   ldx #$00
+; PalLoop:
+;   lda bg_pal, X
+;   sta PPU_DATA
+;   inx
+;   cpx #$10
+;   bne PalLoop
+
+; ; Reset Scroll
+;   lda #$00
+;   sta PPU_SCROLL
+;   lda #$00
+;   sta PPU_SCROLL
+   
+; ; Enable NMI and rendering
+;   lda #%00000000
+;   sta PPU_CTRL
+;   lda #%00001010
+;   sta PPU_MASK
 
   jsr LoadPalettes
   jsr LoadSprites
   jsr ConfigurePPU
   jsr WaitBlank
   jsr EnableSound
-  ; jsr Initialize
+  jsr Initialize
   jsr Loop
 
 ;----------------------------------------------------------------
@@ -56,15 +152,15 @@ EnableSound:
 
 ConfigurePPU:
   lda #%10000000   ; enable NMI, sprites from Pattern Table 0
-  sta $2000
+  sta PPU_CTRL
 
   lda #%00010000   ; enable sprites
-  sta $2001
+  sta PPU_MASK
   rts
 
 ; Makes safe update of screen
 WaitBlank:
-  lda $2002
+  lda PPU_STATUS
   bpl WaitBlank ; keet checking until bit is 7 (VBlank)
 
 ;----------------------------------------------------------------
@@ -72,15 +168,15 @@ WaitBlank:
 ;----------------------------------------------------------------
 
 LoadPalettes:
-  lda $2002    ; read PPU status to reset the high/low latch
+  lda PPU_STATUS    ; read PPU status to reset the high/low latch
   lda #$3F
-  sta $2006    ; write the high byte of $3F00 address
+  sta PPU_ADDR    ; write the high byte of $3F00 address
   lda #$00
-  sta $2006    ; write the low byte of $3F00 address
+  sta PPU_ADDR    ; write the low byte of $3F00 address
   ldx #$00
 LoadPallete:
   lda palette, x
-  sta $2007
+  sta PPU_DATA
   inx
   cpx #$20
   bne LoadPallete
@@ -97,14 +193,14 @@ LoadSprite:
   lda sprites, x        ; load data from address (sprites +  x)
   sta $0200, x          ; store into RAM address ($0200 + x)
   inx                   ; X = X + 1
-  cpx #$01b0            ; Compare X to hex $08, decimal 8 (each 4 is a sprite)
+  cpx #$00a4            ; Compare X to hex $08, decimal 8 (each 4 is a sprite) -- change here if more sprites are needed
   bne LoadSprite        ; Branch to LoadSprite if compare was Not Equal to zero
 
   lda #%10000000   ; enable NMI, sprites from Pattern Table 1
-  sta $2000
+  sta PPU_CTRL
 
   lda #%00010000   ; enable sprites
-  sta $2001
+  sta PPU_MASK
 
 Forever:
   jmp Forever     ;jump back to Forever, infinite loop
@@ -119,6 +215,8 @@ Loop:
   jsr CheckWin
   jsr LatchController
   jmp Loop
+
+; TODO: Caiao, estou usando o $0200 como base para carregar os sprites, rola mudar a logica para $0400 em diante?
 
 ; the size of the word in address $0200
 ; $0201 will be the current letter choosed, to check in the word
@@ -225,11 +323,9 @@ NMI:
 ;----------------------------------------------------------------
 
 DrawScreen:
-  lda #$00  ; load $00 to A
-  sta $2003 ; store first part in 2003
-
-  lda #$02
-  sta $4014       ; set the high byte (02) of the RAM address, start the transfer
+  lda #$00    ; load $00 to A
+  sta OAM_ADDR   ; store first part in 2003
+  sta OAM_ADDR   ; store second part in 2003
   jsr SetUpControllers
 
   rts
@@ -238,7 +334,11 @@ DrawScreen:
 ; CONTROLLERS
 ;----------------------------------------------------------------
 
+; TODO: Dessa, tenta ver como travar pro controle não sair do alfabeto, nao linkei tbm o botão A para selecionar a letra
+
 SetUpControllers:
+  lda #$02
+  sta $4014   ; set the high byte (02) of the RAM address, start the transfer
 
 LatchController:
   LDA #$01
@@ -276,10 +376,6 @@ ReadStart:
   AND #%00000001      ; only look at bit 0
   BEQ ReadStartDone   ; branch to ReadBDone if button is NOT pressed (0)
                       ; add instructions here to do something when button IS pressed (1)
-  LDA $0203           ; load sprite X position
-  SEC                 ; make sure carry flag is set
-  SBC #$01            ; A = A - 1
-  STA $0203           ; save sprite X position
 ReadStartDone:        ; handling this button is done
 
 ; Pressed Up
@@ -290,7 +386,7 @@ ReadUp:
 MoveUp:
   LDA $0200           ; load sprite Y position
   SEC                 ; make sure carry flag is set
-  SBC #$01            ; A = A - 1
+  SBC #$10            ; A = A - 16
   STA $0200           ; save sprite Y position
 ReadUpDone:           ; handling this button is done
 
@@ -302,7 +398,7 @@ ReadDown:
 MoveDown:
   LDA $0200           ; load sprite Y position
   CLC                 ; make sure carry flag is set
-  ADC #$01            ; A = A + 1
+  ADC #$10            ; A = A + 16
   STA $0200           ; save sprite Y position
 ReadDownDone:         ; handling this button is done
 
@@ -314,7 +410,7 @@ ReadLeft:
 MoveLeft:
   LDA $0203           ; load sprite X position
   SEC                 ; make sure carry flag is set
-  SBC #$01            ; A = A - 1
+  SBC #$10            ; A = A - 16
   STA $0203           ; save sprite X position
 ReadLeftDone:         ; handling this button is done
 
@@ -326,21 +422,189 @@ ReadRight:
 MoveRight:           
   LDA $0203           ; load sprite X position
   CLC                 ; make sure carry flag is set
-  ADC #$01            ; A = A + 1
+  ADC #$10            ; A = A + 16
   STA $0203           ; save sprite X position
 ReadRightDone:        ; handling this button is done
+  ; TODO: Dessa, veja se consegue uma logica/timeout para mover mais devagar mas ainda de 16 em 16
   rts
 
 ;----------------------------------------------------------------
 ; DRAWING FUNCTIONS
 ;----------------------------------------------------------------
 
-; TODO: Base memory is $0204 - letter A, iterates each 4 then
-; disableLetter:           
-;   lda $0205           ; load sprite tile
-;   clc                 ; make sure carry flag is set
-;   adc #$01            ; A = A + 1 (which is the disable tile for the letter)
-;   sta $0205           ; save sprite tile
+; TODO: Troca o sprite da letra por um cinza, poderia tbm trocar a cor ao invés do sprite.
+; Precisa deixar o carregamento do byte dinamico e so chamar uma vez por jogo
+;
+; Base memory is $0204 - letter A, iterates each 4 then
+DisableLetter:           
+  lda $0205           ; load sprite tile
+  clc                 ; make sure carry flag is set
+  adc #$01            ; A = A + 1 (which is the disable tile for the letter)
+  sta $0205           ; save sprite tile
+  rts
+; Ou otimiza a funcao de cima para usar, ou usa o as debaixo para desabilitar letras do alfabeto
+
+; Disable Alphabet letters
+DisableA:
+  lda #33             ; tile number
+  sta $0205           ; update tile
+  rts
+
+DisableB:
+  lda #35             ; tile number
+  sta $0209           ; update tile
+  rts
+
+DisableC:
+  lda #37             ; tile number
+  sta $020d           ; update tile
+  rts
+
+DisableD:
+  lda #39             ; tile number
+  sta $0211           ; update tile
+  rts
+
+DisableE:
+  lda #41             ; tile number
+  sta $0215           ; update tile
+  rts
+
+DisableF:
+  lda #43             ; tile number
+  sta $0219           ; update tile
+  rts
+
+DisableG:
+  lda #45             ; tile number
+  sta $021d           ; update tile
+  rts
+
+DisableH:
+  lda #47             ; tile number
+  sta $0221           ; update tile
+  rts
+
+DisableI:
+  lda #49             ; tile number
+  sta $0225           ; update tile
+  rts
+
+DisableJ:
+  lda #51             ; tile number
+  sta $0229           ; update tile
+  rts
+
+DisableK:
+  lda #53             ; tile number
+  sta $022d           ; update tile
+  rts
+
+DisableL:
+  lda #55             ; tile number
+  sta $0231           ; update tile
+  rts
+
+DisableM:
+  lda #57             ; tile number
+  sta $0235           ; update tile
+  rts
+
+DisableN:
+  lda #59             ; tile number
+  sta $0239           ; update tile
+  rts
+
+DisableO:
+  lda #61             ; tile number
+  sta $023d           ; update tile
+  rts
+
+DisableP:
+  lda #63             ; tile number
+  sta $0241           ; update tile
+  rts
+
+DisableQ:
+  lda #65             ; tile number
+  sta $0245           ; update tile
+  rts
+
+DisableR:
+  lda #67             ; tile number
+  sta $0249           ; update tile
+  rts
+
+DisableS:
+  lda #69             ; tile number
+  sta $024d           ; update tile
+  rts
+
+DisableT:
+  lda #71             ; tile number
+  sta $0251           ; update tile
+  rts
+
+DisableU:
+  lda #73             ; tile number
+  sta $0255           ; update tile
+  rts
+
+DisableV:
+  lda #75             ; tile number
+  sta $0259           ; update tile
+  rts
+
+DisableW:
+  lda #77             ; tile number
+  sta $025d           ; update tile
+  rts
+
+DisableX:
+  lda #79             ; tile number
+  sta $0261           ; update tile
+  rts
+
+DisableY:
+  lda #81             ; tile number
+  sta $0265           ; update tile
+  rts
+
+DisableZ:
+  lda #83             ; tile number
+  sta $0269           ; update tile
+  rts
+
+; Draw hangman body
+DrawHead:
+  lda #89             ; tile number
+  sta $026d           ; update tile
+  rts
+
+DrawBody:
+  lda #90             ; tile number
+  sta $0271           ; update tile
+  rts
+
+DrawLeftArm:
+  lda #92             ; tile number
+  sta $0275           ; update tile
+  rts
+
+DrawRightArm:
+  lda #93             ; tile number
+  sta $0279           ; update tile
+  rts
+
+DrawLeftLeg:
+  lda #94             ; tile number
+  sta $027d           ; update tile
+  rts
+
+DrawRightLeg:
+  lda #95             ; tile number
+  sta $0281           ; update tile
+  rts
 
 ;----------------------------------------------------------------
 ; DRAW WORD
@@ -354,26 +618,26 @@ DrawWordLoop:
   bne DrawLetterNotFound
 DrawLetterSuccess:
   ; draw a guessed letter
-  lda #$00   ; these lines tell $2003
-  sta $2003  ; to tell
-  lda #$00   ; $2004 to start
-  sta $2003  ; at $0000.
+  lda #$00   ; these lines tell OAM_ADDR
+  sta OAM_ADDR  ; to tell
+  lda #$00   ; OAM_DATA to start
+  sta OAM_ADDR  ; at $0000.
 
   ; calculate Y position
   lda #50  ; load Y value
-  sta $2004 ; store Y value
+  sta OAM_DATA ; store Y value
 
   ; tile number will change with the letter ascii code
   lda #$0204, x ; pick tile for that letter ( maybe we will need to calculate that)
-  sta $2004 ; store tile number
+  sta OAM_DATA ; store tile number
 
   ; pass this info always as 0
   lda #$00 ; no special junk
-  sta $2004 ; store special junk
+  sta OAM_DATA ; store special junk
 
   ; calculate X position
   lda #20  ; load X value
-  sta $2004 ; store X value
+  sta OAM_DATA ; store X value
   jmp DrawWordLoopIncX
 DrawLetterNotFound:
 
@@ -396,7 +660,17 @@ EndNMI:
 ;----------------------------------------------------------------
 
 IRQ:
-   ;NOTE: IRQ code goes here
+  rti
+
+;----------------------------------------------------------------
+; BACKGROUND INCLUDES (Not working)
+;----------------------------------------------------------------
+
+; bg_nam:
+;   .incbin "bg.nam"
+
+; bg_pal:
+;   .incbin "bg.pal"
 
 ;----------------------------------------------------------------
 ; COLOR PALETTE
@@ -404,48 +678,69 @@ IRQ:
 
   .org $E000
 palette:
+  ; Background Colors
   .db $0F,$31,$32,$33,$0F,$35,$36,$37,$0F,$39,$3A,$3B,$0F,$3D,$3E,$0F
+
+  ; Sprite Colors
   .db $0F,$29,$00,$20,$0F,$02,$38,$3C,$0F,$1C,$15,$14,$0F,$02,$38,$3C
   ;   Whi,LGr,MGr,DGr <-- Sprites color mapping
-  ;   BG
 
 ;----------------------------------------------------------------
 ; SPRITES
 ;
-; Using adresses ($0200 - $0307)
+; Using adresses ($0200 - $02a3)
 ;----------------------------------------------------------------
 
 sprites:
-  ;vert tile attr horiz
+  ; Selector
   .db #130, #86, #00, #80 ; Y, tile, junk, X (Selector: $0200-$0203)
 
   ; Alphabet
   .db #128, #32, #00, #80   ; A ($0204-$0207)
-  .db #128, #34, #00, #96   ; B ($0208-$0211)
-  .db #128, #36, #00, #112  ; C ($0212-$0215)
-  .db #128, #38, #00, #128  ; D ($0216-$0219)
-  .db #128, #40, #00, #144  ; E ($0220-$0223)
-  .db #128, #42, #00, #160  ; F ($0224-$0227)
-  .db #128, #44, #00, #176  ; G ($0228-$0231)
-  .db #144, #46, #00, #80   ; H ($0232-$0235)
-  .db #144, #48, #00, #96   ; I ($0236-$0239)
-  .db #144, #50, #00, #112  ; J ($0240-$0243)
-  .db #144, #52, #00, #128  ; K ($0244-$0247)
-  .db #144, #54, #00, #144  ; L ($0248-$0251)
-  .db #144, #56, #00, #160  ; M ($0252-$0255)
-  .db #144, #58, #00, #176  ; N ($0256-$0259)
-  .db #160, #60, #00, #80   ; O ($0260-$0263)
-  .db #160, #62, #00, #96   ; P ($0264-$0267)
-  .db #160, #64, #00, #112  ; Q ($0268-$0271)
-  .db #160, #66, #00, #128  ; R ($0272-$0275)
-  .db #160, #68, #00, #144  ; S ($0276-$0279)
-  .db #160, #70, #00, #160  ; T ($0280-$0283)
-  .db #160, #72, #00, #176  ; U ($0284-$0287)
-  .db #176, #74, #00, #80   ; V ($0288-$0291)
-  .db #176, #76, #00, #96   ; W ($0292-$0295)
-  .db #176, #78, #00, #112  ; X ($0296-$0299)
-  .db #176, #80, #00, #128  ; Y ($0300-$0303)
-  .db #176, #82, #00, #144  ; Z ($0304-$0307)
+  .db #128, #34, #00, #96   ; B ($0208-$020b)
+  .db #128, #36, #00, #112  ; C ($020c-$020f)
+  .db #128, #38, #00, #128  ; D ($0210-$0213)
+  .db #128, #40, #00, #144  ; E ($0214-$0217)
+  .db #128, #42, #00, #160  ; F ($0218-$021b)
+  .db #128, #44, #00, #176  ; G ($021c-$021f)
+  .db #144, #46, #00, #80   ; H ($0220-$0223)
+  .db #144, #48, #00, #96   ; I ($0224-$0227)
+  .db #144, #50, #00, #112  ; J ($0228-$022b)
+  .db #144, #52, #00, #128  ; K ($022c-$022f)
+  .db #144, #54, #00, #144  ; L ($0230-$0233)
+  .db #144, #56, #00, #160  ; M ($0234-$0237)
+  .db #144, #58, #00, #176  ; N ($0238-$023b)
+  .db #160, #60, #00, #80   ; O ($023c-$023f)
+  .db #160, #62, #00, #96   ; P ($0240-$0244)
+  .db #160, #64, #00, #112  ; Q ($0244-$0247)
+  .db #160, #66, #00, #128  ; R ($0248-$024b)
+  .db #160, #68, #00, #144  ; S ($024c-$024f)
+  .db #160, #70, #00, #160  ; T ($0250-$0253)
+  .db #160, #72, #00, #176  ; U ($0254-$0257)
+  .db #176, #74, #00, #80   ; V ($0258-$025b)
+  .db #176, #76, #00, #96   ; W ($025c-$025f)
+  .db #176, #78, #00, #112  ; X ($0260-$0263)
+  .db #176, #80, #00, #128  ; Y ($0264-$0267)
+  .db #176, #82, #00, #144  ; Z ($0268-$026b)
+
+  ; Stickman
+  ; #88 is an empty sprite tile
+  .db #40, #88, #00, #40  ; Head    ($026c-$026f)
+  .db #48, #88, #00, #40  ; Body    ($0270-$0273)
+  .db #48, #88, #00, #36  ; LArm    ($0274-$0277)
+  .db #48, #88, #00, #44  ; RArm    ($0278-$027b)
+  .db #56, #88, #00, #36  ; LLeg    ($027c-$027f)
+  .db #56, #88, #00, #44  ; RLeg    ($0280-$0283)
+
+  ; Hanger
+  .db #32, #101, #00, #40   ; ($0284-$0287)
+  .db #32, #99, #00, #32    ; ($0288-$028b)
+  .db #32, #100, #00, #24   ; ($028c-$028f)
+  .db #40, #98, #00, #24    ; ($0290-$0293)
+  .db #48, #98, #00, #24    ; ($0294-$0297)
+  .db #56, #98, #00, #24    ; ($0298-$029b)
+  .db #64, #98, #00, #24    ; ($029c-$029f)
+  .db #72, #96, #00, #24    ; ($02a0-$02a3)
 
 ;----------------------------------------------------------------
 ; INTERRUPT VECTORS
