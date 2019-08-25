@@ -119,7 +119,7 @@ Loop:
   jsr LatchController
   jmp Loop
 
-; TODO: (Seiji) Caiao, estou usando o $0200 como base para carregar os sprites, rola mudar a logica para $0400 em diante?
+; TODO: Caiao, estou usando o $0200 como base para carregar os sprites, rola mudar a logica para $0400 em diante?
 
 ; the size of the word in address $0200
 ; $0201 will be the current letter choosed, to check in the word
@@ -237,7 +237,7 @@ DrawScreen:
 ; CONTROLLERS
 ;----------------------------------------------------------------
 
-; TODO: (Seiji) Dessa, tenta ver como travar pro controle não sair do alfabeto, nao linkei tbm o botão A para selecionar a letra
+; TODO: Dessa, tenta ver como travar pro controle não sair do alfabeto, nao linkei tbm o botão A para selecionar a letra
 
 SetUpControllers:
   lda #$02
@@ -332,14 +332,16 @@ MoveRight:
   ADC #$10            ; A = A + 16
   STA $0203           ; save sprite X position
 ReadRightDone:        ; handling this button is done
-  ; TODO: (Seiji) logica/timeout para mover mais devagar
+  ; TODO: logica/timeout para mover mais devagar
   rts
 
 ;----------------------------------------------------------------
 ; DRAWING FUNCTIONS
 ;----------------------------------------------------------------
 
-; TODO: (Seiji) Metodo para trocar o sprite da letra por um cinza, poderia tbm trocar a cor ao invés do sprite.
+; TODO: Troca o sprite da letra por um cinza, poderia tbm trocar a cor ao invés do sprite.
+; Precisa deixar o carregamento do byte dinamico e so chamar uma vez por jogo
+;
 ; Base memory is $0204 - letter A, iterates each 4 then
 ; disableLetter:           
 ;   lda $0205           ; load sprite tile
@@ -423,7 +425,7 @@ palette:
 ;----------------------------------------------------------------
 
 sprites:
-  ;vert tile attr horiz
+  ; Selector
   .db #130, #86, #00, #80 ; Y, tile, junk, X (Selector: $0200-$0203)
 
   ; Alphabet
