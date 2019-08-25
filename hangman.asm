@@ -12,6 +12,9 @@ MIRRORING = %0001 ;%0000 = horizontal, %0001 = vertical, %1000 = four-screen
   .enum $0000
   .ende
 
+  L_byte         = $0000
+  H_byte         = $0001
+
 ;----------------------------------------------------------------
 ; HEADER
 ;----------------------------------------------------------------
@@ -33,6 +36,88 @@ MIRRORING = %0001 ;%0000 = horizontal, %0001 = vertical, %1000 = four-screen
 ;----------------------------------------------------------------
 
 RESET:
+  sei
+  cld
+  ; Disable NMI and rendering
+  lda #%00000000
+  sta $2000
+  lda #%00000000
+  sta $2001
+
+  ; Wait for PPU
+  lda $2002
+vBlankWait1:
+  bit $2002
+  bpl vBlankWait1
+vBlankWait2:
+  bit $2002
+  bpl vBlankWait2
+  
+  ; Clear RAM
+  lda #$00
+  ldx #$00
+ClearLoop:
+  sta $0000, X
+  sta $0100, X
+  sta $0200, X
+  sta $0300, X
+  sta $0400, X
+  sta $0500, X
+  sta $0600, X
+  sta $0700, X
+  inx
+  cpx #$00
+  bne ClearLoop
+
+  ; Set name table + Attribute
+  lda $2002
+  lda #$20
+  sta $2006
+  lda #$00
+  sta $2006
+  lda #<bg_nam
+  sta L_byte
+  lda #>bg_nam
+  sta H_byte
+  ldx #$00
+  ldy #$00
+NamLoop:
+  lda ($00), Y
+  sta $2007
+  iny
+  cpy #$00
+  bne NamLoop
+  inc H_byte
+  inx
+  cpx #$04
+  bne NamLoop
+  
+  ; Background color setup
+  lda $2002
+  lda #$3F
+  sta $2006
+  lda #$00
+  sta $2006
+  ldx #$00
+PalLoop:
+  lda bg_pal, X
+  sta $2007
+  inx
+  cpx #$10
+  bne PalLoop
+
+  ; Reset Scroll
+  lda #$00
+  sta $2005
+  lda #$00
+  sta $2005
+   
+  ; Enable NMI and rendering
+  lda #%00000000
+  sta $2000
+  lda #%00001010
+  sta $2001
+
   jsr LoadPalettes
   jsr LoadSprites
   jsr ConfigurePPU
@@ -403,7 +488,17 @@ EndNMI:
 ;----------------------------------------------------------------
 
 IRQ:
-   ;NOTE: IRQ code goes here
+  rti
+
+;----------------------------------------------------------------
+; BACKGROUND INCLUDES
+;----------------------------------------------------------------
+
+bg_nam:
+  .incbin "bg.nam"
+
+bg_pal:
+  .incbin "bg.pal"
 
 ;----------------------------------------------------------------
 ; COLOR PALETTE
