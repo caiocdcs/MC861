@@ -425,7 +425,7 @@ MoveRight:
   ADC #$10            ; A = A + 16
   STA $0203           ; save sprite X position
 ReadRightDone:        ; handling this button is done
-  ; TODO: logica/timeout para mover mais devagar
+  ; TODO: Dessa, veja se consegue uma logica/timeout para mover mais devagar mas ainda de 16 em 16
   rts
 
 ;----------------------------------------------------------------
@@ -436,11 +436,175 @@ ReadRightDone:        ; handling this button is done
 ; Precisa deixar o carregamento do byte dinamico e so chamar uma vez por jogo
 ;
 ; Base memory is $0204 - letter A, iterates each 4 then
-; disableLetter:           
-;   lda $0205           ; load sprite tile
-;   clc                 ; make sure carry flag is set
-;   adc #$01            ; A = A + 1 (which is the disable tile for the letter)
-;   sta $0205           ; save sprite tile
+DisableLetter:           
+  lda $0205           ; load sprite tile
+  clc                 ; make sure carry flag is set
+  adc #$01            ; A = A + 1 (which is the disable tile for the letter)
+  sta $0205           ; save sprite tile
+  rts
+; Ou otimiza a funcao de cima para usar, ou usa o as debaixo para desabilitar letras do alfabeto
+
+; Disable Alphabet letters
+DisableA:
+  lda #33             ; tile number
+  sta $0205           ; update tile
+  rts
+
+DisableB:
+  lda #35             ; tile number
+  sta $0209           ; update tile
+  rts
+
+DisableC:
+  lda #37             ; tile number
+  sta $020d           ; update tile
+  rts
+
+DisableD:
+  lda #39             ; tile number
+  sta $0211           ; update tile
+  rts
+
+DisableE:
+  lda #41             ; tile number
+  sta $0215           ; update tile
+  rts
+
+DisableF:
+  lda #43             ; tile number
+  sta $0219           ; update tile
+  rts
+
+DisableG:
+  lda #45             ; tile number
+  sta $021d           ; update tile
+  rts
+
+DisableH:
+  lda #47             ; tile number
+  sta $0221           ; update tile
+  rts
+
+DisableI:
+  lda #49             ; tile number
+  sta $0225           ; update tile
+  rts
+
+DisableJ:
+  lda #51             ; tile number
+  sta $0229           ; update tile
+  rts
+
+DisableK:
+  lda #53             ; tile number
+  sta $022d           ; update tile
+  rts
+
+DisableL:
+  lda #55             ; tile number
+  sta $0231           ; update tile
+  rts
+
+DisableM:
+  lda #57             ; tile number
+  sta $0235           ; update tile
+  rts
+
+DisableN:
+  lda #59             ; tile number
+  sta $0239           ; update tile
+  rts
+
+DisableO:
+  lda #61             ; tile number
+  sta $023d           ; update tile
+  rts
+
+DisableP:
+  lda #63             ; tile number
+  sta $0241           ; update tile
+  rts
+
+DisableQ:
+  lda #65             ; tile number
+  sta $0245           ; update tile
+  rts
+
+DisableR:
+  lda #67             ; tile number
+  sta $0249           ; update tile
+  rts
+
+DisableS:
+  lda #69             ; tile number
+  sta $024d           ; update tile
+  rts
+
+DisableT:
+  lda #71             ; tile number
+  sta $0251           ; update tile
+  rts
+
+DisableU:
+  lda #73             ; tile number
+  sta $0255           ; update tile
+  rts
+
+DisableV:
+  lda #75             ; tile number
+  sta $0259           ; update tile
+  rts
+
+DisableW:
+  lda #77             ; tile number
+  sta $025d           ; update tile
+  rts
+
+DisableX:
+  lda #79             ; tile number
+  sta $0261           ; update tile
+  rts
+
+DisableY:
+  lda #81             ; tile number
+  sta $0265           ; update tile
+  rts
+
+DisableZ:
+  lda #83             ; tile number
+  sta $0269           ; update tile
+  rts
+
+; Draw hangman body
+DrawHead:
+  lda #89             ; tile number
+  sta $026d           ; update tile
+  rts
+
+DrawBody:
+  lda #90             ; tile number
+  sta $0271           ; update tile
+  rts
+
+DrawLeftArm:
+  lda #92             ; tile number
+  sta $0275           ; update tile
+  rts
+
+DrawRightArm:
+  lda #93             ; tile number
+  sta $0279           ; update tile
+  rts
+
+DrawLeftLeg:
+  lda #94             ; tile number
+  sta $027d           ; update tile
+  rts
+
+DrawRightLeg:
+  lda #95             ; tile number
+  sta $0281           ; update tile
+  rts
 
 ;----------------------------------------------------------------
 ; DRAW WORD
@@ -524,7 +688,7 @@ palette:
 ;----------------------------------------------------------------
 ; SPRITES
 ;
-; Using adresses ($0200 - $0363)
+; Using adresses ($0200 - $02a3)
 ;----------------------------------------------------------------
 
 sprites:
@@ -533,58 +697,50 @@ sprites:
 
   ; Alphabet
   .db #128, #32, #00, #80   ; A ($0204-$0207)
-  .db #128, #34, #00, #96   ; B ($0208-$0211)
-  .db #128, #36, #00, #112  ; C ($0212-$0215)
-  .db #128, #38, #00, #128  ; D ($0216-$0219)
-  .db #128, #40, #00, #144  ; E ($0220-$0223)
-  .db #128, #42, #00, #160  ; F ($0224-$0227)
-  .db #128, #44, #00, #176  ; G ($0228-$0231)
-  .db #144, #46, #00, #80   ; H ($0232-$0235)
-  .db #144, #48, #00, #96   ; I ($0236-$0239)
-  .db #144, #50, #00, #112  ; J ($0240-$0243)
-  .db #144, #52, #00, #128  ; K ($0244-$0247)
-  .db #144, #54, #00, #144  ; L ($0248-$0251)
-  .db #144, #56, #00, #160  ; M ($0252-$0255)
-  .db #144, #58, #00, #176  ; N ($0256-$0259)
-  .db #160, #60, #00, #80   ; O ($0260-$0263)
-  .db #160, #62, #00, #96   ; P ($0264-$0267)
-  .db #160, #64, #00, #112  ; Q ($0268-$0271)
-  .db #160, #66, #00, #128  ; R ($0272-$0275)
-  .db #160, #68, #00, #144  ; S ($0276-$0279)
-  .db #160, #70, #00, #160  ; T ($0280-$0283)
-  .db #160, #72, #00, #176  ; U ($0284-$0287)
-  .db #176, #74, #00, #80   ; V ($0288-$0291)
-  .db #176, #76, #00, #96   ; W ($0292-$0295)
-  .db #176, #78, #00, #112  ; X ($0296-$0299)
-  .db #176, #80, #00, #128  ; Y ($0300-$0303)
-  .db #176, #82, #00, #144  ; Z ($0304-$0307)
+  .db #128, #34, #00, #96   ; B ($0208-$020b)
+  .db #128, #36, #00, #112  ; C ($020c-$020f)
+  .db #128, #38, #00, #128  ; D ($0210-$0213)
+  .db #128, #40, #00, #144  ; E ($0214-$0217)
+  .db #128, #42, #00, #160  ; F ($0218-$021b)
+  .db #128, #44, #00, #176  ; G ($021c-$021f)
+  .db #144, #46, #00, #80   ; H ($0220-$0223)
+  .db #144, #48, #00, #96   ; I ($0224-$0227)
+  .db #144, #50, #00, #112  ; J ($0228-$022b)
+  .db #144, #52, #00, #128  ; K ($022c-$022f)
+  .db #144, #54, #00, #144  ; L ($0230-$0233)
+  .db #144, #56, #00, #160  ; M ($0234-$0237)
+  .db #144, #58, #00, #176  ; N ($0238-$023b)
+  .db #160, #60, #00, #80   ; O ($023c-$023f)
+  .db #160, #62, #00, #96   ; P ($0240-$0244)
+  .db #160, #64, #00, #112  ; Q ($0244-$0247)
+  .db #160, #66, #00, #128  ; R ($0248-$024b)
+  .db #160, #68, #00, #144  ; S ($024c-$024f)
+  .db #160, #70, #00, #160  ; T ($0250-$0253)
+  .db #160, #72, #00, #176  ; U ($0254-$0257)
+  .db #176, #74, #00, #80   ; V ($0258-$025b)
+  .db #176, #76, #00, #96   ; W ($025c-$025f)
+  .db #176, #78, #00, #112  ; X ($0260-$0263)
+  .db #176, #80, #00, #128  ; Y ($0264-$0267)
+  .db #176, #82, #00, #144  ; Z ($0268-$026b)
 
   ; Stickman
   ; #88 is an empty sprite tile
-  ; .db #40, #88, #00, #40  ; Head    ($0308-$0311)
-  ; .db #48, #88, #00, #40  ; Body    ($0312-$0315)
-  ; .db #48, #88, #00, #36  ; LArm    ($0316-$0319)
-  ; .db #48, #88, #00, #44  ; RArm    ($0320-$0323)
-  ; .db #56, #88, #00, #36  ; LLeg    ($0324-$0327)
-  ; .db #56, #88, #00, #44  ; RLeg    ($0328-$0331)
-
-  ; Correct tile for each body part below
-  .db #40, #89, #00, #40  ; Head    ($0308-$0311)
-  .db #48, #90, #00, #40  ; Body    ($0312-$0315)
-  .db #48, #92, #00, #36  ; LArm    ($0316-$0319)
-  .db #48, #93, #00, #44  ; RArm    ($0320-$0323)
-  .db #56, #94, #00, #36  ; LLeg    ($0324-$0327)
-  .db #56, #95, #00, #44  ; RLeg    ($0328-$0331)
+  .db #40, #88, #00, #40  ; Head    ($026c-$026f)
+  .db #48, #88, #00, #40  ; Body    ($0270-$0273)
+  .db #48, #88, #00, #36  ; LArm    ($0274-$0277)
+  .db #48, #88, #00, #44  ; RArm    ($0278-$027b)
+  .db #56, #88, #00, #36  ; LLeg    ($027c-$027f)
+  .db #56, #88, #00, #44  ; RLeg    ($0280-$0283)
 
   ; Hanger
-  .db #32, #101, #00, #40   ; ($0332-$0335)
-  .db #32, #99, #00, #32    ; ($0336-$0339)
-  .db #32, #100, #00, #24   ; ($0340-$0343)
-  .db #40, #98, #00, #24    ; ($0344-$0347)
-  .db #48, #98, #00, #24    ; ($0348-$0351)
-  .db #56, #98, #00, #24    ; ($0352-$0355)
-  .db #64, #98, #00, #24    ; ($0356-$0359)
-  .db #72, #96, #00, #24    ; ($0360-$0363)
+  .db #32, #101, #00, #40   ; ($0284-$0287)
+  .db #32, #99, #00, #32    ; ($0288-$028b)
+  .db #32, #100, #00, #24   ; ($028c-$028f)
+  .db #40, #98, #00, #24    ; ($0290-$0293)
+  .db #48, #98, #00, #24    ; ($0294-$0297)
+  .db #56, #98, #00, #24    ; ($0298-$029b)
+  .db #64, #98, #00, #24    ; ($029c-$029f)
+  .db #72, #96, #00, #24    ; ($02a0-$02a3)
 
 ;----------------------------------------------------------------
 ; INTERRUPT VECTORS
