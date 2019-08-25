@@ -49,13 +49,13 @@ MIRRORING = %0001 ;%0000 = horizontal, %0001 = vertical, %1000 = four-screen
 RESET:
   sei
   cld
-  ; Disable NMI and rendering
+; Disable NMI and rendering
   lda #%00000000
   sta PPU_CTRL
   lda #%00000000
   sta PPU_MASK
 
-  ; Wait for PPU
+; Wait for PPU
   lda PPU_STATUS
 vBlankWait1:
   bit PPU_STATUS
@@ -64,7 +64,7 @@ vBlankWait2:
   bit PPU_STATUS
   bpl vBlankWait2
   
-  ; Clear RAM
+; Clear RAM
   lda #$00
   ldx #$00
 ClearLoop:
@@ -80,54 +80,55 @@ ClearLoop:
   cpx #$00
   bne ClearLoop
 
-  ; Set name table + Attribute
-  lda PPU_STATUS
-  lda #$20
-  sta PPU_ADDR
-  lda #$00
-  sta PPU_ADDR
-  lda #<bg_nam
-  sta L_byte
-  lda #>bg_nam
-  sta H_byte
-  ldx #$00
-  ldy #$00
-NamLoop:
-  lda ($00), Y
-  sta PPU_DATA
-  iny
-  cpy #$00
-  bne NamLoop
-  inc H_byte
-  inx
-  cpx #$04
-  bne NamLoop
+; Background was not working
+; ; Set name table + Attribute
+;   lda PPU_STATUS
+;   lda #$20
+;   sta PPU_ADDR
+;   lda #$00
+;   sta PPU_ADDR
+;   lda #<bg_nam
+;   sta L_byte
+;   lda #>bg_nam
+;   sta H_byte
+;   ldx #$00
+;   ldy #$00
+; NamLoop:
+;   lda ($00), Y
+;   sta PPU_DATA
+;   iny
+;   cpy #$00
+;   bne NamLoop
+;   inc H_byte
+;   inx
+;   cpx #$04
+;   bne NamLoop
   
-  ; Background color setup
-  lda PPU_STATUS
-  lda #$3F
-  sta PPU_ADDR
-  lda #$00
-  sta PPU_ADDR
-  ldx #$00
-PalLoop:
-  lda bg_pal, X
-  sta PPU_DATA
-  inx
-  cpx #$10
-  bne PalLoop
+; ; Background color setup
+;   lda PPU_STATUS
+;   lda #$3F
+;   sta PPU_ADDR
+;   lda #$00
+;   sta PPU_ADDR
+;   ldx #$00
+; PalLoop:
+;   lda bg_pal, X
+;   sta PPU_DATA
+;   inx
+;   cpx #$10
+;   bne PalLoop
 
-  ; Reset Scroll
-  lda #$00
-  sta PPU_SCROLL
-  lda #$00
-  sta PPU_SCROLL
+; ; Reset Scroll
+;   lda #$00
+;   sta PPU_SCROLL
+;   lda #$00
+;   sta PPU_SCROLL
    
-  ; Enable NMI and rendering
-  lda #%00000000
-  sta PPU_CTRL
-  lda #%00001010
-  sta PPU_MASK
+; ; Enable NMI and rendering
+;   lda #%00000000
+;   sta PPU_CTRL
+;   lda #%00001010
+;   sta PPU_MASK
 
   jsr LoadPalettes
   jsr LoadSprites
@@ -192,7 +193,7 @@ LoadSprite:
   lda sprites, x        ; load data from address (sprites +  x)
   sta $0200, x          ; store into RAM address ($0200 + x)
   inx                   ; X = X + 1
-  cpx #$01b0            ; Compare X to hex $08, decimal 8 (each 4 is a sprite)
+  cpx #$00a4            ; Compare X to hex $08, decimal 8 (each 4 is a sprite) -- change here if more sprites are needed
   bne LoadSprite        ; Branch to LoadSprite if compare was Not Equal to zero
 
   lda #%10000000   ; enable NMI, sprites from Pattern Table 1
@@ -375,10 +376,6 @@ ReadStart:
   AND #%00000001      ; only look at bit 0
   BEQ ReadStartDone   ; branch to ReadBDone if button is NOT pressed (0)
                       ; add instructions here to do something when button IS pressed (1)
-  LDA $0203           ; load sprite X position
-  SEC                 ; make sure carry flag is set
-  SBC #$01            ; A = A - 1
-  STA $0203           ; save sprite X position
 ReadStartDone:        ; handling this button is done
 
 ; Pressed Up
@@ -502,14 +499,14 @@ IRQ:
   rti
 
 ;----------------------------------------------------------------
-; BACKGROUND INCLUDES
+; BACKGROUND INCLUDES (Not working)
 ;----------------------------------------------------------------
 
-bg_nam:
-  .incbin "bg.nam"
+; bg_nam:
+;   .incbin "bg.nam"
 
-bg_pal:
-  .incbin "bg.pal"
+; bg_pal:
+;   .incbin "bg.pal"
 
 ;----------------------------------------------------------------
 ; COLOR PALETTE
@@ -527,7 +524,7 @@ palette:
 ;----------------------------------------------------------------
 ; SPRITES
 ;
-; Using adresses ($0200 - $0307)
+; Using adresses ($0200 - $0363)
 ;----------------------------------------------------------------
 
 sprites:
@@ -561,6 +558,33 @@ sprites:
   .db #176, #78, #00, #112  ; X ($0296-$0299)
   .db #176, #80, #00, #128  ; Y ($0300-$0303)
   .db #176, #82, #00, #144  ; Z ($0304-$0307)
+
+  ; Stickman
+  ; #88 is an empty sprite tile
+  ; .db #40, #88, #00, #40  ; Head    ($0308-$0311)
+  ; .db #48, #88, #00, #40  ; Body    ($0312-$0315)
+  ; .db #48, #88, #00, #36  ; LArm    ($0316-$0319)
+  ; .db #48, #88, #00, #44  ; RArm    ($0320-$0323)
+  ; .db #56, #88, #00, #36  ; LLeg    ($0324-$0327)
+  ; .db #56, #88, #00, #44  ; RLeg    ($0328-$0331)
+
+  ; Correct tile for each body part below
+  .db #40, #89, #00, #40  ; Head    ($0308-$0311)
+  .db #48, #90, #00, #40  ; Body    ($0312-$0315)
+  .db #48, #92, #00, #36  ; LArm    ($0316-$0319)
+  .db #48, #93, #00, #44  ; RArm    ($0320-$0323)
+  .db #56, #94, #00, #36  ; LLeg    ($0324-$0327)
+  .db #56, #95, #00, #44  ; RLeg    ($0328-$0331)
+
+  ; Hanger
+  .db #32, #101, #00, #40   ; ($0332-$0335)
+  .db #32, #99, #00, #32    ; ($0336-$0339)
+  .db #32, #100, #00, #24   ; ($0340-$0343)
+  .db #40, #98, #00, #24    ; ($0344-$0347)
+  .db #48, #98, #00, #24    ; ($0348-$0351)
+  .db #56, #98, #00, #24    ; ($0352-$0355)
+  .db #64, #98, #00, #24    ; ($0356-$0359)
+  .db #72, #96, #00, #24    ; ($0360-$0363)
 
 ;----------------------------------------------------------------
 ; INTERRUPT VECTORS
