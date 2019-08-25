@@ -15,6 +15,17 @@ MIRRORING = %0001 ;%0000 = horizontal, %0001 = vertical, %1000 = four-screen
   L_byte         = $0000
   H_byte         = $0001
 
+  ; PPU
+
+  PPU_CTRL    =   $2000
+  PPU_MASK    =   $2001
+  PPU_STATUS  =   $2002
+  OAM_ADDR    =   $2003
+  OAM_DATA    =   $2004
+  PPU_SCROLL  =   $2005
+  PPU_ADDR    =   $2006
+  PPU_DATA    =   $2007
+
 ;----------------------------------------------------------------
 ; HEADER
 ;----------------------------------------------------------------
@@ -40,17 +51,17 @@ RESET:
   cld
   ; Disable NMI and rendering
   lda #%00000000
-  sta $2000
+  sta PPU_CTRL
   lda #%00000000
-  sta $2001
+  sta PPU_MASK
 
   ; Wait for PPU
-  lda $2002
+  lda PPU_STATUS
 vBlankWait1:
-  bit $2002
+  bit PPU_STATUS
   bpl vBlankWait1
 vBlankWait2:
-  bit $2002
+  bit PPU_STATUS
   bpl vBlankWait2
   
   ; Clear RAM
@@ -70,11 +81,11 @@ ClearLoop:
   bne ClearLoop
 
   ; Set name table + Attribute
-  lda $2002
+  lda PPU_STATUS
   lda #$20
-  sta $2006
+  sta PPU_ADDR
   lda #$00
-  sta $2006
+  sta PPU_ADDR
   lda #<bg_nam
   sta L_byte
   lda #>bg_nam
@@ -83,7 +94,7 @@ ClearLoop:
   ldy #$00
 NamLoop:
   lda ($00), Y
-  sta $2007
+  sta PPU_DATA
   iny
   cpy #$00
   bne NamLoop
@@ -93,30 +104,30 @@ NamLoop:
   bne NamLoop
   
   ; Background color setup
-  lda $2002
+  lda PPU_STATUS
   lda #$3F
-  sta $2006
+  sta PPU_ADDR
   lda #$00
-  sta $2006
+  sta PPU_ADDR
   ldx #$00
 PalLoop:
   lda bg_pal, X
-  sta $2007
+  sta PPU_DATA
   inx
   cpx #$10
   bne PalLoop
 
   ; Reset Scroll
   lda #$00
-  sta $2005
+  sta PPU_SCROLL
   lda #$00
-  sta $2005
+  sta PPU_SCROLL
    
   ; Enable NMI and rendering
   lda #%00000000
-  sta $2000
+  sta PPU_CTRL
   lda #%00001010
-  sta $2001
+  sta PPU_MASK
 
   jsr LoadPalettes
   jsr LoadSprites
@@ -140,15 +151,15 @@ EnableSound:
 
 ConfigurePPU:
   lda #%10000000   ; enable NMI, sprites from Pattern Table 0
-  sta $2000
+  sta PPU_CTRL
 
   lda #%00010000   ; enable sprites
-  sta $2001
+  sta PPU_MASK
   rts
 
 ; Makes safe update of screen
 WaitBlank:
-  lda $2002
+  lda PPU_STATUS
   bpl WaitBlank ; keet checking until bit is 7 (VBlank)
 
 ;----------------------------------------------------------------
@@ -156,15 +167,15 @@ WaitBlank:
 ;----------------------------------------------------------------
 
 LoadPalettes:
-  lda $2002    ; read PPU status to reset the high/low latch
+  lda PPU_STATUS    ; read PPU status to reset the high/low latch
   lda #$3F
-  sta $2006    ; write the high byte of $3F00 address
+  sta PPU_ADDR    ; write the high byte of $3F00 address
   lda #$00
-  sta $2006    ; write the low byte of $3F00 address
+  sta PPU_ADDR    ; write the low byte of $3F00 address
   ldx #$00
 LoadPallete:
   lda palette, x
-  sta $2007
+  sta PPU_DATA
   inx
   cpx #$20
   bne LoadPallete
@@ -185,10 +196,10 @@ LoadSprite:
   bne LoadSprite        ; Branch to LoadSprite if compare was Not Equal to zero
 
   lda #%10000000   ; enable NMI, sprites from Pattern Table 1
-  sta $2000
+  sta PPU_CTRL
 
   lda #%00010000   ; enable sprites
-  sta $2001
+  sta PPU_MASK
 
 Forever:
   jmp Forever     ;jump back to Forever, infinite loop
@@ -312,8 +323,8 @@ NMI:
 
 DrawScreen:
   lda #$00    ; load $00 to A
-  sta $2003   ; store first part in 2003
-  sta $2003   ; store second part in 2003
+  sta OAM_ADDR   ; store first part in 2003
+  sta OAM_ADDR   ; store second part in 2003
   jsr SetUpControllers
 
   rts
@@ -446,26 +457,26 @@ DrawWordLoop:
   bne DrawLetterNotFound
 DrawLetterSuccess:
   ; draw a guessed letter
-  lda #$00   ; these lines tell $2003
-  sta $2003  ; to tell
-  lda #$00   ; $2004 to start
-  sta $2003  ; at $0000.
+  lda #$00   ; these lines tell OAM_ADDR
+  sta OAM_ADDR  ; to tell
+  lda #$00   ; OAM_DATA to start
+  sta OAM_ADDR  ; at $0000.
 
   ; calculate Y position
   lda #50  ; load Y value
-  sta $2004 ; store Y value
+  sta OAM_DATA ; store Y value
 
   ; tile number will change with the letter ascii code
   lda #$0204, x ; pick tile for that letter ( maybe we will need to calculate that)
-  sta $2004 ; store tile number
+  sta OAM_DATA ; store tile number
 
   ; pass this info always as 0
   lda #$00 ; no special junk
-  sta $2004 ; store special junk
+  sta OAM_DATA ; store special junk
 
   ; calculate X position
   lda #20  ; load X value
-  sta $2004 ; store X value
+  sta OAM_DATA ; store X value
   jmp DrawWordLoopIncX
 DrawLetterNotFound:
 
