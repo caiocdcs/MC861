@@ -216,15 +216,15 @@ Loop:
   jsr LatchController
   jmp Loop
 
-; the size of the word in address $0400
-; $0401 will be the current letter choosed, to check in the word
-; $0402 will store how many parts of the body will be displayed ( how many errors )
-; $0403 will store if a letter was correctly guessed during that round
-; $0404 how many letters guessed
-; initizalize the current word ( banana ) starting in address $0408 ( first letter ) 
-; $0400 + the letter code choosed will be the place to store if the current letter was guessed right, beginning in $0420
+; the size of the word in address $0500
+; $0501 will be the current letter choosed, to check in the word
+; $0502 will store how many parts of the body will be displayed ( how many errors )
+; $0503 will store if a letter was correctly guessed during that round
+; $0504 how many letters guessed
+; initizalize the current word ( banana ) starting in address $0508 ( first letter ) 
+; $0500 + the letter code choosed will be the place to store if the current letter was guessed right, beginning in $0520
 Initialize:
-  lda #6 ; word size
+  lda #$06 ; word size
   sta $0500
   lda #$22 ; B
   sta $0508
@@ -239,14 +239,8 @@ Initialize:
   lda #$20 ; A
   sta $050D
 
-  lda #$01
-  sta $0520
-
-  lda #$01
-  sta $053A
-
   lda #$00
-  sta $0505
+  sta $0505 ; position for count the tile position that will be drawn, each sprite has 4 bytes
   rts
 
 CheckCurrentLetter:
@@ -630,22 +624,17 @@ DrawWordEndLoop:
   rts
 
 DrawErrors:
-  lda $0402
+  lda $0502
   cmp #$01
   beq DrawErrorHead
-  lda $0402
   cmp #$02
   beq DrawErrorBody
-  lda $0402
   cmp #$03
   beq DrawErrorLeftArm
-  lda $0402
   cmp #$04
   beq DrawErrorRightArm
-  lda $0402
   cmp #$05
   beq DrawErrorLeftLeg
-  lda $0402
   cmp #$06
   beq DrawErrorRightLeg
   jmp DrawErrorEnd
