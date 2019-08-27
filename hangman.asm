@@ -211,7 +211,7 @@ LoadSprite:
 
 ; main loop
 Loop:
-  ;jsr CheckCurrentLetter
+  jsr CheckCurrentLetter
   jsr CheckWin
   jsr LatchController
   jmp Loop
@@ -239,14 +239,42 @@ Initialize:
   lda #$20 ; A
   sta $050D
 
+  lda #$23
+  sta $0501
+
   lda #$00
   sta $0505 ; position for count the tile position that will be drawn, each sprite has 4 bytes
   rts
 
 CheckCurrentLetter:
   ldx #$00
+  lda $0501
+  cmp #$00
+  beq CheckCurrentLetterEnd
 CheckCurrentLetterLoop:
-
+  lda $0508, x
+  cmp $0501
+  bne CheckCurrenterLetterIncX
+  ; set letter as correct
+  tay
+  lda #$01
+  sta $0500, y
+  sta $0503 ; set that a letter was guessed
+CheckCurrenterLetterIncX:
+  inx
+  cpx $0500 ; iterate with the size of the word to guess
+  bne CheckCurrentLetterLoop
+  ; check if a letter was guessed
+  lda $0503
+  cmp #$01
+  beq CheckCurrentLetterEnd ; if equals a letter was guessed and the value is equal to one, don't make a sound
+  ;if an error happened
+  inc $0502 ; inc how many erros ocurred
+  jsr MakeSound
+CheckCurrentLetterEnd:
+  lda #$00
+  sta $0503
+  sta $0501
   rts
 
 CheckWin:
