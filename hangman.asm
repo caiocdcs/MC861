@@ -383,6 +383,13 @@ ReadUp:
   LDA $4016           ; player 1 - Up
   AND #%00000001      ; only look at bit 0
   BEQ ReadUpDone      ; branch to ReadUpDone if button is NOT pressed (0)
+MoveAlphabetUp:
+  LDX $0300           ; load current position on the alphabet
+  SEC
+  SBC #7, x           ; move seven letters to the beggining
+  AND #%10000000      ; only look at most significant bit
+  BCS ReadUpDone      ; branch to ReadUpDone if passed the limits of alphabet
+  STX $0300
 MoveUp:
   LDA $0200           ; load sprite Y position
   SEC                 ; make sure carry flag is set
@@ -395,6 +402,13 @@ ReadDown:
   LDA $4016           ; player 1 - Down
   AND #%00000001      ; only look at bit 0
   BEQ ReadDownDone    ; branch to ReadDownDone if button is NOT pressed (0)
+MoveAlphabetDown:
+  LDX $0300           ; load current position on the alphabet
+  CLC
+  ADC #7, x              ; check if counter > 26
+  STX $0301        
+  jsr CheckDownLimits   ; check if counter > 26
+  STX $0300
 MoveDown:
   LDA $0200           ; load sprite Y position
   CLC                 ; make sure carry flag is set
@@ -407,6 +421,13 @@ ReadLeft:
   LDA $4016           ; player 1 - Left
   AND #%00000001      ; only look at bit 0
   BEQ ReadLeftDone    ; branch to ReadLeftDone if button is NOT pressed (0)
+MoveAlphabetLeft:
+  LDX $0300           ; load current position on the alphabet
+  SEC
+  SBC #1, x              ; move seven letters to the beggining
+  AND #%10000000      ; only look at most significant bit
+  BCS ReadLeftDone      ; branch to ReadUpDone if passed the limits of alphabet
+  STX $0300
 MoveLeft:
   LDA $0203           ; load sprite X position
   SEC                 ; make sure carry flag is set
@@ -419,6 +440,13 @@ ReadRight:
   LDA $4016           ; player 1 - Right
   AND #%00000001      ; only look at bit 0
   BEQ ReadRightDone   ; branch to ReadRightDone if button is NOT pressed (0)
+MoveAlphabetRight:
+  LDX $0300           ; load current position on the alphabet
+  CLC
+  ADC #1, x      
+  STX $0301        
+  jsr CheckRightLimits   ; check if counter > 26
+  STX $0300
 MoveRight:           
   LDA $0203           ; load sprite X position
   CLC                 ; make sure carry flag is set
@@ -427,6 +455,24 @@ MoveRight:
 ReadRightDone:        ; handling this button is done
   ; TODO: Dessa, veja se consegue uma logica/timeout para mover mais devagar mas ainda de 16 em 16
   rts
+
+
+CheckDownLimits:
+  LDY $0301
+  SEC
+  SBC #26
+  AND #%10000000
+  BCC ReadDownDone
+  rts
+
+CheckRightLimits:
+  LDY $0301
+  SEC
+  SBC #26
+  AND #%10000000
+  BCC ReadRightDone
+  rts
+
 
 ;----------------------------------------------------------------
 ; DRAWING FUNCTIONS
