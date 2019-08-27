@@ -129,13 +129,12 @@ ClearLoop:
 ;   sta PPU_CTRL
 ;   lda #%00001010
 ;   sta PPU_MASK
-
+  jsr Initialize
   jsr LoadPalettes
   jsr LoadSprites
   jsr ConfigurePPU
   jsr WaitBlank
   jsr EnableSound
-  jsr Initialize
   jsr Loop
 
 ;----------------------------------------------------------------
@@ -193,7 +192,7 @@ LoadSprite:
   lda sprites, x        ; load data from address (sprites +  x)
   sta $0200, x          ; store into RAM address ($0200 + x)
   inx                   ; X = X + 1
-  cpx #$00a4            ; Compare X to hex $08, decimal 8 (each 4 is a sprite) -- change here if more sprites are needed
+  cpx #$00bc            ; Compare X to hex $08, decimal 8 (each 4 is a sprite) -- change here if more sprites are needed
   bne LoadSprite        ; Branch to LoadSprite if compare was Not Equal to zero
 
   lda #%10000000   ; enable NMI, sprites from Pattern Table 1
@@ -201,9 +200,10 @@ LoadSprite:
 
   lda #%00010000   ; enable sprites
   sta PPU_MASK
+  rts
 
-Forever:
-  jmp Forever     ;jump back to Forever, infinite loop
+;Forever:
+;  jmp Forever     ;jump back to Forever, infinite loop
 
 ;----------------------------------------------------------------
 ; GAME LOGIC
@@ -211,67 +211,54 @@ Forever:
 
 ; main loop
 Loop:
-  jsr CheckCurrentLetter
+  ;jsr CheckCurrentLetter
   jsr CheckWin
   jsr LatchController
   jmp Loop
 
-; TODO: Caiao, estou usando o $0200 como base para carregar os sprites, rola mudar a logica para $0400 em diante?
-
-; the size of the word in address $0200
-; $0201 will be the current letter choosed, to check in the word
-; $0202 will store how many parts of the body will be displayed ( how many errors )
-; $0203 will store if a letter was correctly guessed during that round
-; initizalize the current word ( banana ) starting in address $0204 ( first letter ) 
-; $0200 + the letter choosed will be the place to store if the current letter was guessed right, beginning in $0241
+; the size of the word in address $0400
+; $0401 will be the current letter choosed, to check in the word
+; $0402 will store how many parts of the body will be displayed ( how many errors )
+; $0403 will store if a letter was correctly guessed during that round
+; $0404 how many letters guessed
+; initizalize the current word ( banana ) starting in address $0408 ( first letter ) 
+; $0400 + the letter code choosed will be the place to store if the current letter was guessed right, beginning in $0420
 Initialize:
-  lda #$06 ; word size
-  sta $0200
-  lda #$42 ; B
-  sta $0204
-  lda #$41 ; A
-  sta $0205
-  lda #$4E ; N
-  sta $0206
-  lda #$41 ; A
-  sta $0207
-  lda #$4E ; N
-  sta $0208
-  lda #$41 ; A
-  sta $0209
+  lda #6 ; word size
+  sta $0500
+  lda #$22 ; B
+  sta $0508
+  lda #$20 ; A
+  sta $0509
+  lda #$3A ; N
+  sta $050A
+  lda #$20 ; A
+  sta $050B
+  lda #$3A ; N
+  sta $050C
+  lda #$20 ; A
+  sta $050D
+
+  lda #$01
+  sta $0520
+
+  lda #$01
+  sta $053A
+
+  lda #$00
+  sta $0505
   rts
 
 CheckCurrentLetter:
   ldx #$00
 CheckCurrentLetterLoop:
-  lda $0204, x
-  cmp $0201
-  bne CheckCurrenterLetterIncX
-  ; set letter as correct
-  tay
-  lda #$01
-  sta $0200, y
-  sta $0203 ; set that a letter was guessed
-CheckCurrenterLetterIncX:
-  inx
-  cpx $0200 ; iterate with the size of the word to guess
-  bne CheckCurrentLetterLoop
-  ; check if a letter was guessed
-  lda $0203
-  cmp #$01
-  beq CheckCurrentLetterEnd ; if equals a letter was guessed and the value is equal to one, don't make a sound
-  ;if an error happened
-  inc $0202 ; inc how many erros ocurred
-  ; jsr MakeSound
-CheckCurrentLetterEnd:
-  lda #$00
-  sta $0203
+
   rts
 
 CheckWin:
-
+  brk
 Win:
-
+  brk
 GameOver:
   brk
 
@@ -315,6 +302,7 @@ MakeSound:
 
 NMI:
   jsr DrawScreen
+  jsr DrawErrors
   jsr DrawWord
   jmp EndNMI
 
@@ -609,43 +597,71 @@ DrawRightLeg:
 ;----------------------------------------------------------------
 ; DRAW WORD
 ;----------------------------------------------------------------
-
 DrawWord:
-  ldx #$00
-DrawWordLoop:
-  lda $0241, x
+  ldy #00
+DrawWordLoop: 
+  ldx $0508, y
+  lda $0500, x
   cmp #$01
-  bne DrawLetterNotFound
-DrawLetterSuccess:
-  ; draw a guessed letter
-  lda #$00   ; these lines tell OAM_ADDR
-  sta OAM_ADDR  ; to tell
-  lda #$00   ; OAM_DATA to start
-  sta OAM_ADDR  ; at $0000.
+  bne DrawWordNotGuessed
 
-  ; calculate Y position
-  lda #50  ; load Y value
-  sta OAM_DATA ; store Y value
+  txa
+  ldx $0505
+  sta $02A5, x
+  jmp DrawWordEndLoop
 
-  ; tile number will change with the letter ascii code
-  lda #$0204, x ; pick tile for that letter ( maybe we will need to calculate that)
-  sta OAM_DATA ; store tile number
+DrawWordNotGuessed:
+  lda #$1D
+  ldx $0505
+  sta $02A5, x
 
-  ; pass this info always as 0
-  lda #$00 ; no special junk
-  sta OAM_DATA ; store special junk
+DrawWordEndLoop:
+  txa
+  clc
+  adc #$04
+  sta $0505
 
-  ; calculate X position
-  lda #20  ; load X value
-  sta OAM_DATA ; store X value
-  jmp DrawWordLoopIncX
-DrawLetterNotFound:
-
-
-DrawWordLoopIncX:
-  inx
-  cpx #$19 ; 25 for 26 letter from alphabet
+  iny
+  cpy $0500
   bne DrawWordLoop
+
+  lda #00
+  sta $0505
+  rts
+
+DrawErrors:
+  lda $0402
+  cmp #$01
+  beq DrawErrorHead
+  lda $0402
+  cmp #$02
+  beq DrawErrorBody
+  lda $0402
+  cmp #$03
+  beq DrawErrorLeftArm
+  lda $0402
+  cmp #$04
+  beq DrawErrorRightArm
+  lda $0402
+  cmp #$05
+  beq DrawErrorLeftLeg
+  lda $0402
+  cmp #$06
+  beq DrawErrorRightLeg
+  jmp DrawErrorEnd
+DrawErrorRightLeg:
+  jsr DrawRightLeg
+DrawErrorLeftLeg:
+  jsr DrawLeftLeg
+DrawErrorRightArm:
+  jsr DrawRightArm
+DrawErrorLeftArm:
+  jsr DrawLeftArm
+DrawErrorBody:
+  jsr DrawBody
+DrawErrorHead:
+  jsr DrawHead
+DrawErrorEnd:
   rts
 
 ;----------------------------------------------------------------
@@ -741,6 +757,13 @@ sprites:
   .db #56, #98, #00, #24    ; ($0298-$029b)
   .db #64, #98, #00, #24    ; ($029c-$029f)
   .db #72, #96, #00, #24    ; ($02a0-$02a3)
+
+  .db #72, #88, #00, #60    ; ($02a4-$02a7)
+  .db #72, #88, #00, #76    ; ($02a8-$02ab)
+  .db #72, #88, #00, #92    ; ($02ac-$02af)
+  .db #72, #88, #00, #108   ; ($02b0-$02b3)
+  .db #72, #88, #00, #124   ; ($02b4-$02b7)
+  .db #72, #88, #00, #140   ; ($02b8-$02bb)
 
 ;----------------------------------------------------------------
 ; INTERRUPT VECTORS
