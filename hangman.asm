@@ -335,6 +335,8 @@ DrawScreen:
 ;----------------------------------------------------------------
 
 ; TODO: Dessa, tenta ver como travar pro controle não sair do alfabeto, nao linkei tbm o botão A para selecionar a letra
+; $0300 saves the selector's offset horizontal position
+; $0301 saves the selector's offset vertical position 
 
 SetUpControllers:
   lda #$02
@@ -384,12 +386,10 @@ ReadUp:
   AND #%00000001      ; only look at bit 0
   BEQ ReadUpDone      ; branch to ReadUpDone if button is NOT pressed (0)
 MoveAlphabetUp:
-  LDX $0300           ; load current position on the alphabet
-  SEC
-  SBC #7, x           ; move seven letters to the beggining
-  STX $0301           
-  jsr CheckUpLimits
-  STX $0300
+  LDA $0300           ; load current position on the alphabet
+  SBC #1           ; move seven letters to the beggining
+  BMI ReadUpDone
+  STA $0300
 MoveUp:
   LDA $0200           ; load sprite Y position
   SEC                 ; make sure carry flag is set
@@ -403,11 +403,10 @@ ReadDown:
   AND #%00000001      ; only look at bit 0
   BEQ ReadDownDone    ; branch to ReadDownDone if button is NOT pressed (0)
 MoveAlphabetDown:
-  LDX $0300           ; load current position on the alphabet
+  LDA $0300           ; load current position on the alphabet
   CLC
-  ADC #7, x              ; check if counter > 26
-  STX $0301        
-  jsr CheckDownLimits   ; check if counter > 26
+  ADC #$7              ; check if counter > 26
+  CMP #$1A        
   STX $0300
 MoveDown:
   LDA $0200           ; load sprite Y position
@@ -422,10 +421,10 @@ ReadLeft:
   AND #%00000001      ; only look at bit 0
   BEQ ReadLeftDone    ; branch to ReadLeftDone if button is NOT pressed (0)
 MoveAlphabetLeft:
-  LDX $0300           ; load current position on the alphabet
-  DEX
+  LDA $0300           ; load current position on the alphabet
+  SBC #1
   BMI ReadLeftDone    ; branch to ReadUpDone if passed the limits of alphabet      
-  STX $0300
+  STA $0300
 MoveLeft:
   LDA $0203           ; load sprite X position
   SEC                 ; make sure carry flag is set
@@ -439,11 +438,12 @@ ReadRight:
   AND #%00000001      ; only look at bit 0
   BEQ ReadRightDone   ; branch to ReadRightDone if button is NOT pressed (0)
 MoveAlphabetRight:
-  LDX $0300           ; load current position on the alphabet
-  INX      
-  STX $0301        
-  jsr CheckRightLimits   ; check if counter > 26
-  STX $0300
+  LDA $0300           ; load current position on the alphabet
+  CLC
+  ADC #1   
+  CMP #$7             ; check if counter > 26
+  BPL ReadRightDone
+  STA $0300
 MoveRight:           
   LDA $0203           ; load sprite X position
   CLC                 ; make sure carry flag is set
@@ -451,39 +451,6 @@ MoveRight:
   STA $0203           ; save sprite X position
 ReadRightDone:        ; handling this button is done
   ; TODO: Dessa, veja se consegue uma logica/timeout para mover mais devagar mas ainda de 16 em 16
-  rts
-
-
-CheckUpLimits:
-  LDY $0301
-  AND #%1000000000000000, y
-  EOR #%1000000000000000, y
-  BEQ ReadUpDone
-  rts
-
-CheckDownLimits:
-  LDY $0301
-  CLC
-  SBC #26
-  AND #%1000000000000000, y
-  EOR #%1000000000000000, y
-  BEQ ReadDownDone
-  rts
-
-CheckRightLimits:
-  LDY $0301
-  CLC
-  SBC #26
-  AND #%1000000000000000, y
-  EOR #%1000000000000000, y
-  BEQ ReadRightDone
-  rts
-
-CheckLeftLimits:
-  LDY $0301
-  AND #%1000000000000000, y
-  EOR #%1000000000000000, y
-  BEQ ReadLeftDone
   rts
 
 
