@@ -387,8 +387,8 @@ MoveAlphabetUp:
   LDX $0300           ; load current position on the alphabet
   SEC
   SBC #7, x           ; move seven letters to the beggining
-  AND #%10000000      ; only look at most significant bit
-  BCS ReadUpDone      ; branch to ReadUpDone if passed the limits of alphabet
+  STX $0301           
+  jsr CheckUpLimits
   STX $0300
 MoveUp:
   LDA $0200           ; load sprite Y position
@@ -423,10 +423,8 @@ ReadLeft:
   BEQ ReadLeftDone    ; branch to ReadLeftDone if button is NOT pressed (0)
 MoveAlphabetLeft:
   LDX $0300           ; load current position on the alphabet
-  SEC
-  SBC #1, x              ; move seven letters to the beggining
-  AND #%10000000      ; only look at most significant bit
-  BCS ReadLeftDone      ; branch to ReadUpDone if passed the limits of alphabet
+  DEX
+  BMI ReadLeftDone    ; branch to ReadUpDone if passed the limits of alphabet      
   STX $0300
 MoveLeft:
   LDA $0203           ; load sprite X position
@@ -442,8 +440,7 @@ ReadRight:
   BEQ ReadRightDone   ; branch to ReadRightDone if button is NOT pressed (0)
 MoveAlphabetRight:
   LDX $0300           ; load current position on the alphabet
-  CLC
-  ADC #1, x      
+  INX      
   STX $0301        
   jsr CheckRightLimits   ; check if counter > 26
   STX $0300
@@ -457,20 +454,36 @@ ReadRightDone:        ; handling this button is done
   rts
 
 
+CheckUpLimits:
+  LDY $0301
+  AND #%1000000000000000, y
+  EOR #%1000000000000000, y
+  BEQ ReadUpDone
+  rts
+
 CheckDownLimits:
   LDY $0301
-  SEC
+  CLC
   SBC #26
-  AND #%10000000
-  BCC ReadDownDone
+  AND #%1000000000000000, y
+  EOR #%1000000000000000, y
+  BEQ ReadDownDone
   rts
 
 CheckRightLimits:
   LDY $0301
-  SEC
+  CLC
   SBC #26
-  AND #%10000000
-  BCC ReadRightDone
+  AND #%1000000000000000, y
+  EOR #%1000000000000000, y
+  BEQ ReadRightDone
+  rts
+
+CheckLeftLimits:
+  LDY $0301
+  AND #%1000000000000000, y
+  EOR #%1000000000000000, y
+  BEQ ReadLeftDone
   rts
 
 
