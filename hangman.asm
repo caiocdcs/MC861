@@ -355,7 +355,6 @@ ReadStart:
   AND #%00000001      ; only look at bit 0
   BEQ ReadStartDone   ; branch to ReadBDone if button is NOT pressed (0)
                       ; add instructions here to do something when button IS pressed (1)
-  ; jsr Win ; TODO: rethink/remove
 ReadStartDone:        ; handling this button is done
 
 ; Pressed Up
@@ -444,6 +443,78 @@ DrawWin:
   sta $0201
   lda #00
   sta $0203
+  ; Y
+  lda #112
+  sta $0208
+  lda #80
+  sta $0209
+  lda #02
+  sta $020a
+  lda #84
+  sta $020b
+  ; O
+  lda #112
+  sta $020c
+  lda #60
+  sta $020d
+  lda #02
+  sta $020e
+  lda #96
+  sta $020f
+  ; U
+  lda #112
+  sta $0210
+  lda #72
+  sta $0211
+  lda #02
+  sta $0212
+  lda #108
+  sta $0213
+  ; W
+  lda #112
+  sta $0214
+  lda #76
+  sta $0215
+  lda #02
+  sta $0216
+  lda #132
+  sta $0217
+  ; I
+  lda #112
+  sta $0218
+  lda #48
+  sta $0219
+  lda #02
+  sta $021a
+  lda #144
+  sta $021b
+  ; N
+  lda #112
+  sta $021c
+  lda #58
+  sta $021d
+  lda #02
+  sta $021e
+  lda #156
+  sta $021f
+  jsr DrawPressB
+  ; Clear remaining letters
+  lda #88
+  sta $0205
+  sta $0221
+  sta $0225
+  sta $0229
+  sta $022d
+  sta $0231
+  sta $024d
+  sta $024d
+  sta $0251
+  sta $0255
+  sta $0259
+  sta $025d
+  sta $0261
+  sta $0265
+  sta $0269
 
   rts
 
@@ -563,6 +634,21 @@ DrawGameOver:
   sta $0232
   lda #124
   sta $0233
+  jsr DrawPressB
+  ; Clear remaining letters
+  lda #88
+  sta $024d
+  sta $0251
+  sta $0255
+  sta $0259
+  sta $025d
+  sta $0261
+  sta $0265
+  sta $0269
+
+  rts
+
+DrawPressB:
   ; P
   lda #132
   sta $0234
@@ -605,16 +691,6 @@ DrawGameOver:
   sta $0249
   lda #150
   sta $024b
-  ; Clear remaining letters
-  lda #88
-  sta $024d
-  sta $0251
-  sta $0255
-  sta $0259
-  sta $025d
-  sta $0261
-  sta $0265
-  sta $0269
 
   rts
 
@@ -870,7 +946,7 @@ IRQ:
   .org $E000
 palette:
   .db $0F,$31,$32,$33,$0F,$35,$36,$37,$0F,$39,$3A,$3B,$0F,$3D,$3E,$0F
-  .db $0F,$29,$00,$20,$0F,$15,$26,$37,$0F,$1C,$15,$14,$0F,$02,$38,$3C
+  .db $0F,$29,$00,$20,$0F,$15,$26,$37,$0F,$1C,$15,$2B,$0F,$02,$38,$3C
   ;   Whi,LGr,MGr,DGr <-- Sprites color mapping
 
 ;----------------------------------------------------------------
