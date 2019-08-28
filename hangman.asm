@@ -242,8 +242,12 @@ CheckWin:
   beq GameOver
   rts
 Win:
+  jsr DrawWin
+; TODO: Link B to command 'jsr RESET', if in state Win or GameOver (maybe use memory address to know)
   brk
 GameOver:
+  jsr DrawGameOver
+; TODO: Link B to command 'jsr RESET', if in state Win or GameOver (maybe use memory address to know)
   brk
 
 ;----------------------------------------------------------------
@@ -306,7 +310,6 @@ DrawScreen:
 ; CONTROLLERS
 ;----------------------------------------------------------------
 
-; TODO: Dessa, tenta ver como travar pro controle não sair do alfabeto, nao linkei tbm o botão A para selecionar a letra
 ; $0300 saves the selector's offset horizontal position
 ; $0301 saves the selector's offset vertical position 
 ; $0302 alphabet position
@@ -335,6 +338,7 @@ ReadB:
   AND #%00000001      ; only look at bit 0
   BEQ ReadBDone       ; branch to ReadBDone if button is NOT pressed (0)
                       ; add instructions here to do something when button IS pressed (1)
+; TODO: Link B to command 'jsr RESET', if in state Win or GameOver (maybe use memory address to know)
 ReadBDone:            ; handling this button is done
 
 ; Pressed Select
@@ -351,6 +355,7 @@ ReadStart:
   AND #%00000001      ; only look at bit 0
   BEQ ReadStartDone   ; branch to ReadBDone if button is NOT pressed (0)
                       ; add instructions here to do something when button IS pressed (1)
+  ; jsr Win ; TODO: rethink/remove
 ReadStartDone:        ; handling this button is done
 
 ; Pressed Up
@@ -425,27 +430,197 @@ MoveRight:
   ADC #$10            ; A = A + 16
   STA $0203           ; save sprite X position
 ReadRightDone:        ; handling this button is done
-  ; TODO: Dessa, veja se consegue uma logica/timeout para mover mais devagar mas ainda de 16 em 16
   rts
-
 
 ;----------------------------------------------------------------
 ; DRAWING FUNCTIONS
 ;----------------------------------------------------------------
 
-; TODO: Troca o sprite da letra por um cinza, poderia tbm trocar a cor ao invés do sprite.
-; Precisa deixar o carregamento do byte dinamico e so chamar uma vez por jogo
-;
-; Base memory is $0204 - letter A, iterates each 4 then
-DisableLetter:           
-  lda $0205           ; load sprite tile
-  clc                 ; make sure carry flag is set
-  adc #$01            ; A = A + 1 (which is the disable tile for the letter)
-  sta $0205           ; save sprite tile
-  rts
-; Ou otimiza a funcao de cima para usar, ou usa o as debaixo para desabilitar letras do alfabeto
+DrawWin:
+  ; Disable selector
+  lda #00
+  sta $0200
+  lda #88
+  sta $0201
+  lda #00
+  sta $0203
 
-; Disable Alphabet letters
+  rts
+
+DrawGameOver:
+  ; Disable selector
+  lda #00
+  sta $0200
+  lda #88
+  sta $0201
+  lda #00
+  sta $0203
+  ; G
+  lda #112
+  sta $0204
+  lda #45
+  sta $0205
+  lda #01
+  sta $0206
+  lda #72
+  sta $0207
+  ; A
+  lda #112
+  sta $0208
+  lda #33
+  sta $0209
+  lda #01
+  sta $020a
+  lda #84
+  sta $020b
+  ; M
+  lda #112
+  sta $020c
+  lda #57
+  sta $020d
+  lda #01
+  sta $020e
+  lda #96
+  sta $020f
+  ; E
+  lda #112
+  sta $0210
+  lda #41
+  sta $0211
+  lda #01
+  sta $0212
+  lda #108
+  sta $0213
+  ; O
+  lda #112
+  sta $0214
+  lda #61
+  sta $0215
+  lda #01
+  sta $0216
+  lda #132
+  sta $0217
+  ; V
+  lda #112
+  sta $0218
+  lda #75
+  sta $0219
+  lda #01
+  sta $021a
+  lda #144
+  sta $021b
+  ; E
+  lda #112
+  sta $021c
+  lda #41
+  sta $021d
+  lda #01
+  sta $021e
+  lda #156
+  sta $021f
+  ; R
+  lda #112
+  sta $0220
+  lda #67
+  sta $0221
+  lda #01
+  sta $0222
+  lda #168
+  sta $0223
+  ; Dead Face (1/4)
+  lda #96
+  sta $0224
+  lda #12
+  sta $0225
+  lda #01
+  sta $0226
+  lda #116
+  sta $0227
+  ; Dead Face (2/4)
+  lda #96
+  sta $0228
+  lda #13
+  sta $0229
+  lda #01
+  sta $022a
+  lda #124
+  sta $022b
+  ; Dead Face (3/4)
+  lda #104
+  sta $022c
+  lda #14
+  sta $022d
+  lda #01
+  sta $022e
+  lda #116
+  sta $022f
+  ; Dead Face (4/4)
+  lda #104
+  sta $0230
+  lda #15
+  sta $0231
+  lda #01
+  sta $0232
+  lda #124
+  sta $0233
+  ; P
+  lda #132
+  sta $0234
+  lda #62
+  sta $0235
+  lda #90
+  sta $0237
+  ; R
+  lda #132
+  sta $0238
+  lda #66
+  sta $0239
+  lda #100
+  sta $023b
+  ; E
+  lda #132
+  sta $023c
+  lda #40
+  sta $023d
+  lda #110
+  sta $023f
+  ; S
+  lda #132
+  sta $0240
+  lda #68
+  sta $0241
+  lda #120
+  sta $0243
+  ; S
+  lda #132
+  sta $0244
+  lda #68
+  sta $0245
+  lda #130
+  sta $0247
+  ; B
+  lda #132
+  sta $0248
+  lda #34
+  sta $0249
+  lda #150
+  sta $024b
+  ; Clear remaining letters
+  lda #88
+  sta $024d
+  sta $0251
+  sta $0255
+  sta $0259
+  sta $025d
+  sta $0261
+  sta $0265
+  sta $0269
+
+  rts
+
+;----------------------------------------------------------------
+; DRAW ALPHABET (DISABLED LETTERS)
+;----------------------------------------------------------------
 DisableA:
   lda #33
   sta $0205
@@ -576,7 +751,9 @@ DisableZ:
   sta $0269
   rts
 
-; Draw hangman body
+;----------------------------------------------------------------
+; DRAW HANGMAN
+;----------------------------------------------------------------
 DrawHead:
   lda #89
   sta $026d
@@ -692,11 +869,8 @@ IRQ:
 
   .org $E000
 palette:
-  ; Background Colors
   .db $0F,$31,$32,$33,$0F,$35,$36,$37,$0F,$39,$3A,$3B,$0F,$3D,$3E,$0F
-
-  ; Sprite Colors
-  .db $0F,$29,$00,$20,$0F,$02,$38,$3C,$0F,$1C,$15,$14,$0F,$02,$38,$3C
+  .db $0F,$29,$00,$20,$0F,$15,$26,$37,$0F,$1C,$15,$14,$0F,$02,$38,$3C
   ;   Whi,LGr,MGr,DGr <-- Sprites color mapping
 
 ;----------------------------------------------------------------
