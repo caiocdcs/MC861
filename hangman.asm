@@ -407,6 +407,11 @@ CanMoveUp:
   SBC #1              ; move up y = y - 1
   BMI ReadUpDone      ; if negative, dont move selector
   STA $0301           ; else, move onde postion up
+IterateAlphabetUp:
+  LDA $0302           ; load alphabet counter c
+  SBC #4              ; c = c - 4
+  BMI ReadUpDone      ; if negative, dont move selector
+  STA $0302           ; else, move onde postion up
 MoveUp:
   LDA $0200           ; load sprite Y position
   SEC                 ; make sure carry flag is set
@@ -426,6 +431,12 @@ CanMoveDown:
   CMP #$4             ; if y > 4
   BPL ReadDownDone    ; dont move the selector    
   STA $0301           ; else, move onde postion down
+IterateAlphabetDown:
+  LDA $0302           ; load alphabet counter c
+  ADC #4              ; c = c + 4
+  CMP #$26            ; if c > 26
+  BPL ReadDownDone    ; dont move the selector
+  STA $0302           ; else, move onde postion down
 MoveDown:
   LDA $0200           ; load sprite Y position
   CLC                 ; make sure carry flag is set
@@ -443,6 +454,11 @@ CanMoveLeft:
   SBC #1              ; move up x = x - 1
   BMI ReadLeftDone    ; if negative, dont move selector      
   STA $0300           ; else, move onde postion left
+IterateAlphabetLeft:
+  LDA $0302           ; load alphabet counter c
+  SBC #1              ; c = c - 1
+  BMI ReadLeftDone    ; if negative, dont move selector
+  STA $0302           ; else, move onde postion left
 MoveLeft:
   LDA $0203           ; load sprite X position
   SEC                 ; make sure carry flag is set
@@ -462,7 +478,12 @@ CanMoveRight:
   CMP #$7             ; if x > 7
   BPL ReadRightDone   ; dont move the selector
   STA $0300           ; else, move onde postion right
-
+IterateAlphabetRight:
+  LDA $0302           ; load alphabet counter c
+  ADC #1              ; c = c + 1
+  CMP #$26            ; if c > 26
+  BPL ReadRightDone   ; dont move the selector
+  STA $0302           ; else, move onde postion right
 MoveRight:           
   LDA $0203           ; load sprite X position
   CLC                 ; make sure carry flag is set
