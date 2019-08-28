@@ -415,7 +415,11 @@ ReadA:
   BEQ ReadADone       ; branch to ReadADone if button is NOT pressed (0)
                       ; add instructions here to do something when button IS pressed (1)
 SelectLetter:
-
+  ASL $0302           ; counter c = c * 2
+  LDX $0302           
+  ADC #32, x          ; x = c + 32
+  STX $0501           ; selecionar letra
+  LSR $0302           ; counter c = c / 2
 ReadADone:            ; handling this button is done
   
 ; Pressed B
