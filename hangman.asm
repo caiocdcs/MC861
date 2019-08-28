@@ -241,9 +241,6 @@ Initialize:
   lda #32
   sta $0501
 
-  lda #$23
-  sta $0501
-
   lda #$00
   sta $0505 ; position for count the tile position that will be drawn, each sprite has 4 bytes
   rts
