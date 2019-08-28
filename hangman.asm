@@ -259,6 +259,7 @@ CheckCurrentLetterLoop:
   lda #$01
   sta $0500, y
   sta $0503 ; set that a letter was guessed
+  inc $0504
 CheckCurrenterLetterIncX:
   inx
   cpx $0500 ; iterate with the size of the word to guess
@@ -269,7 +270,7 @@ CheckCurrenterLetterIncX:
   beq CheckCurrentLetterEnd ; if equals a letter was guessed and the value is equal to one, don't make a sound
   ;if an error happened
   inc $0502 ; inc how many erros ocurred
-  jsr MakeSound
+  ;jsr MakeSound
 CheckCurrentLetterEnd:
   lda #$00
   sta $0503
@@ -277,7 +278,13 @@ CheckCurrentLetterEnd:
   rts
 
 CheckWin:
-  brk
+  lda $0504
+  cmp $0500
+  beq Win
+  lda $0502
+  cmp #06
+  beq GameOver
+  rts
 Win:
   brk
 GameOver:
