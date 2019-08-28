@@ -80,55 +80,7 @@ ClearLoop:
   cpx #$00
   bne ClearLoop
 
-; Background was not working
-; ; Set name table + Attribute
-;   lda PPU_STATUS
-;   lda #$20
-;   sta PPU_ADDR
-;   lda #$00
-;   sta PPU_ADDR
-;   lda #<bg_nam
-;   sta L_byte
-;   lda #>bg_nam
-;   sta H_byte
-;   ldx #$00
-;   ldy #$00
-; NamLoop:
-;   lda ($00), Y
-;   sta PPU_DATA
-;   iny
-;   cpy #$00
-;   bne NamLoop
-;   inc H_byte
-;   inx
-;   cpx #$04
-;   bne NamLoop
-  
-; ; Background color setup
-;   lda PPU_STATUS
-;   lda #$3F
-;   sta PPU_ADDR
-;   lda #$00
-;   sta PPU_ADDR
-;   ldx #$00
-; PalLoop:
-;   lda bg_pal, X
-;   sta PPU_DATA
-;   inx
-;   cpx #$10
-;   bne PalLoop
-
-; ; Reset Scroll
-;   lda #$00
-;   sta PPU_SCROLL
-;   lda #$00
-;   sta PPU_SCROLL
-   
-; ; Enable NMI and rendering
-;   lda #%00000000
-;   sta PPU_CTRL
-;   lda #%00001010
-;   sta PPU_MASK
+  ; Initialize Game
   jsr Initialize
   jsr LoadPalettes
   jsr LoadSprites
@@ -192,7 +144,7 @@ LoadSprite:
   lda sprites, x        ; load data from address (sprites +  x)
   sta $0200, x          ; store into RAM address ($0200 + x)
   inx                   ; X = X + 1
-  cpx #$00bc            ; Compare X to hex $08, decimal 8 (each 4 is a sprite) -- change here if more sprites are needed
+  cpx #$00bc            ; Compare X to hex $00bc (each 4 is a sprite) -- change here if more sprites are needed
   bne LoadSprite        ; Branch to LoadSprite if compare was Not Equal to zero
 
   lda #%10000000   ; enable NMI, sprites from Pattern Table 1
@@ -200,6 +152,10 @@ LoadSprite:
 
   lda #%00010000   ; enable sprites
   sta PPU_MASK
+
+;----------------------------------------------------------------
+; FOREVER LOOP
+;----------------------------------------------------------------
 
 Forever:
   jmp Forever     ;jump back to Forever, infinite loop
@@ -286,8 +242,12 @@ CheckWin:
   beq GameOver
   rts
 Win:
+  jsr DrawWin
+; TODO: Link B to command 'jsr RESET', if in state Win or GameOver (maybe use memory address to know)
   brk
 GameOver:
+  jsr DrawGameOver
+; TODO: Link B to command 'jsr RESET', if in state Win or GameOver (maybe use memory address to know)
   brk
 
 ;----------------------------------------------------------------
@@ -350,7 +310,6 @@ DrawScreen:
 ; CONTROLLERS
 ;----------------------------------------------------------------
 
-; TODO: Dessa, tenta ver como travar pro controle não sair do alfabeto, nao linkei tbm o botão A para selecionar a letra
 ; $0300 saves the selector's offset horizontal position
 ; $0301 saves the selector's offset vertical position 
 ; $0302 alphabet position
@@ -379,6 +338,7 @@ ReadB:
   AND #%00000001      ; only look at bit 0
   BEQ ReadBDone       ; branch to ReadBDone if button is NOT pressed (0)
                       ; add instructions here to do something when button IS pressed (1)
+; TODO: Link B to command 'jsr RESET', if in state Win or GameOver (maybe use memory address to know)
 ReadBDone:            ; handling this button is done
 
 ; Pressed Select
@@ -469,186 +429,435 @@ MoveRight:
   ADC #$10            ; A = A + 16
   STA $0203           ; save sprite X position
 ReadRightDone:        ; handling this button is done
-  ; TODO: Dessa, veja se consegue uma logica/timeout para mover mais devagar mas ainda de 16 em 16
   rts
-
 
 ;----------------------------------------------------------------
 ; DRAWING FUNCTIONS
 ;----------------------------------------------------------------
 
-; TODO: Troca o sprite da letra por um cinza, poderia tbm trocar a cor ao invés do sprite.
-; Precisa deixar o carregamento do byte dinamico e so chamar uma vez por jogo
-;
-; Base memory is $0204 - letter A, iterates each 4 then
-DisableLetter:           
-  lda $0205           ; load sprite tile
-  clc                 ; make sure carry flag is set
-  adc #$01            ; A = A + 1 (which is the disable tile for the letter)
-  sta $0205           ; save sprite tile
-  rts
-; Ou otimiza a funcao de cima para usar, ou usa o as debaixo para desabilitar letras do alfabeto
+DrawWin:
+  ; Disable selector
+  lda #00
+  sta $0200
+  lda #88
+  sta $0201
+  lda #00
+  sta $0203
+  ; Y
+  lda #112
+  sta $0208
+  lda #80
+  sta $0209
+  lda #02
+  sta $020a
+  lda #84
+  sta $020b
+  ; O
+  lda #112
+  sta $020c
+  lda #60
+  sta $020d
+  lda #02
+  sta $020e
+  lda #96
+  sta $020f
+  ; U
+  lda #112
+  sta $0210
+  lda #72
+  sta $0211
+  lda #02
+  sta $0212
+  lda #108
+  sta $0213
+  ; W
+  lda #112
+  sta $0214
+  lda #76
+  sta $0215
+  lda #02
+  sta $0216
+  lda #132
+  sta $0217
+  ; I
+  lda #112
+  sta $0218
+  lda #48
+  sta $0219
+  lda #02
+  sta $021a
+  lda #144
+  sta $021b
+  ; N
+  lda #112
+  sta $021c
+  lda #58
+  sta $021d
+  lda #02
+  sta $021e
+  lda #156
+  sta $021f
+  jsr DrawPressB
+  ; Clear remaining letters
+  lda #88
+  sta $0205
+  sta $0221
+  sta $0225
+  sta $0229
+  sta $022d
+  sta $0231
+  sta $024d
+  sta $024d
+  sta $0251
+  sta $0255
+  sta $0259
+  sta $025d
+  sta $0261
+  sta $0265
+  sta $0269
 
-; Disable Alphabet letters
+  rts
+
+DrawGameOver:
+  ; Disable selector
+  lda #00
+  sta $0200
+  lda #88
+  sta $0201
+  lda #00
+  sta $0203
+  ; G
+  lda #112
+  sta $0204
+  lda #45
+  sta $0205
+  lda #01
+  sta $0206
+  lda #72
+  sta $0207
+  ; A
+  lda #112
+  sta $0208
+  lda #33
+  sta $0209
+  lda #01
+  sta $020a
+  lda #84
+  sta $020b
+  ; M
+  lda #112
+  sta $020c
+  lda #57
+  sta $020d
+  lda #01
+  sta $020e
+  lda #96
+  sta $020f
+  ; E
+  lda #112
+  sta $0210
+  lda #41
+  sta $0211
+  lda #01
+  sta $0212
+  lda #108
+  sta $0213
+  ; O
+  lda #112
+  sta $0214
+  lda #61
+  sta $0215
+  lda #01
+  sta $0216
+  lda #132
+  sta $0217
+  ; V
+  lda #112
+  sta $0218
+  lda #75
+  sta $0219
+  lda #01
+  sta $021a
+  lda #144
+  sta $021b
+  ; E
+  lda #112
+  sta $021c
+  lda #41
+  sta $021d
+  lda #01
+  sta $021e
+  lda #156
+  sta $021f
+  ; R
+  lda #112
+  sta $0220
+  lda #67
+  sta $0221
+  lda #01
+  sta $0222
+  lda #168
+  sta $0223
+  ; Dead Face (1/4)
+  lda #96
+  sta $0224
+  lda #12
+  sta $0225
+  lda #01
+  sta $0226
+  lda #116
+  sta $0227
+  ; Dead Face (2/4)
+  lda #96
+  sta $0228
+  lda #13
+  sta $0229
+  lda #01
+  sta $022a
+  lda #124
+  sta $022b
+  ; Dead Face (3/4)
+  lda #104
+  sta $022c
+  lda #14
+  sta $022d
+  lda #01
+  sta $022e
+  lda #116
+  sta $022f
+  ; Dead Face (4/4)
+  lda #104
+  sta $0230
+  lda #15
+  sta $0231
+  lda #01
+  sta $0232
+  lda #124
+  sta $0233
+  jsr DrawPressB
+  ; Clear remaining letters
+  lda #88
+  sta $024d
+  sta $0251
+  sta $0255
+  sta $0259
+  sta $025d
+  sta $0261
+  sta $0265
+  sta $0269
+
+  rts
+
+DrawPressB:
+  ; P
+  lda #132
+  sta $0234
+  lda #62
+  sta $0235
+  lda #90
+  sta $0237
+  ; R
+  lda #132
+  sta $0238
+  lda #66
+  sta $0239
+  lda #100
+  sta $023b
+  ; E
+  lda #132
+  sta $023c
+  lda #40
+  sta $023d
+  lda #110
+  sta $023f
+  ; S
+  lda #132
+  sta $0240
+  lda #68
+  sta $0241
+  lda #120
+  sta $0243
+  ; S
+  lda #132
+  sta $0244
+  lda #68
+  sta $0245
+  lda #130
+  sta $0247
+  ; B
+  lda #132
+  sta $0248
+  lda #34
+  sta $0249
+  lda #150
+  sta $024b
+
+  rts
+
+;----------------------------------------------------------------
+; DRAW ALPHABET (DISABLED LETTERS)
+;----------------------------------------------------------------
 DisableA:
-  lda #33             ; tile number
-  sta $0205           ; update tile
+  lda #33
+  sta $0205
   rts
 
 DisableB:
-  lda #35             ; tile number
-  sta $0209           ; update tile
+  lda #35
+  sta $0209
   rts
 
 DisableC:
-  lda #37             ; tile number
-  sta $020d           ; update tile
+  lda #37
+  sta $020d
   rts
 
 DisableD:
-  lda #39             ; tile number
-  sta $0211           ; update tile
+  lda #39
+  sta $0211
   rts
 
 DisableE:
-  lda #41             ; tile number
-  sta $0215           ; update tile
+  lda #41
+  sta $0215
   rts
 
 DisableF:
-  lda #43             ; tile number
-  sta $0219           ; update tile
+  lda #43
+  sta $0219
   rts
 
 DisableG:
-  lda #45             ; tile number
-  sta $021d           ; update tile
+  lda #45
+  sta $021d
   rts
 
 DisableH:
-  lda #47             ; tile number
-  sta $0221           ; update tile
+  lda #47
+  sta $0221
   rts
 
 DisableI:
-  lda #49             ; tile number
-  sta $0225           ; update tile
+  lda #49
+  sta $0225
   rts
 
 DisableJ:
-  lda #51             ; tile number
-  sta $0229           ; update tile
+  lda #51
+  sta $0229
   rts
 
 DisableK:
-  lda #53             ; tile number
-  sta $022d           ; update tile
+  lda #53
+  sta $022d
   rts
 
 DisableL:
-  lda #55             ; tile number
-  sta $0231           ; update tile
+  lda #55
+  sta $0231
   rts
 
 DisableM:
-  lda #57             ; tile number
-  sta $0235           ; update tile
+  lda #57
+  sta $0235
   rts
 
 DisableN:
-  lda #59             ; tile number
-  sta $0239           ; update tile
+  lda #59
+  sta $0239
   rts
 
 DisableO:
-  lda #61             ; tile number
-  sta $023d           ; update tile
+  lda #61
+  sta $023d
   rts
 
 DisableP:
-  lda #63             ; tile number
-  sta $0241           ; update tile
+  lda #63
+  sta $0241
   rts
 
 DisableQ:
-  lda #65             ; tile number
-  sta $0245           ; update tile
+  lda #65
+  sta $0245
   rts
 
 DisableR:
-  lda #67             ; tile number
-  sta $0249           ; update tile
+  lda #67
+  sta $0249
   rts
 
 DisableS:
-  lda #69             ; tile number
-  sta $024d           ; update tile
+  lda #69
+  sta $024d
   rts
 
 DisableT:
-  lda #71             ; tile number
-  sta $0251           ; update tile
+  lda #71
+  sta $0251
   rts
 
 DisableU:
-  lda #73             ; tile number
-  sta $0255           ; update tile
+  lda #73
+  sta $0255
   rts
 
 DisableV:
-  lda #75             ; tile number
-  sta $0259           ; update tile
+  lda #75
+  sta $0259
   rts
 
 DisableW:
-  lda #77             ; tile number
-  sta $025d           ; update tile
+  lda #77
+  sta $025d
   rts
 
 DisableX:
-  lda #79             ; tile number
-  sta $0261           ; update tile
+  lda #79
+  sta $0261
   rts
 
 DisableY:
-  lda #81             ; tile number
-  sta $0265           ; update tile
+  lda #81
+  sta $0265
   rts
 
 DisableZ:
-  lda #83             ; tile number
-  sta $0269           ; update tile
+  lda #83
+  sta $0269
   rts
 
-; Draw hangman body
+;----------------------------------------------------------------
+; DRAW HANGMAN
+;----------------------------------------------------------------
 DrawHead:
-  lda #89             ; tile number
-  sta $026d           ; update tile
+  lda #89
+  sta $026d
   rts
 
 DrawBody:
-  lda #90             ; tile number
-  sta $0271           ; update tile
+  lda #90
+  sta $0271
   rts
 
 DrawLeftArm:
-  lda #92             ; tile number
-  sta $0275           ; update tile
+  lda #92
+  sta $0275
   rts
 
 DrawRightArm:
-  lda #93             ; tile number
-  sta $0279           ; update tile
+  lda #93
+  sta $0279
   rts
 
 DrawLeftLeg:
-  lda #94             ; tile number
-  sta $027d           ; update tile
+  lda #94
+  sta $027d
   rts
 
 DrawRightLeg:
-  lda #95             ; tile number
-  sta $0281           ; update tile
+  lda #95
+  sta $0281
   rts
 
 ;----------------------------------------------------------------
@@ -721,7 +930,7 @@ DrawErrorEnd:
 ;----------------------------------------------------------------
 
 EndNMI:
-  rti        ; return from interrupt
+  rti
 
 ;----------------------------------------------------------------
 ; IRQ
@@ -731,26 +940,13 @@ IRQ:
   rti
 
 ;----------------------------------------------------------------
-; BACKGROUND INCLUDES (Not working)
-;----------------------------------------------------------------
-
-; bg_nam:
-;   .incbin "bg.nam"
-
-; bg_pal:
-;   .incbin "bg.pal"
-
-;----------------------------------------------------------------
 ; COLOR PALETTE
 ;----------------------------------------------------------------
 
   .org $E000
 palette:
-  ; Background Colors
   .db $0F,$31,$32,$33,$0F,$35,$36,$37,$0F,$39,$3A,$3B,$0F,$3D,$3E,$0F
-
-  ; Sprite Colors
-  .db $0F,$29,$00,$20,$0F,$02,$38,$3C,$0F,$1C,$15,$14,$0F,$02,$38,$3C
+  .db $0F,$29,$00,$20,$0F,$15,$26,$37,$0F,$1C,$15,$2B,$0F,$02,$38,$3C
   ;   Whi,LGr,MGr,DGr <-- Sprites color mapping
 
 ;----------------------------------------------------------------
@@ -810,6 +1006,7 @@ sprites:
   .db #64, #98, #00, #24    ; ($029c-$029f)
   .db #72, #96, #00, #24    ; ($02a0-$02a3)
 
+  ; Word to be guessed
   .db #72, #88, #00, #60    ; ($02a4-$02a7)
   .db #72, #88, #00, #76    ; ($02a8-$02ab)
   .db #72, #88, #00, #92    ; ($02ac-$02af)
