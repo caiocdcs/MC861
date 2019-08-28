@@ -345,6 +345,8 @@ DrawScreen:
 ;----------------------------------------------------------------
 
 ; TODO: Dessa, tenta ver como travar pro controle não sair do alfabeto, nao linkei tbm o botão A para selecionar a letra
+; $0300 saves the selector's offset horizontal position
+; $0301 saves the selector's offset vertical position 
 
 SetUpControllers:
   lda #$02
@@ -393,6 +395,11 @@ ReadUp:
   LDA $4016           ; player 1 - Up
   AND #%00000001      ; only look at bit 0
   BEQ ReadUpDone      ; branch to ReadUpDone if button is NOT pressed (0)
+MoveAlphabetUp:
+  LDA $0301           ; load current position on the alphabet
+  SBC #1           ; move seven letters to the beggining
+  BMI ReadUpDone
+  STA $0301
 MoveUp:
   LDA $0200           ; load sprite Y position
   SEC                 ; make sure carry flag is set
@@ -405,6 +412,13 @@ ReadDown:
   LDA $4016           ; player 1 - Down
   AND #%00000001      ; only look at bit 0
   BEQ ReadDownDone    ; branch to ReadDownDone if button is NOT pressed (0)
+MoveAlphabetDown:
+  LDA $0301           ; load current position on the alphabet
+  CLC
+  ADC #1              ; check if counter > 26
+  CMP #$4
+  BPL ReadDownDone       
+  STA $0301
 MoveDown:
   LDA $0200           ; load sprite Y position
   CLC                 ; make sure carry flag is set
@@ -417,6 +431,11 @@ ReadLeft:
   LDA $4016           ; player 1 - Left
   AND #%00000001      ; only look at bit 0
   BEQ ReadLeftDone    ; branch to ReadLeftDone if button is NOT pressed (0)
+MoveAlphabetLeft:
+  LDA $0300           ; load current position on the alphabet
+  SBC #1
+  BMI ReadLeftDone    ; branch to ReadUpDone if passed the limits of alphabet      
+  STA $0300
 MoveLeft:
   LDA $0203           ; load sprite X position
   SEC                 ; make sure carry flag is set
@@ -429,6 +448,13 @@ ReadRight:
   LDA $4016           ; player 1 - Right
   AND #%00000001      ; only look at bit 0
   BEQ ReadRightDone   ; branch to ReadRightDone if button is NOT pressed (0)
+MoveAlphabetRight:
+  LDA $0300           ; load current position on the alphabet
+  CLC
+  ADC #1   
+  CMP #$7             ; check if counter > 26
+  BPL ReadRightDone
+  STA $0300
 MoveRight:           
   LDA $0203           ; load sprite X position
   CLC                 ; make sure carry flag is set
@@ -437,6 +463,7 @@ MoveRight:
 ReadRightDone:        ; handling this button is done
   ; TODO: Dessa, veja se consegue uma logica/timeout para mover mais devagar mas ainda de 16 em 16
   rts
+
 
 ;----------------------------------------------------------------
 ; DRAWING FUNCTIONS
