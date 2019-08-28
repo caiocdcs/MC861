@@ -257,13 +257,38 @@ GameOver:
 ;----------------------------------------------------------------
 
 MoveSound:
-  ; bits 0-2: shift to get frequency
-  ; bit 3: 1 - increase, 0 - decrease frequency
-  ; bits 4-6: how fast from 0-7
   ; bit 7: enables/disables sweep (if sweep is 0, tone continues)
+  ; bits 4-6: how fast from 0-7
+  ; bit 3: 1 - increase, 0 - decrease frequency
+  ; bits 0-2: shift to get frequency
   lda #%110101011
   sta $4001
   lda #$aa
+  sta $4002
+  lda #$a0
+  sta $4003
+  lda #%00000001
+  sta $4015
+  rts
+
+WrongLetterSound:
+  lda #%11001011
+  sta $4001
+  lda #$aa
+  sta $4002
+  lda #$aa
+  sta $4003
+  lda #%00000001
+  sta $4015
+  rts
+
+; TODO: CorrectLetterSound
+; TODO: WinSound
+; TODO: Improve game over sound
+GameOverSound:
+  lda #%11001000
+  sta $4001
+  lda #$cc
   sta $4002
   lda #$a0
   sta $4003
