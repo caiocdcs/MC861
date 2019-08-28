@@ -353,7 +353,8 @@ DrawScreen:
 ; TODO: Dessa, tenta ver como travar pro controle não sair do alfabeto, nao linkei tbm o botão A para selecionar a letra
 ; $0300 saves the selector's offset horizontal position
 ; $0301 saves the selector's offset vertical position 
-
+; $0302 alphabet position
+ 
 SetUpControllers:
   lda #$02
   sta $4014   ; set the high byte (02) of the RAM address, start the transfer
@@ -401,11 +402,11 @@ ReadUp:
   LDA $4016           ; player 1 - Up
   AND #%00000001      ; only look at bit 0
   BEQ ReadUpDone      ; branch to ReadUpDone if button is NOT pressed (0)
-MoveAlphabetUp:
-  LDA $0301           ; load current position on the alphabet
-  SBC #1           ; move seven letters to the beggining
-  BMI ReadUpDone
-  STA $0301
+CanMoveUp:
+  LDA $0301           ; load selector y position
+  SBC #1              ; move up y = y - 1
+  BMI ReadUpDone      ; if negative, dont move selector
+  STA $0301           ; else, move onde postion up
 MoveUp:
   LDA $0200           ; load sprite Y position
   SEC                 ; make sure carry flag is set
@@ -418,13 +419,13 @@ ReadDown:
   LDA $4016           ; player 1 - Down
   AND #%00000001      ; only look at bit 0
   BEQ ReadDownDone    ; branch to ReadDownDone if button is NOT pressed (0)
-MoveAlphabetDown:
-  LDA $0301           ; load current position on the alphabet
+CanMoveDown:
+  LDA $0301           ; load selector y position
   CLC
-  ADC #1              ; check if counter > 26
-  CMP #$4
-  BPL ReadDownDone       
-  STA $0301
+  ADC #1              ; move up y = y + 1
+  CMP #$4             ; if y > 4
+  BPL ReadDownDone    ; dont move the selector    
+  STA $0301           ; else, move onde postion down
 MoveDown:
   LDA $0200           ; load sprite Y position
   CLC                 ; make sure carry flag is set
@@ -437,11 +438,11 @@ ReadLeft:
   LDA $4016           ; player 1 - Left
   AND #%00000001      ; only look at bit 0
   BEQ ReadLeftDone    ; branch to ReadLeftDone if button is NOT pressed (0)
-MoveAlphabetLeft:
-  LDA $0300           ; load current position on the alphabet
-  SBC #1
-  BMI ReadLeftDone    ; branch to ReadUpDone if passed the limits of alphabet      
-  STA $0300
+CanMoveLeft:
+  LDA $0300           ; load selector x position
+  SBC #1              ; move up x = x - 1
+  BMI ReadLeftDone    ; if negative, dont move selector      
+  STA $0300           ; else, move onde postion left
 MoveLeft:
   LDA $0203           ; load sprite X position
   SEC                 ; make sure carry flag is set
@@ -454,13 +455,14 @@ ReadRight:
   LDA $4016           ; player 1 - Right
   AND #%00000001      ; only look at bit 0
   BEQ ReadRightDone   ; branch to ReadRightDone if button is NOT pressed (0)
-MoveAlphabetRight:
-  LDA $0300           ; load current position on the alphabet
+CanMoveRight:
+  LDA $0300           ; load selector x position
   CLC
-  ADC #1   
-  CMP #$7             ; check if counter > 26
-  BPL ReadRightDone
-  STA $0300
+  ADC #1              ; move up x = x + 1
+  CMP #$7             ; if x > 7
+  BPL ReadRightDone   ; dont move the selector
+  STA $0300           ; else, move onde postion right
+
 MoveRight:           
   LDA $0203           ; load sprite X position
   CLC                 ; make sure carry flag is set
