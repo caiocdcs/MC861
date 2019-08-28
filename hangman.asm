@@ -414,6 +414,8 @@ ReadA:
   AND #%00000001      ; only look at bit 0
   BEQ ReadADone       ; branch to ReadADone if button is NOT pressed (0)
                       ; add instructions here to do something when button IS pressed (1)
+SelectLetter:
+
 ReadADone:            ; handling this button is done
   
 ; Pressed B
@@ -453,7 +455,7 @@ CanMoveUp:
   STA $0301           ; else, move onde postion up
 IterateAlphabetUp:
   LDA $0302           ; load alphabet counter c
-  SBC #4              ; c = c - 4
+  SBC #7              ; c = c - 7
   BMI ReadUpDone      ; if negative, dont move selector
   STA $0302           ; else, move onde postion up
 MoveUp:
@@ -478,7 +480,7 @@ CanMoveDown:
   STA $0301           ; else, move onde postion down
 IterateAlphabetDown:
   LDA $0302           ; load alphabet counter c
-  ADC #4              ; c = c + 4
+  ADC #7              ; c = c + 7
   CMP #$26            ; if c > 26
   BPL ReadDownDone    ; dont move the selector
   STA $0302           ; else, move onde postion down
