@@ -386,10 +386,10 @@ ReadUp:
   AND #%00000001      ; only look at bit 0
   BEQ ReadUpDone      ; branch to ReadUpDone if button is NOT pressed (0)
 MoveAlphabetUp:
-  LDA $0300           ; load current position on the alphabet
+  LDA $0301           ; load current position on the alphabet
   SBC #1           ; move seven letters to the beggining
   BMI ReadUpDone
-  STA $0300
+  STA $0301
 MoveUp:
   LDA $0200           ; load sprite Y position
   SEC                 ; make sure carry flag is set
@@ -403,11 +403,12 @@ ReadDown:
   AND #%00000001      ; only look at bit 0
   BEQ ReadDownDone    ; branch to ReadDownDone if button is NOT pressed (0)
 MoveAlphabetDown:
-  LDA $0300           ; load current position on the alphabet
+  LDA $0301           ; load current position on the alphabet
   CLC
-  ADC #$7              ; check if counter > 26
-  CMP #$1A        
-  STX $0300
+  ADC #1              ; check if counter > 26
+  CMP #$4
+  BPL ReadDownDone       
+  STA $0301
 MoveDown:
   LDA $0200           ; load sprite Y position
   CLC                 ; make sure carry flag is set
