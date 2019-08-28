@@ -49,25 +49,25 @@ MIRRORING = %0001 ;%0000 = horizontal, %0001 = vertical, %1000 = four-screen
 RESET:
   sei
   cld
+; Disable APU frame IRQ
+  ldx #$40
+  stx $4017
+  ldx #$FF
+  txs
+  inx
 ; Disable NMI and rendering
-  lda #%00000000
-  sta PPU_CTRL
-  lda #%00000000
-  sta PPU_MASK
+  stx PPU_CTRL
+  stx PPU_MASK
+  stx $4010
 
 ; Wait for PPU
-  lda PPU_STATUS
 vBlankWait1:
   bit PPU_STATUS
   bpl vBlankWait1
-vBlankWait2:
-  bit PPU_STATUS
-  bpl vBlankWait2
   
-; Clear RAM
-  lda #$00
-  ldx #$00
+; Clear Memory
 ClearLoop:
+  lda #$00
   sta $0000, X
   sta $0100, X
   sta $0200, X
@@ -76,45 +76,39 @@ ClearLoop:
   sta $0500, X
   sta $0600, X
   sta $0700, X
+  lda #$FE
+  sta $0200, x
   inx
-  cpx #$00
   bne ClearLoop
 
+; Wait for PPU
+vBlankWait2:
+  bit PPU_STATUS
+  bpl vBlankWait2
+
   ; Initialize Game
-  jsr Initialize
   jsr LoadPalettes
   jsr LoadSprites
+  ; jsr LoadBackground (TODO: Draw BG)
+  ; jsr LoadAttributes (TODO: find out why it breaks part of BG)
+  ; Helpful link: https://taywee.github.io/NerdyNights/nerdynights/backgrounds.html
   jsr ConfigurePPU
-  jsr WaitBlank
-  jsr EnableSound
+  jsr Initialize
   jsr Loop
-
-;----------------------------------------------------------------
-; ENABLE SOUND
-;----------------------------------------------------------------
-
-EnableSound:
-  lda #$FF ; typical
-  sta $4000 ; write
-  ; lda #$0F
-  ; sta $4015 ;enable Square 1, Square 2, Triangle and Noise channels.  Disable DMC.
 
 ;----------------------------------------------------------------
 ; PPU CONFIGURATION
 ;----------------------------------------------------------------
 
 ConfigurePPU:
-  lda #%10000000   ; enable NMI, sprites from Pattern Table 0
+  lda #%10010000   ; enable NMI, sprites from Pattern Table 0
   sta PPU_CTRL
-
-  lda #%00010000   ; enable sprites
+  lda #%00011110   ; enable sprites and background
   sta PPU_MASK
+  lda #$00         ; disable scroll
+  sta PPU_SCROLL
+  sta PPU_SCROLL
   rts
-
-; Makes safe update of screen
-WaitBlank:
-  lda PPU_STATUS
-  bpl WaitBlank ; keet checking until bit is 7 (VBlank)
 
 ;----------------------------------------------------------------
 ; LOAD PALETTES
@@ -127,12 +121,12 @@ LoadPalettes:
   lda #$00
   sta PPU_ADDR    ; write the low byte of $3F00 address
   ldx #$00
-LoadPallete:
+LoadPalette:
   lda palette, x
   sta PPU_DATA
   inx
   cpx #$20
-  bne LoadPallete
+  bne LoadPalette
 
   rts
 
@@ -146,21 +140,68 @@ LoadSprite:
   lda sprites, x        ; load data from address (sprites +  x)
   sta $0200, x          ; store into RAM address ($0200 + x)
   inx                   ; X = X + 1
-  cpx #$00bc            ; Compare X to hex $00bc (each 4 is a sprite) -- change here if more sprites are needed
+  cpx #$bc            ; Compare X to hex $00bc (each 4 is a sprite) -- change here if more sprites are needed
   bne LoadSprite        ; Branch to LoadSprite if compare was Not Equal to zero
 
-  lda #%10000000   ; enable NMI, sprites from Pattern Table 1
-  sta PPU_CTRL
-
-  lda #%00010000   ; enable sprites
-  sta PPU_MASK
+  rts
 
 ;----------------------------------------------------------------
-; FOREVER LOOP
+; LOAD BACKGROUND 
 ;----------------------------------------------------------------
 
-Forever:
-  jmp Forever     ;jump back to Forever, infinite loop
+LoadBackground:
+  lda PPU_STATUS
+  lda #$20
+  sta PPU_ADDR          ; set high byte
+  lda #$00
+  sta PPU_ADDR          ; set low byte
+  ldx #$00
+LoadBackgroundTile1:
+  lda bg1, x
+  sta PPU_DATA
+  inx
+  cpx #$00
+  bne LoadBackgroundTile1
+LoadBackgroundTile2:
+  lda bg2, x
+  sta PPU_DATA
+  inx
+  cpx #$00
+  bne LoadBackgroundTile2
+LoadBackgroundTile3:
+  lda bg3, x
+  sta PPU_DATA
+  inx
+  cpx #$00
+  bne LoadBackgroundTile3
+LoadBackgroundTile4:
+  lda bg4, x
+  sta PPU_DATA
+  inx
+  cpx #$bc
+  bne LoadBackgroundTile4
+
+  rts
+
+;----------------------------------------------------------------
+; LOAD ATTRIBUTES
+;----------------------------------------------------------------
+
+LoadAttributes:
+  lda PPU_STATUS
+  lda #$23
+  sta PPU_ADDR             ; $23 high byte address
+  sta #$C0
+  sta PPU_ADDR             ; $C0 low byte address
+  ldx #$00
+LoadAttribute:
+  lda attributes, x
+  sta PPU_DATA
+  inx
+  cpx #$40
+  bne LoadAttribute
+
+  rts
 
 ;----------------------------------------------------------------
 ; GAME LOGIC
@@ -168,9 +209,10 @@ Forever:
 
 ; main loop
 Loop:
-  jsr CheckCurrentLetter
-  jsr CheckWin
-  jsr LatchController
+  ; TODO: Check why is conflicting with controllers
+  ; jsr CheckCurrentLetter
+  ; jsr CheckWin
+  ; jsr LatchController
   jmp Loop
 
 ; the size of the word in address $0500
@@ -284,7 +326,7 @@ WrongLetterSound:
 
 ; TODO: CorrectLetterSound
 ; TODO: WinSound
-; TODO: Improve game over sound
+; TODO: GameOverSound
 GameOverSound:
   lda #%11001000
   sta $4001
@@ -991,7 +1033,7 @@ IRQ:
 
   .org $E000
 palette:
-  .db $0F,$31,$32,$33,$0F,$35,$36,$37,$0F,$39,$3A,$3B,$0F,$3D,$3E,$0F
+  .db $0F,$04,$0A,$02,$0F,$35,$36,$37,$0F,$39,$3A,$3B,$0F,$3D,$3E,$0F
   .db $0F,$29,$00,$20,$0F,$15,$26,$37,$0F,$1C,$15,$2B,$0F,$02,$38,$3C
   ;   Whi,LGr,MGr,DGr <-- Sprites color mapping
 
@@ -1059,6 +1101,27 @@ sprites:
   .db #72, #88, #00, #108   ; ($02b0-$02b3)
   .db #72, #88, #00, #124   ; ($02b4-$02b7)
   .db #72, #88, #00, #140   ; ($02b8-$02bb)
+
+;----------------------------------------------------------------
+; BACKGROUND
+;----------------------------------------------------------------
+
+background:
+  .include "bg.asm"
+
+;----------------------------------------------------------------
+; ATTRIBUTES
+;----------------------------------------------------------------
+
+attributes:
+  .db %00000000, %00000000, %00000000, %00000000, %00000000, %00000000, %00000000, %00000000
+  .db %00000000, %00000000, %00000000, %00000000, %00000000, %00000000, %00000000, %00000000
+  .db %00000000, %00000000, %00000000, %00000000, %00000000, %00000000, %00000000, %00000000
+  .db %00000000, %00000000, %00000000, %00000000, %00000000, %00000000, %00000000, %00000000
+  .db %00000000, %00000000, %00000000, %00000000, %00000000, %00000000, %00000000, %00000000
+  .db %00000000, %00000000, %00000000, %00000000, %00000000, %00000000, %00000000, %00000000
+  .db %00000000, %00000000, %00000000, %00000000, %00000000, %00000000, %00000000, %00000000
+  .db %00000000, %00000000, %00000000, %00000000, %00000000, %00000000, %00000000, %00000000
 
 ;----------------------------------------------------------------
 ; INTERRUPT VECTORS
