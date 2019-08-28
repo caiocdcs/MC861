@@ -80,55 +80,7 @@ ClearLoop:
   cpx #$00
   bne ClearLoop
 
-; Background was not working
-; ; Set name table + Attribute
-;   lda PPU_STATUS
-;   lda #$20
-;   sta PPU_ADDR
-;   lda #$00
-;   sta PPU_ADDR
-;   lda #<bg_nam
-;   sta L_byte
-;   lda #>bg_nam
-;   sta H_byte
-;   ldx #$00
-;   ldy #$00
-; NamLoop:
-;   lda ($00), Y
-;   sta PPU_DATA
-;   iny
-;   cpy #$00
-;   bne NamLoop
-;   inc H_byte
-;   inx
-;   cpx #$04
-;   bne NamLoop
-  
-; ; Background color setup
-;   lda PPU_STATUS
-;   lda #$3F
-;   sta PPU_ADDR
-;   lda #$00
-;   sta PPU_ADDR
-;   ldx #$00
-; PalLoop:
-;   lda bg_pal, X
-;   sta PPU_DATA
-;   inx
-;   cpx #$10
-;   bne PalLoop
-
-; ; Reset Scroll
-;   lda #$00
-;   sta PPU_SCROLL
-;   lda #$00
-;   sta PPU_SCROLL
-   
-; ; Enable NMI and rendering
-;   lda #%00000000
-;   sta PPU_CTRL
-;   lda #%00001010
-;   sta PPU_MASK
+  ; Initialize Game
   jsr Initialize
   jsr LoadPalettes
   jsr LoadSprites
@@ -192,7 +144,7 @@ LoadSprite:
   lda sprites, x        ; load data from address (sprites +  x)
   sta $0200, x          ; store into RAM address ($0200 + x)
   inx                   ; X = X + 1
-  cpx #$00bc            ; Compare X to hex $08, decimal 8 (each 4 is a sprite) -- change here if more sprites are needed
+  cpx #$00bc            ; Compare X to hex $00bc (each 4 is a sprite) -- change here if more sprites are needed
   bne LoadSprite        ; Branch to LoadSprite if compare was Not Equal to zero
 
   lda #%10000000   ; enable NMI, sprites from Pattern Table 1
@@ -200,6 +152,10 @@ LoadSprite:
 
   lda #%00010000   ; enable sprites
   sta PPU_MASK
+
+;----------------------------------------------------------------
+; FOREVER LOOP
+;----------------------------------------------------------------
 
 Forever:
   jmp Forever     ;jump back to Forever, infinite loop
@@ -491,164 +447,164 @@ DisableLetter:
 
 ; Disable Alphabet letters
 DisableA:
-  lda #33             ; tile number
-  sta $0205           ; update tile
+  lda #33
+  sta $0205
   rts
 
 DisableB:
-  lda #35             ; tile number
-  sta $0209           ; update tile
+  lda #35
+  sta $0209
   rts
 
 DisableC:
-  lda #37             ; tile number
-  sta $020d           ; update tile
+  lda #37
+  sta $020d
   rts
 
 DisableD:
-  lda #39             ; tile number
-  sta $0211           ; update tile
+  lda #39
+  sta $0211
   rts
 
 DisableE:
-  lda #41             ; tile number
-  sta $0215           ; update tile
+  lda #41
+  sta $0215
   rts
 
 DisableF:
-  lda #43             ; tile number
-  sta $0219           ; update tile
+  lda #43
+  sta $0219
   rts
 
 DisableG:
-  lda #45             ; tile number
-  sta $021d           ; update tile
+  lda #45
+  sta $021d
   rts
 
 DisableH:
-  lda #47             ; tile number
-  sta $0221           ; update tile
+  lda #47
+  sta $0221
   rts
 
 DisableI:
-  lda #49             ; tile number
-  sta $0225           ; update tile
+  lda #49
+  sta $0225
   rts
 
 DisableJ:
-  lda #51             ; tile number
-  sta $0229           ; update tile
+  lda #51
+  sta $0229
   rts
 
 DisableK:
-  lda #53             ; tile number
-  sta $022d           ; update tile
+  lda #53
+  sta $022d
   rts
 
 DisableL:
-  lda #55             ; tile number
-  sta $0231           ; update tile
+  lda #55
+  sta $0231
   rts
 
 DisableM:
-  lda #57             ; tile number
-  sta $0235           ; update tile
+  lda #57
+  sta $0235
   rts
 
 DisableN:
-  lda #59             ; tile number
-  sta $0239           ; update tile
+  lda #59
+  sta $0239
   rts
 
 DisableO:
-  lda #61             ; tile number
-  sta $023d           ; update tile
+  lda #61
+  sta $023d
   rts
 
 DisableP:
-  lda #63             ; tile number
-  sta $0241           ; update tile
+  lda #63
+  sta $0241
   rts
 
 DisableQ:
-  lda #65             ; tile number
-  sta $0245           ; update tile
+  lda #65
+  sta $0245
   rts
 
 DisableR:
-  lda #67             ; tile number
-  sta $0249           ; update tile
+  lda #67
+  sta $0249
   rts
 
 DisableS:
-  lda #69             ; tile number
-  sta $024d           ; update tile
+  lda #69
+  sta $024d
   rts
 
 DisableT:
-  lda #71             ; tile number
-  sta $0251           ; update tile
+  lda #71
+  sta $0251
   rts
 
 DisableU:
-  lda #73             ; tile number
-  sta $0255           ; update tile
+  lda #73
+  sta $0255
   rts
 
 DisableV:
-  lda #75             ; tile number
-  sta $0259           ; update tile
+  lda #75
+  sta $0259
   rts
 
 DisableW:
-  lda #77             ; tile number
-  sta $025d           ; update tile
+  lda #77
+  sta $025d
   rts
 
 DisableX:
-  lda #79             ; tile number
-  sta $0261           ; update tile
+  lda #79
+  sta $0261
   rts
 
 DisableY:
-  lda #81             ; tile number
-  sta $0265           ; update tile
+  lda #81
+  sta $0265
   rts
 
 DisableZ:
-  lda #83             ; tile number
-  sta $0269           ; update tile
+  lda #83
+  sta $0269
   rts
 
 ; Draw hangman body
 DrawHead:
-  lda #89             ; tile number
-  sta $026d           ; update tile
+  lda #89
+  sta $026d
   rts
 
 DrawBody:
-  lda #90             ; tile number
-  sta $0271           ; update tile
+  lda #90
+  sta $0271
   rts
 
 DrawLeftArm:
-  lda #92             ; tile number
-  sta $0275           ; update tile
+  lda #92
+  sta $0275
   rts
 
 DrawRightArm:
-  lda #93             ; tile number
-  sta $0279           ; update tile
+  lda #93
+  sta $0279
   rts
 
 DrawLeftLeg:
-  lda #94             ; tile number
-  sta $027d           ; update tile
+  lda #94
+  sta $027d
   rts
 
 DrawRightLeg:
-  lda #95             ; tile number
-  sta $0281           ; update tile
+  lda #95
+  sta $0281
   rts
 
 ;----------------------------------------------------------------
@@ -721,7 +677,7 @@ DrawErrorEnd:
 ;----------------------------------------------------------------
 
 EndNMI:
-  rti        ; return from interrupt
+  rti
 
 ;----------------------------------------------------------------
 ; IRQ
@@ -729,16 +685,6 @@ EndNMI:
 
 IRQ:
   rti
-
-;----------------------------------------------------------------
-; BACKGROUND INCLUDES (Not working)
-;----------------------------------------------------------------
-
-; bg_nam:
-;   .incbin "bg.nam"
-
-; bg_pal:
-;   .incbin "bg.pal"
 
 ;----------------------------------------------------------------
 ; COLOR PALETTE
@@ -810,6 +756,7 @@ sprites:
   .db #64, #98, #00, #24    ; ($029c-$029f)
   .db #72, #96, #00, #24    ; ($02a0-$02a3)
 
+  ; Word to be guessed
   .db #72, #88, #00, #60    ; ($02a4-$02a7)
   .db #72, #88, #00, #76    ; ($02a8-$02ab)
   .db #72, #88, #00, #92    ; ($02ac-$02af)
