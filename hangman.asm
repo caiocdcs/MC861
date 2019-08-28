@@ -94,8 +94,10 @@ ClearLoop:
 ;----------------------------------------------------------------
 
 EnableSound:
-  lda #%00000111  ;enable Sq1, Sq2 and Tri channels
-  sta $4015
+  lda #$FF ; typical
+  sta $4000 ; write
+  ; lda #$0F
+  ; sta $4015 ;enable Square 1, Square 2, Triangle and Noise channels.  Disable DMC.
 
 ;----------------------------------------------------------------
 ; PPU CONFIGURATION
@@ -251,8 +253,23 @@ GameOver:
   brk
 
 ;----------------------------------------------------------------
-; SOUND
+; SOUND (More about sounds: https://patater.com/nes-asm-tutorials/day-14/)
 ;----------------------------------------------------------------
+
+MoveSound:
+  ; bits 0-2: shift to get frequency
+  ; bit 3: 1 - increase, 0 - decrease frequency
+  ; bits 4-6: how fast from 0-7
+  ; bit 7: enables/disables sweep (if sweep is 0, tone continues)
+  lda #%110101011
+  sta $4001
+  lda #$aa
+  sta $4002
+  lda #$a0
+  sta $4003
+  lda #%00000001
+  sta $4015
+  rts
 
 MakeSound:
   ;Square 1
@@ -372,6 +389,7 @@ MoveUp:
   SEC                 ; make sure carry flag is set
   SBC #$10            ; A = A - 16
   STA $0200           ; save sprite Y position
+  jsr MoveSound
 ReadUpDone:           ; handling this button is done
 
 ; Pressed Down
@@ -391,6 +409,7 @@ MoveDown:
   CLC                 ; make sure carry flag is set
   ADC #$10            ; A = A + 16
   STA $0200           ; save sprite Y position
+  jsr MoveSound
 ReadDownDone:         ; handling this button is done
 
 ; Pressed Left
@@ -408,6 +427,7 @@ MoveLeft:
   SEC                 ; make sure carry flag is set
   SBC #$10            ; A = A - 16
   STA $0203           ; save sprite X position
+  jsr MoveSound
 ReadLeftDone:         ; handling this button is done
 
 ; Pressed Right
@@ -428,6 +448,7 @@ MoveRight:
   CLC                 ; make sure carry flag is set
   ADC #$10            ; A = A + 16
   STA $0203           ; save sprite X position
+  jsr MoveSound
 ReadRightDone:        ; handling this button is done
   rts
 
