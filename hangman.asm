@@ -60,9 +60,6 @@ RESET:
 vBlankWait1:
   bit PPU_STATUS
   bpl vBlankWait1
-vBlankWait2:
-  bit PPU_STATUS
-  bpl vBlankWait2
   
 ; Clear RAM
   lda #$00
@@ -79,6 +76,11 @@ ClearLoop:
   inx
   cpx #$00
   bne ClearLoop
+
+; Wait for PPU
+vBlankWait2:
+  bit PPU_STATUS
+  bpl vBlankWait2
 
   ; Initialize Game
   jsr Initialize
