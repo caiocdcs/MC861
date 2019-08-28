@@ -86,9 +86,9 @@ vBlankWait2:
   jsr Initialize
   jsr LoadPalettes
   jsr LoadSprites
-  jsr ConfigurePPU
-  jsr WaitBlank
-  jsr EnableSound
+  jsr LoadBackground
+  ; jsr ConfigurePPU
+  ; jsr EnableSound
   jsr Loop
 
 ;----------------------------------------------------------------
@@ -112,11 +112,6 @@ ConfigurePPU:
   lda #%00010000   ; enable sprites
   sta PPU_MASK
   rts
-
-; Makes safe update of screen
-WaitBlank:
-  lda PPU_STATUS
-  bpl WaitBlank ; keet checking until bit is 7 (VBlank)
 
 ;----------------------------------------------------------------
 ; LOAD PALETTES
@@ -157,12 +152,26 @@ LoadSprite:
   lda #%00010000   ; enable sprites
   sta PPU_MASK
 
+  rts
+
 ;----------------------------------------------------------------
-; FOREVER LOOP
+; LOAD BACKGROUND 
 ;----------------------------------------------------------------
 
-Forever:
-  jmp Forever     ;jump back to Forever, infinite loop
+LoadBackground:
+  lda $2002
+  lda #$20
+  sta $2006
+  sta $2006
+  ldx #$00
+; LoadBGChunk:
+;   lda background, x
+;   sta $2007
+;   inx
+;   cpx #$00
+;   bne LoadBackgroundChunk
+
+  rts
 
 ;----------------------------------------------------------------
 ; GAME LOGIC
@@ -172,7 +181,7 @@ Forever:
 Loop:
   jsr CheckCurrentLetter
   jsr CheckWin
-  jsr LatchController
+  ; jsr LatchController TODO: Is it really necessary?
   jmp Loop
 
 ; the size of the word in address $0500
