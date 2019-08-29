@@ -87,19 +87,6 @@ vBlankWait2:
   bpl vBlankWait2
 
 ;----------------------------------------------------------------
-; PPU CONFIGURATION
-;----------------------------------------------------------------
-
-ConfigurePPU:
-  lda #%10010000   ; enable NMI, sprites from Pattern Table 0
-  sta PPU_CTRL
-  lda #%00011110   ; enable sprites and background
-  sta PPU_MASK
-  lda #$00         ; disable scroll
-  sta PPU_SCROLL
-  sta PPU_SCROLL
-
-;----------------------------------------------------------------
 ; LOAD PALETTES
 ;----------------------------------------------------------------
 
@@ -170,19 +157,32 @@ LoadBackgroundTile4:
 ; LOAD ATTRIBUTES
 ;----------------------------------------------------------------
 
-LoadAttributes:
-  lda PPU_STATUS
-  lda #$23
-  sta PPU_ADDR             ; $23 high byte address
-  sta #$C0
-  sta PPU_ADDR             ; $C0 low byte address
-  ldx #$00
-LoadAttribute:
-  lda attributes, x
-  sta PPU_DATA
-  inx
-  cpx #$40
-  bne LoadAttribute
+; LoadAttributes:
+;   lda PPU_STATUS
+;   lda #$23
+;   sta PPU_ADDR             ; $23 high byte address
+;   sta #$C0
+;   sta PPU_ADDR             ; $C0 low byte address
+;   ldx #$00
+; LoadAttribute:
+;   lda attributes, x
+;   sta PPU_DATA
+;   inx
+;   cpx #$40
+;   bne LoadAttribute
+
+;----------------------------------------------------------------
+; PPU CONFIGURATION
+;----------------------------------------------------------------
+
+ConfigurePPU:
+  lda #%10010000   ; enable NMI, sprites from Pattern Table 0
+  sta PPU_CTRL
+  lda #%00011110   ; enable sprites and background
+  sta PPU_MASK
+  lda #$00         ; disable scroll
+  sta PPU_SCROLL
+  sta PPU_SCROLL
 
 ;----------------------------------------------------------------
 ; INITIALIZE
@@ -231,6 +231,12 @@ Forever:
   jmp Forever
 
 ;----------------------------------------------------------------
+; SOUNDS
+;----------------------------------------------------------------
+
+.include "sounds.asm"
+
+;----------------------------------------------------------------
 ; NMI (Non-Maskable Interrupt)
 ;----------------------------------------------------------------
 
@@ -241,18 +247,18 @@ NMI:
   jmp EndNMI
 
 ;----------------------------------------------------------------
-; MAIN SCREEN FUNCTION
+; DRAW SCREEN
 ;----------------------------------------------------------------
 
 DrawScreen:
-  lda #$00    ; load $00 to A
-  sta OAM_ADDR   ; store first part in 2003
-  sta OAM_ADDR   ; store second part in 2003
+  lda #$00        ; load $00 to A
+  sta OAM_ADDR    ; store first part in 2003
+  sta OAM_ADDR    ; store second part in 2003
 
   rts
 
 ;----------------------------------------------------------------
-; DRAW WORD
+; DRAW ERRORS & WORD
 ;----------------------------------------------------------------
 
 DrawWord:
@@ -321,431 +327,7 @@ DrawErrorEnd:
 ; DRAWING FUNCTIONS
 ;----------------------------------------------------------------
 
-DrawWin:
-  ; Disable selector
-  lda #00
-  sta $0200
-  lda #88
-  sta $0201
-  lda #00
-  sta $0203
-  ; Y
-  lda #112
-  sta $0208
-  lda #80
-  sta $0209
-  lda #02
-  sta $020a
-  lda #84
-  sta $020b
-  ; O
-  lda #112
-  sta $020c
-  lda #60
-  sta $020d
-  lda #02
-  sta $020e
-  lda #96
-  sta $020f
-  ; U
-  lda #112
-  sta $0210
-  lda #72
-  sta $0211
-  lda #02
-  sta $0212
-  lda #108
-  sta $0213
-  ; W
-  lda #112
-  sta $0214
-  lda #76
-  sta $0215
-  lda #02
-  sta $0216
-  lda #132
-  sta $0217
-  ; I
-  lda #112
-  sta $0218
-  lda #48
-  sta $0219
-  lda #02
-  sta $021a
-  lda #144
-  sta $021b
-  ; N
-  lda #112
-  sta $021c
-  lda #58
-  sta $021d
-  lda #02
-  sta $021e
-  lda #156
-  sta $021f
-  jsr DrawPressB
-  ; Clear remaining letters
-  lda #88
-  sta $0205
-  sta $0221
-  sta $0225
-  sta $0229
-  sta $022d
-  sta $0231
-  sta $024d
-  sta $024d
-  sta $0251
-  sta $0255
-  sta $0259
-  sta $025d
-  sta $0261
-  sta $0265
-  sta $0269
-
-  rts
-
-DrawGameOver:
-  ; Disable selector
-  lda #00
-  sta $0200
-  lda #88
-  sta $0201
-  lda #00
-  sta $0203
-  ; G
-  lda #112
-  sta $0204
-  lda #45
-  sta $0205
-  lda #01
-  sta $0206
-  lda #72
-  sta $0207
-  ; A
-  lda #112
-  sta $0208
-  lda #33
-  sta $0209
-  lda #01
-  sta $020a
-  lda #84
-  sta $020b
-  ; M
-  lda #112
-  sta $020c
-  lda #57
-  sta $020d
-  lda #01
-  sta $020e
-  lda #96
-  sta $020f
-  ; E
-  lda #112
-  sta $0210
-  lda #41
-  sta $0211
-  lda #01
-  sta $0212
-  lda #108
-  sta $0213
-  ; O
-  lda #112
-  sta $0214
-  lda #61
-  sta $0215
-  lda #01
-  sta $0216
-  lda #132
-  sta $0217
-  ; V
-  lda #112
-  sta $0218
-  lda #75
-  sta $0219
-  lda #01
-  sta $021a
-  lda #144
-  sta $021b
-  ; E
-  lda #112
-  sta $021c
-  lda #41
-  sta $021d
-  lda #01
-  sta $021e
-  lda #156
-  sta $021f
-  ; R
-  lda #112
-  sta $0220
-  lda #67
-  sta $0221
-  lda #01
-  sta $0222
-  lda #168
-  sta $0223
-  ; Dead Face (1/4)
-  lda #96
-  sta $0224
-  lda #12
-  sta $0225
-  lda #01
-  sta $0226
-  lda #116
-  sta $0227
-  ; Dead Face (2/4)
-  lda #96
-  sta $0228
-  lda #13
-  sta $0229
-  lda #01
-  sta $022a
-  lda #124
-  sta $022b
-  ; Dead Face (3/4)
-  lda #104
-  sta $022c
-  lda #14
-  sta $022d
-  lda #01
-  sta $022e
-  lda #116
-  sta $022f
-  ; Dead Face (4/4)
-  lda #104
-  sta $0230
-  lda #15
-  sta $0231
-  lda #01
-  sta $0232
-  lda #124
-  sta $0233
-  jsr DrawPressB
-  ; Clear remaining letters
-  lda #88
-  sta $024d
-  sta $0251
-  sta $0255
-  sta $0259
-  sta $025d
-  sta $0261
-  sta $0265
-  sta $0269
-
-  rts
-
-DrawPressB:
-  ; P
-  lda #132
-  sta $0234
-  lda #62
-  sta $0235
-  lda #90
-  sta $0237
-  ; R
-  lda #132
-  sta $0238
-  lda #66
-  sta $0239
-  lda #100
-  sta $023b
-  ; E
-  lda #132
-  sta $023c
-  lda #40
-  sta $023d
-  lda #110
-  sta $023f
-  ; S
-  lda #132
-  sta $0240
-  lda #68
-  sta $0241
-  lda #120
-  sta $0243
-  ; S
-  lda #132
-  sta $0244
-  lda #68
-  sta $0245
-  lda #130
-  sta $0247
-  ; B
-  lda #132
-  sta $0248
-  lda #34
-  sta $0249
-  lda #150
-  sta $024b
-
-  rts
-
-;----------------------------------------------------------------
-; DRAW ALPHABET (DISABLED LETTERS)
-;----------------------------------------------------------------
-DisableA:
-  lda #33
-  sta $0205
-  rts
-
-DisableB:
-  lda #35
-  sta $0209
-  rts
-
-DisableC:
-  lda #37
-  sta $020d
-  rts
-
-DisableD:
-  lda #39
-  sta $0211
-  rts
-
-DisableE:
-  lda #41
-  sta $0215
-  rts
-
-DisableF:
-  lda #43
-  sta $0219
-  rts
-
-DisableG:
-  lda #45
-  sta $021d
-  rts
-
-DisableH:
-  lda #47
-  sta $0221
-  rts
-
-DisableI:
-  lda #49
-  sta $0225
-  rts
-
-DisableJ:
-  lda #51
-  sta $0229
-  rts
-
-DisableK:
-  lda #53
-  sta $022d
-  rts
-
-DisableL:
-  lda #55
-  sta $0231
-  rts
-
-DisableM:
-  lda #57
-  sta $0235
-  rts
-
-DisableN:
-  lda #59
-  sta $0239
-  rts
-
-DisableO:
-  lda #61
-  sta $023d
-  rts
-
-DisableP:
-  lda #63
-  sta $0241
-  rts
-
-DisableQ:
-  lda #65
-  sta $0245
-  rts
-
-DisableR:
-  lda #67
-  sta $0249
-  rts
-
-DisableS:
-  lda #69
-  sta $024d
-  rts
-
-DisableT:
-  lda #71
-  sta $0251
-  rts
-
-DisableU:
-  lda #73
-  sta $0255
-  rts
-
-DisableV:
-  lda #75
-  sta $0259
-  rts
-
-DisableW:
-  lda #77
-  sta $025d
-  rts
-
-DisableX:
-  lda #79
-  sta $0261
-  rts
-
-DisableY:
-  lda #81
-  sta $0265
-  rts
-
-DisableZ:
-  lda #83
-  sta $0269
-  rts
-
-;----------------------------------------------------------------
-; DRAW HANGMAN
-;----------------------------------------------------------------
-
-DrawHead:
-  lda #89
-  sta $026d
-  rts
-
-DrawBody:
-  lda #90
-  sta $0271
-  rts
-
-DrawLeftArm:
-  lda #92
-  sta $0275
-  rts
-
-DrawRightArm:
-  lda #93
-  sta $0279
-  rts
-
-DrawLeftLeg:
-  lda #94
-  sta $027d
-  rts
-
-DrawRightLeg:
-  lda #95
-  sta $0281
-  rts
+.include "drawing.asm"
 
 ;----------------------------------------------------------------
 ; END NMI
@@ -903,82 +485,6 @@ MoveRight:
   jsr MoveSound
 ReadRightDone:        ; handling this button is done
 
-  jmp ControllersDone
-
-;----------------------------------------------------------------
-; SOUND (More about sounds: https://patater.com/nes-asm-tutorials/day-14/)
-;----------------------------------------------------------------
-
-MoveSound:
-  ; bit 7: enables/disables sweep (if sweep is 0, tone continues)
-  ; bits 4-6: how fast from 0-7
-  ; bit 3: 1 - increase, 0 - decrease frequency
-  ; bits 0-2: shift to get frequency
-  lda #%110101011
-  sta $4001
-  lda #$aa
-  sta $4002
-  lda #$a0
-  sta $4003
-  lda #%00000001
-  sta $4015
-  rts
-
-WrongLetterSound:
-  lda #%11001011
-  sta $4001
-  lda #$aa
-  sta $4002
-  lda #$aa
-  sta $4003
-  lda #%00000001
-  sta $4015
-  rts
-
-; TODO: CorrectLetterSound
-; TODO: WinSound
-; TODO: GameOverSound
-GameOverSound:
-  lda #%11001000
-  sta $4001
-  lda #$cc
-  sta $4002
-  lda #$a0
-  sta $4003
-  lda #%00000001
-  sta $4015
-  rts
-
-MakeSound:
-  ;Square 1
-  lda #%00011000  ;Duty 00, Volume 8 (half volume)
-  sta $4000
-  lda #$C9        ;$0C9 is a C# in NTSC mode
-  sta $4002       ;low 8 bits of period
-  lda #%11111000
-  sta $4003       ;high 3 bits of period
- 
-  ;Square 2
-  ;lda #%01110110  ;Duty 01, Volume 6
-  ;sta $4004
-  ;lda #$A9        ;$0A9 is an E in NTSC mode
-  ;sta $4006
-  ;lda #$00
-  ;sta $4007
- 
-  ;Triangle
-  ;lda #%10000001  ;Triangle channel on
-  ;sta $4008
-  ;lda #$42        ;$042 is a G# in NTSC mode
-  ;sta $400A
-  ;lda #$00
-  ;sta $400B
-
-; stop sound
-  ;lda #%00000000
-  ;sta $4015
-  rts
-
 ControllersDone:
 
 ;----------------------------------------------------------------
@@ -1043,7 +549,6 @@ GameOver:
 
 IRQ:
   rti
-
 
 ;----------------------------------------------------------------
 ; COLOR PALETTE
@@ -1131,15 +636,15 @@ background:
 ; ATTRIBUTES
 ;----------------------------------------------------------------
 
-attributes:
-  .db %00000000, %00000000, %00000000, %00000000, %00000000, %00000000, %00000000, %00000000
-  .db %00000000, %00000000, %00000000, %00000000, %00000000, %00000000, %00000000, %00000000
-  .db %00000000, %00000000, %00000000, %00000000, %00000000, %00000000, %00000000, %00000000
-  .db %00000000, %00000000, %00000000, %00000000, %00000000, %00000000, %00000000, %00000000
-  .db %00000000, %00000000, %00000000, %00000000, %00000000, %00000000, %00000000, %00000000
-  .db %00000000, %00000000, %00000000, %00000000, %00000000, %00000000, %00000000, %00000000
-  .db %00000000, %00000000, %00000000, %00000000, %00000000, %00000000, %00000000, %00000000
-  .db %00000000, %00000000, %00000000, %00000000, %00000000, %00000000, %00000000, %00000000
+; attributes:
+;   .db %00000000, %00000000, %00000000, %00000000, %00000000, %00000000, %00000000, %00000000
+;   .db %00000000, %00000000, %00000000, %00000000, %00000000, %00000000, %00000000, %00000000
+;   .db %00000000, %00000000, %00000000, %00000000, %00000000, %00000000, %00000000, %00000000
+;   .db %00000000, %00000000, %00000000, %00000000, %00000000, %00000000, %00000000, %00000000
+;   .db %00000000, %00000000, %00000000, %00000000, %00000000, %00000000, %00000000, %00000000
+;   .db %00000000, %00000000, %00000000, %00000000, %00000000, %00000000, %00000000, %00000000
+;   .db %00000000, %00000000, %00000000, %00000000, %00000000, %00000000, %00000000, %00000000
+;   .db %00000000, %00000000, %00000000, %00000000, %00000000, %00000000, %00000000, %00000000
 
 ;----------------------------------------------------------------
 ; INTERRUPT VECTORS
