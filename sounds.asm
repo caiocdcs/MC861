@@ -1,4 +1,3 @@
-
 MoveSound:
   ; bit 7: enables/disables sweep (if sweep is 0, tone continues)
   ; bits 4-6: how fast from 0-7

@@ -2,8 +2,22 @@
 ; CONSTANTS
 ;----------------------------------------------------------------
 
-PRG_COUNT = 1 ;1 = 16KB, 2 = 32KB
+PRG_COUNT = 1     ;1 = 16KB, 2 = 32KB
 MIRRORING = %0001 ;%0000 = horizontal, %0001 = vertical, %1000 = four-screen
+
+L_byte         = $0000
+H_byte         = $0001
+
+; PPU
+
+PPU_CTRL    =   $2000
+PPU_MASK    =   $2001
+PPU_STATUS  =   $2002
+OAM_ADDR    =   $2003
+OAM_DATA    =   $2004
+PPU_SCROLL  =   $2005
+PPU_ADDR    =   $2006
+PPU_DATA    =   $2007
 
 ;----------------------------------------------------------------
 ; VARIABLES
@@ -12,29 +26,15 @@ MIRRORING = %0001 ;%0000 = horizontal, %0001 = vertical, %1000 = four-screen
   .enum $0000
   .ende
 
-  L_byte         = $0000
-  H_byte         = $0001
-
-  ; PPU
-
-  PPU_CTRL    =   $2000
-  PPU_MASK    =   $2001
-  PPU_STATUS  =   $2002
-  OAM_ADDR    =   $2003
-  OAM_DATA    =   $2004
-  PPU_SCROLL  =   $2005
-  PPU_ADDR    =   $2006
-  PPU_DATA    =   $2007
-
 ;----------------------------------------------------------------
 ; HEADER
 ;----------------------------------------------------------------
 
-  .db "NES", $1a ;identification of the iNES header
-  .db PRG_COUNT ;number of 16KB PRG-ROM pages
-  .db $01 ;number of 8KB CHR-ROM pages
+  .db "NES", $1a    ;identification of the iNES header
+  .db PRG_COUNT     ;number of 16KB PRG-ROM pages
+  .db $01           ;number of 8KB CHR-ROM pages
   .db $00|MIRRORING ;mapper 0 and mirroring
-  .dsb 9, $00 ;clear the remaining bytes
+  .dsb 9, $00       ;clear the remaining bytes
 
 ;----------------------------------------------------------------
 ; PROGRAM BANK (BASE)
@@ -45,6 +45,8 @@ MIRRORING = %0001 ;%0000 = horizontal, %0001 = vertical, %1000 = four-screen
 ;----------------------------------------------------------------
 ; RESET
 ;----------------------------------------------------------------
+
+.org $C000
 
 RESET:
   sei
@@ -93,9 +95,9 @@ vBlankWait2:
 LoadPalettes:
   lda PPU_STATUS    ; read PPU status to reset the high/low latch
   lda #$3F
-  sta PPU_ADDR    ; write the high byte of $3F00 address
+  sta PPU_ADDR      ; write the high byte of $3F00 address
   lda #$00
-  sta PPU_ADDR    ; write the low byte of $3F00 address
+  sta PPU_ADDR      ; write the low byte of $3F00 address
   ldx #$00
 LoadPalette:
   lda palette, x
@@ -114,7 +116,7 @@ LoadSprite:
   lda sprites, x        ; load data from address (sprites +  x)
   sta $0200, x          ; store into RAM address ($0200 + x)
   inx                   ; X = X + 1
-  cpx #$c0              ; Compare X to hex $00bc (each 4 is a sprite) -- change here if more sprites are needed
+  cpx #$c0              ; Compare X to hex $c0 (each 4 is a sprite) -- change here if more sprites are needed
   bne LoadSprite        ; Branch to LoadSprite if compare was Not Equal to zero
 
 ;----------------------------------------------------------------
@@ -150,7 +152,7 @@ LoadBackgroundTile4:
   lda bg4, x
   sta PPU_DATA
   inx
-  cpx #$bc
+  cpx #$c0
   bne LoadBackgroundTile4
 
 ;----------------------------------------------------------------
@@ -213,11 +215,9 @@ Initialize:
   lda #$00
   sta $0505 ; position for count the tile position that will be drawn, each sprite has 4 bytes
 
-LatchController:
-  LDA #$01
-  STA $4016
-  LDA #$00
-  STA $4016
+  ; Controller counter c initialization (as 0)
+  lda #$00
+  sta $0302
 
 ;----------------------------------------------------------------
 ; INFINITE LOOP
@@ -237,21 +237,17 @@ Forever:
 ;----------------------------------------------------------------
 
 NMI:
-  jsr DrawScreen
-  jsr DrawErrors
-  jsr DrawWord
-  jmp EndNMI
-
-;----------------------------------------------------------------
-; DRAW SCREEN
-;----------------------------------------------------------------
-
-DrawScreen:
+SetUpOAMAddr:
   lda #$00        ; load $00 to A
   sta OAM_ADDR    ; store first part in 2003
   sta OAM_ADDR    ; store second part in 2003
+SetUpControllers:
+  lda #$02
+  sta $4014   ; set the high byte (02) of the RAM address, start the transfer
 
-  rts
+  jsr DrawErrors
+  jsr DrawWord
+  jmp EndNMI
 
 ;----------------------------------------------------------------
 ; DRAW ERRORS & WORD
@@ -337,11 +333,13 @@ EndNMI:
 
 ; $0300 saves the selector's offset horizontal position
 ; $0301 saves the selector's offset vertical position 
-; $0302 alphabet position
- 
-SetUpControllers:
-  lda #$02
-  sta $4014   ; set the high byte (02) of the RAM address, start the transfer
+; $0302 alphabet counter
+
+LatchController:
+  LDA #$01
+  STA $4016
+  LDA #$00
+  STA $4016
 
 ; Pressed A
 ReadA: 
@@ -382,6 +380,13 @@ ReadStart:
   AND #%00000001      ; only look at bit 0
   BEQ ReadStartDone   ; branch to ReadBDone if button is NOT pressed (0)
                       ; add instructions here to do something when button IS pressed (1)
+; TODO REMOVEEE!
+  LDA $0302           ; counter c = c * 2
+  STA $0303
+  ASL $0303           
+  LDA $0303
+  ADC #$20            ; x = c + 32
+  STA $0501           ; selecionar letra
 ReadStartDone:        ; handling this button is done
 
 ; Pressed Up
@@ -391,11 +396,13 @@ ReadUp:
   BEQ ReadUpDone      ; branch to ReadUpDone if button is NOT pressed (0)
 CanMoveUp:
   LDA $0301           ; load selector y position
+  SEC
   SBC #1              ; move up y = y - 1
   BMI ReadUpDone      ; if negative, dont move selector
   STA $0301           ; else, move onde postion up
 IterateAlphabetUp:
   LDA $0302           ; load alphabet counter c
+  SEC
   SBC #7              ; c = c - 7
   BMI ReadUpDone      ; if negative, dont move selector
   STA $0302           ; else, move onde postion up
@@ -415,12 +422,23 @@ ReadDown:
 CanMoveDown:
   LDA $0301           ; load selector y position
   CLC
-  ADC #1              ; move up y = y + 1
+  ADC #1              ; move down y = y - 1
   CMP #$4             ; if y > 4
-  BPL ReadDownDone    ; dont move the selector    
-  STA $0301           ; else, move onde postion down
+  BPL ReadDownDone    ; dont move the selector
+; Cannot move outside of boundaries
+  tax
+  lda $0300
+  cmp #$5             ; if x < 5
+  bmi ContinueMoveDown
+  lda $0301
+  cmp #$2             ; if y < 2
+  bmi ContinueMoveDown
+  jmp ReadDownDone
+ContinueMoveDown:
+  stx $0301
 IterateAlphabetDown:
   LDA $0302           ; load alphabet counter c
+  CLC
   ADC #7              ; c = c + 7
   CMP #$26            ; if c > 26
   BPL ReadDownDone    ; dont move the selector
@@ -440,11 +458,13 @@ ReadLeft:
   BEQ ReadLeftDone    ; branch to ReadLeftDone if button is NOT pressed (0)
 CanMoveLeft:
   LDA $0300           ; load selector x position
-  SBC #1              ; move up x = x - 1
+  SEC
+  SBC #1              ; move left x = x - 1
   BMI ReadLeftDone    ; if negative, dont move selector      
   STA $0300           ; else, move onde postion left
 IterateAlphabetLeft:
   LDA $0302           ; load alphabet counter c
+  SEC
   SBC #1              ; c = c - 1
   BMI ReadLeftDone    ; if negative, dont move selector
   STA $0302           ; else, move onde postion left
@@ -464,12 +484,23 @@ ReadRight:
 CanMoveRight:
   LDA $0300           ; load selector x position
   CLC
-  ADC #1              ; move up x = x + 1
+  ADC #1              ; move right x = x + 1
   CMP #$7             ; if x > 7
   BPL ReadRightDone   ; dont move the selector
-  STA $0300           ; else, move onde postion right
+; Cannot move outside of boundaries
+  tax
+  lda $0301
+  cmp #$3             ; if y < 3
+  bmi ContinueMoveRight
+  lda $0300
+  cmp #$4             ; if x < 4
+  bmi ContinueMoveRight
+  jmp ReadRightDone
+ContinueMoveRight:
+  stx $0300
 IterateAlphabetRight:
   LDA $0302           ; load alphabet counter c
+  CLC
   ADC #1              ; c = c + 1
   CMP #$26            ; if c > 26
   BPL ReadRightDone   ; dont move the selector
