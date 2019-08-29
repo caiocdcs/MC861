@@ -544,7 +544,7 @@ CheckCurrenterLetterIncX:
   beq CheckCurrentLetterEnd ; if equals a letter was guessed and the value is equal to one, don't make a sound
   ;if an error happened
   inc $0502 ; inc how many erros ocurred
-  ;jsr MakeSound
+  jsr WrongLetterSound
 CheckCurrentLetterEnd:
   lda #$00
   sta $0503
