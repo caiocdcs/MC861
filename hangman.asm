@@ -397,7 +397,10 @@ ReadB:
   AND #%00000001      ; only look at bit 0
   BEQ ReadBDone       ; branch to ReadBDone if button is NOT pressed (0)
                       ; add instructions here to do something when button IS pressed (1)
-; TODO: Link B to command 'jsr RESET', if in state Win or GameOver (maybe use memory address to know)
+  lda $0310
+  clc
+  adc $0311
+  beq ReadBDone
   jmp RESET
 ReadBDone:            ; handling this button is done
 
