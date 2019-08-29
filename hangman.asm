@@ -422,10 +422,20 @@ ReadDown:
 CanMoveDown:
   LDA $0301           ; load selector y position
   CLC
-  ADC #1              ; move up y = y + 1
+  ADC #1              ; move down y = y - 1
   CMP #$4             ; if y > 4
-  BPL ReadDownDone    ; dont move the selector    
-  STA $0301           ; else, move onde postion down
+  BPL ReadDownDone    ; dont move the selector
+; Cannot move outside of boundaries
+  tax
+  lda $0300
+  cmp #$5             ; if x < 5
+  bmi ContinueMoveDown
+  lda $0301
+  cmp #$2             ; if y < 2
+  bmi ContinueMoveDown
+  jmp ReadDownDone
+ContinueMoveDown:
+  stx $0301
 IterateAlphabetDown:
   LDA $0302           ; load alphabet counter c
   CLC
@@ -449,7 +459,7 @@ ReadLeft:
 CanMoveLeft:
   LDA $0300           ; load selector x position
   SEC
-  SBC #1              ; move up x = x - 1
+  SBC #1              ; move left x = x - 1
   BMI ReadLeftDone    ; if negative, dont move selector      
   STA $0300           ; else, move onde postion left
 IterateAlphabetLeft:
@@ -474,10 +484,20 @@ ReadRight:
 CanMoveRight:
   LDA $0300           ; load selector x position
   CLC
-  ADC #1              ; move up x = x + 1
+  ADC #1              ; move right x = x + 1
   CMP #$7             ; if x > 7
   BPL ReadRightDone   ; dont move the selector
-  STA $0300           ; else, move onde postion right
+; Cannot move outside of boundaries
+  tax
+  lda $0301
+  cmp #$3             ; if y < 3
+  bmi ContinueMoveRight
+  lda $0300
+  cmp #$4             ; if x < 4
+  bmi ContinueMoveRight
+  jmp ReadRightDone
+ContinueMoveRight:
+  stx $0300
 IterateAlphabetRight:
   LDA $0302           ; load alphabet counter c
   CLC
