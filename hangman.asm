@@ -5,26 +5,26 @@
 PRG_COUNT = 1     ;1 = 16KB, 2 = 32KB
 MIRRORING = %0001 ;%0000 = horizontal, %0001 = vertical, %1000 = four-screen
 
+L_byte         = $0000
+H_byte         = $0001
+
+; PPU
+
+PPU_CTRL    =   $2000
+PPU_MASK    =   $2001
+PPU_STATUS  =   $2002
+OAM_ADDR    =   $2003
+OAM_DATA    =   $2004
+PPU_SCROLL  =   $2005
+PPU_ADDR    =   $2006
+PPU_DATA    =   $2007
+
 ;----------------------------------------------------------------
 ; VARIABLES
 ;----------------------------------------------------------------
 
   .enum $0000
   .ende
-
-  L_byte         = $0000
-  H_byte         = $0001
-
-  ; PPU
-
-  PPU_CTRL    =   $2000
-  PPU_MASK    =   $2001
-  PPU_STATUS  =   $2002
-  OAM_ADDR    =   $2003
-  OAM_DATA    =   $2004
-  PPU_SCROLL  =   $2005
-  PPU_ADDR    =   $2006
-  PPU_DATA    =   $2007
 
 ;----------------------------------------------------------------
 ; HEADER
@@ -45,6 +45,8 @@ MIRRORING = %0001 ;%0000 = horizontal, %0001 = vertical, %1000 = four-screen
 ;----------------------------------------------------------------
 ; RESET
 ;----------------------------------------------------------------
+
+.org $C000
 
 RESET:
   sei
@@ -217,11 +219,9 @@ Initialize:
   lda #$00
   sta $0505 ; position for count the tile position that will be drawn, each sprite has 4 bytes
 
-LatchController:
-  LDA #$01
-  STA $4016
-  LDA #$00
-  STA $4016
+  ; Controller counter c initialization (as 0)
+  lda #$00
+  sta $0302
 
 ;----------------------------------------------------------------
 ; INFINITE LOOP
@@ -241,21 +241,17 @@ Forever:
 ;----------------------------------------------------------------
 
 NMI:
-  jsr DrawScreen
-  jsr DrawErrors
-  jsr DrawWord
-  jmp EndNMI
-
-;----------------------------------------------------------------
-; DRAW SCREEN
-;----------------------------------------------------------------
-
-DrawScreen:
+SetUpOAMAddr:
   lda #$00        ; load $00 to A
   sta OAM_ADDR    ; store first part in 2003
   sta OAM_ADDR    ; store second part in 2003
+SetUpControllers:
+  lda #$02
+  sta $4014   ; set the high byte (02) of the RAM address, start the transfer
 
-  rts
+  jsr DrawErrors
+  jsr DrawWord
+  jmp EndNMI
 
 ;----------------------------------------------------------------
 ; DRAW ERRORS & WORD
@@ -341,11 +337,14 @@ EndNMI:
 
 ; $0300 saves the selector's offset horizontal position
 ; $0301 saves the selector's offset vertical position 
-; $0302 alphabet position
- 
-SetUpControllers:
-  lda #$02
-  sta $4014   ; set the high byte (02) of the RAM address, start the transfer
+; $0302 alphabet horizontal position (x)
+; $0303 alphabet vertical position (y)
+
+LatchController:
+  LDA #$01
+  STA $4016
+  LDA #$00
+  STA $4016
 
 ; Pressed A
 ReadA: 
@@ -385,6 +384,12 @@ ReadStart:
   AND #%00000001      ; only look at bit 0
   BEQ ReadStartDone   ; branch to ReadBDone if button is NOT pressed (0)
                       ; add instructions here to do something when button IS pressed (1)
+; TODO REMOVEEE!
+  LDA $0302           ; counter c = c * 2
+  STA $0303
+  ASL $0303           
+  ADC #$20            ; x = c + 32
+  STA $0501           ; selecionar letra
 ReadStartDone:        ; handling this button is done
 
 ; Pressed Up
