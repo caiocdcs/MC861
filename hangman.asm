@@ -86,16 +86,6 @@ vBlankWait2:
   bit PPU_STATUS
   bpl vBlankWait2
 
-  ; Initialize Game
-  jsr LoadPalettes
-  jsr LoadSprites
-  ; jsr LoadBackground (TODO: Draw BG)
-  ; jsr LoadAttributes (TODO: find out why it breaks part of BG)
-  ; Helpful link: https://taywee.github.io/NerdyNights/nerdynights/backgrounds.html
-  jsr ConfigurePPU
-  jsr Initialize
-  jsr Loop
-
 ;----------------------------------------------------------------
 ; PPU CONFIGURATION
 ;----------------------------------------------------------------
@@ -108,7 +98,6 @@ ConfigurePPU:
   lda #$00         ; disable scroll
   sta PPU_SCROLL
   sta PPU_SCROLL
-  rts
 
 ;----------------------------------------------------------------
 ; LOAD PALETTES
@@ -128,8 +117,6 @@ LoadPalette:
   cpx #$20
   bne LoadPalette
 
-  rts
-
 ;----------------------------------------------------------------
 ; LOAD SPRITES
 ;----------------------------------------------------------------
@@ -142,8 +129,6 @@ LoadSprite:
   inx                   ; X = X + 1
   cpx #$bc            ; Compare X to hex $00bc (each 4 is a sprite) -- change here if more sprites are needed
   bne LoadSprite        ; Branch to LoadSprite if compare was Not Equal to zero
-
-  rts
 
 ;----------------------------------------------------------------
 ; LOAD BACKGROUND 
@@ -181,8 +166,6 @@ LoadBackgroundTile4:
   cpx #$bc
   bne LoadBackgroundTile4
 
-  rts
-
 ;----------------------------------------------------------------
 ; LOAD ATTRIBUTES
 ;----------------------------------------------------------------
@@ -201,19 +184,9 @@ LoadAttribute:
   cpx #$40
   bne LoadAttribute
 
-  rts
-
 ;----------------------------------------------------------------
-; GAME LOGIC
+; INITIALIZE
 ;----------------------------------------------------------------
-
-; main loop
-Loop:
-  ; TODO: Check why is conflicting with controllers
-  ; jsr CheckCurrentLetter
-  ; jsr CheckWin
-  ; jsr LatchController
-  jmp Loop
 
 ; the size of the word in address $0500
 ; $0501 will be the current letter choosed, to check in the word
@@ -243,130 +216,19 @@ Initialize:
 
   lda #$00
   sta $0505 ; position for count the tile position that will be drawn, each sprite has 4 bytes
-  rts
 
-CheckCurrentLetter:
-  ldx #$00
-  lda $0501
-  cmp #$00
-  beq CheckCurrentLetterEnd
-CheckCurrentLetterLoop:
-  lda $0508, x
-  cmp $0501
-  bne CheckCurrenterLetterIncX
-  ; set letter as correct
-  tay
-  lda #$01
-  sta $0500, y
-  sta $0503 ; set that a letter was guessed
-  inc $0504
-CheckCurrenterLetterIncX:
-  inx
-  cpx $0500 ; iterate with the size of the word to guess
-  bne CheckCurrentLetterLoop
-  ; check if a letter was guessed
-  lda $0503
-  cmp #$01
-  beq CheckCurrentLetterEnd ; if equals a letter was guessed and the value is equal to one, don't make a sound
-  ;if an error happened
-  inc $0502 ; inc how many erros ocurred
-  ;jsr MakeSound
-CheckCurrentLetterEnd:
-  lda #$00
-  sta $0503
-  sta $0501
-  rts
-
-CheckWin:
-  lda $0504
-  cmp $0500
-  beq Win
-  lda $0502
-  cmp #06
-  beq GameOver
-  rts
-Win:
-  jsr DrawWin
-; TODO: Link B to command 'jsr RESET', if in state Win or GameOver (maybe use memory address to know)
-  brk
-GameOver:
-  jsr DrawGameOver
-; TODO: Link B to command 'jsr RESET', if in state Win or GameOver (maybe use memory address to know)
-  brk
+LatchController:
+  LDA #$01
+  STA $4016
+  LDA #$00
+  STA $4016
 
 ;----------------------------------------------------------------
-; SOUND (More about sounds: https://patater.com/nes-asm-tutorials/day-14/)
+; INFINITE LOOP
 ;----------------------------------------------------------------
 
-MoveSound:
-  ; bit 7: enables/disables sweep (if sweep is 0, tone continues)
-  ; bits 4-6: how fast from 0-7
-  ; bit 3: 1 - increase, 0 - decrease frequency
-  ; bits 0-2: shift to get frequency
-  lda #%110101011
-  sta $4001
-  lda #$aa
-  sta $4002
-  lda #$a0
-  sta $4003
-  lda #%00000001
-  sta $4015
-  rts
-
-WrongLetterSound:
-  lda #%11001011
-  sta $4001
-  lda #$aa
-  sta $4002
-  lda #$aa
-  sta $4003
-  lda #%00000001
-  sta $4015
-  rts
-
-; TODO: CorrectLetterSound
-; TODO: WinSound
-; TODO: GameOverSound
-GameOverSound:
-  lda #%11001000
-  sta $4001
-  lda #$cc
-  sta $4002
-  lda #$a0
-  sta $4003
-  lda #%00000001
-  sta $4015
-  rts
-
-MakeSound:
-  ;Square 1
-  lda #%00011000  ;Duty 00, Volume 8 (half volume)
-  sta $4000
-  lda #$C9        ;$0C9 is a C# in NTSC mode
-  sta $4002       ;low 8 bits of period
-  lda #%11111000
-  sta $4003       ;high 3 bits of period
- 
-  ;Square 2
-  ;lda #%01110110  ;Duty 01, Volume 6
-  ;sta $4004
-  ;lda #$A9        ;$0A9 is an E in NTSC mode
-  ;sta $4006
-  ;lda #$00
-  ;sta $4007
- 
-  ;Triangle
-  ;lda #%10000001  ;Triangle channel on
-  ;sta $4008
-  ;lda #$42        ;$042 is a G# in NTSC mode
-  ;sta $400A
-  ;lda #$00
-  ;sta $400B
-
-; stop sound
-  ;lda #%00000000
-  ;sta $4015
-  rts
+Forever:
+  jmp Forever
 
 ;----------------------------------------------------------------
 ; NMI (Non-Maskable Interrupt)
@@ -386,167 +248,73 @@ DrawScreen:
   lda #$00    ; load $00 to A
   sta OAM_ADDR   ; store first part in 2003
   sta OAM_ADDR   ; store second part in 2003
-  jsr SetUpControllers
 
   rts
 
 ;----------------------------------------------------------------
-; CONTROLLERS
+; DRAW WORD
 ;----------------------------------------------------------------
 
-; $0300 saves the selector's offset horizontal position
-; $0301 saves the selector's offset vertical position 
-; $0302 alphabet position
+DrawWord:
+  ldy #00
+DrawWordLoop: 
+  ldx $0508, y
+  lda $0500, x
+  cmp #$01
+  bne DrawWordNotGuessed
 
-LatchController:
-  LDA #$01
-  STA $4016
-  LDA #$00
-  STA $4016
+  txa
+  ldx $0505
+  sta $02A5, x
+  jmp DrawWordEndLoop
+
+DrawWordNotGuessed:
+  lda #$1D
+  ldx $0505
+  sta $02A5, x
+
+DrawWordEndLoop:
+  txa
+  clc
+  adc #$04
+  sta $0505
+
+  iny
+  cpy $0500
+  bne DrawWordLoop
+
+  lda #00
+  sta $0505
   rts
- 
-SetUpControllers:
-  lda #$02
-  sta $4014   ; set the high byte (02) of the RAM address, start the transfer
 
-
-
-; Pressed A
-ReadA: 
-  LDA $4016           ; player 1 - A
-  AND #%00000001      ; only look at bit 0
-  BEQ ReadADone       ; branch to ReadADone if button is NOT pressed (0)
-                      ; add instructions here to do something when button IS pressed (1)
-SelectLetter:
-  ASL $0302           ; counter c = c * 2
-  LDX $0302           
-  ADC #32, x          ; x = c + 32
-  STX $0501           ; selecionar letra
-  LSR $0302           ; counter c = c / 2
-ReadADone:            ; handling this button is done
-  
-; Pressed B
-ReadB: 
-  LDA $4016           ; player 1 - B
-  AND #%00000001      ; only look at bit 0
-  BEQ ReadBDone       ; branch to ReadBDone if button is NOT pressed (0)
-                      ; add instructions here to do something when button IS pressed (1)
-; TODO: Link B to command 'jsr RESET', if in state Win or GameOver (maybe use memory address to know)
-ReadBDone:            ; handling this button is done
-
-; Pressed Select
-ReadSelect: 
-  LDA $4016           ; player 1 - Select
-  AND #%00000001      ; only look at bit 0
-  BEQ ReadSelectDone  ; branch to ReadBDone if button is NOT pressed (0)
-                      ; add instructions here to do something when button IS pressed (1)
-ReadSelectDone:       ; handling this button is done
-
-; Pressed Start
-ReadStart: 
-  LDA $4016           ; player 1 - Select
-  AND #%00000001      ; only look at bit 0
-  BEQ ReadStartDone   ; branch to ReadBDone if button is NOT pressed (0)
-                      ; add instructions here to do something when button IS pressed (1)
-ReadStartDone:        ; handling this button is done
-
-; Pressed Up
-ReadUp: 
-  LDA $4016           ; player 1 - Up
-  AND #%00000001      ; only look at bit 0
-  BEQ ReadUpDone      ; branch to ReadUpDone if button is NOT pressed (0)
-CanMoveUp:
-  LDA $0301           ; load selector y position
-  SBC #1              ; move up y = y - 1
-  BMI ReadUpDone      ; if negative, dont move selector
-  STA $0301           ; else, move onde postion up
-IterateAlphabetUp:
-  LDA $0302           ; load alphabet counter c
-  SBC #7              ; c = c - 7
-  BMI ReadUpDone      ; if negative, dont move selector
-  STA $0302           ; else, move onde postion up
-MoveUp:
-  LDA $0200           ; load sprite Y position
-  SEC                 ; make sure carry flag is set
-  SBC #$10            ; A = A - 16
-  STA $0200           ; save sprite Y position
-  jsr MoveSound
-ReadUpDone:           ; handling this button is done
-
-; Pressed Down
-ReadDown: 
-  LDA $4016           ; player 1 - Down
-  AND #%00000001      ; only look at bit 0
-  BEQ ReadDownDone    ; branch to ReadDownDone if button is NOT pressed (0)
-CanMoveDown:
-  LDA $0301           ; load selector y position
-  CLC
-  ADC #1              ; move up y = y + 1
-  CMP #$4             ; if y > 4
-  BPL ReadDownDone    ; dont move the selector    
-  STA $0301           ; else, move onde postion down
-IterateAlphabetDown:
-  LDA $0302           ; load alphabet counter c
-  ADC #7              ; c = c + 7
-  CMP #$26            ; if c > 26
-  BPL ReadDownDone    ; dont move the selector
-  STA $0302           ; else, move onde postion down
-MoveDown:
-  LDA $0200           ; load sprite Y position
-  CLC                 ; make sure carry flag is set
-  ADC #$10            ; A = A + 16
-  STA $0200           ; save sprite Y position
-  jsr MoveSound
-ReadDownDone:         ; handling this button is done
-
-; Pressed Left
-ReadLeft: 
-  LDA $4016           ; player 1 - Left
-  AND #%00000001      ; only look at bit 0
-  BEQ ReadLeftDone    ; branch to ReadLeftDone if button is NOT pressed (0)
-CanMoveLeft:
-  LDA $0300           ; load selector x position
-  SBC #1              ; move up x = x - 1
-  BMI ReadLeftDone    ; if negative, dont move selector      
-  STA $0300           ; else, move onde postion left
-IterateAlphabetLeft:
-  LDA $0302           ; load alphabet counter c
-  SBC #1              ; c = c - 1
-  BMI ReadLeftDone    ; if negative, dont move selector
-  STA $0302           ; else, move onde postion left
-MoveLeft:
-  LDA $0203           ; load sprite X position
-  SEC                 ; make sure carry flag is set
-  SBC #$10            ; A = A - 16
-  STA $0203           ; save sprite X position
-  jsr MoveSound
-ReadLeftDone:         ; handling this button is done
-
-; Pressed Right
-ReadRight: 
-  LDA $4016           ; player 1 - Right
-  AND #%00000001      ; only look at bit 0
-  BEQ ReadRightDone   ; branch to ReadRightDone if button is NOT pressed (0)
-CanMoveRight:
-  LDA $0300           ; load selector x position
-  CLC
-  ADC #1              ; move up x = x + 1
-  CMP #$7             ; if x > 7
-  BPL ReadRightDone   ; dont move the selector
-  STA $0300           ; else, move onde postion right
-IterateAlphabetRight:
-  LDA $0302           ; load alphabet counter c
-  ADC #1              ; c = c + 1
-  CMP #$26            ; if c > 26
-  BPL ReadRightDone   ; dont move the selector
-  STA $0302           ; else, move onde postion right
-MoveRight:           
-  LDA $0203           ; load sprite X position
-  CLC                 ; make sure carry flag is set
-  ADC #$10            ; A = A + 16
-  STA $0203           ; save sprite X position
-  jsr MoveSound
-ReadRightDone:        ; handling this button is done
+DrawErrors:
+  lda $0502
+  cmp #$01
+  beq DrawErrorHead
+  cmp #$02
+  beq DrawErrorBody
+  cmp #$03
+  beq DrawErrorLeftArm
+  cmp #$04
+  beq DrawErrorRightArm
+  cmp #$05
+  beq DrawErrorLeftLeg
+  cmp #$06
+  beq DrawErrorRightLeg
+  jmp DrawErrorEnd
+DrawErrorRightLeg:
+  jsr DrawRightLeg
+DrawErrorLeftLeg:
+  jsr DrawLeftLeg
+DrawErrorRightArm:
+  jsr DrawRightArm
+DrawErrorLeftArm:
+  jsr DrawLeftArm
+DrawErrorBody:
+  jsr DrawBody
+DrawErrorHead:
+  jsr DrawHead
+DrawErrorEnd:
   rts
 
 ;----------------------------------------------------------------
@@ -948,6 +716,7 @@ DisableZ:
 ;----------------------------------------------------------------
 ; DRAW HANGMAN
 ;----------------------------------------------------------------
+
 DrawHead:
   lda #89
   sta $026d
@@ -979,76 +748,294 @@ DrawRightLeg:
   rts
 
 ;----------------------------------------------------------------
-; DRAW WORD
-;----------------------------------------------------------------
-DrawWord:
-  ldy #00
-DrawWordLoop: 
-  ldx $0508, y
-  lda $0500, x
-  cmp #$01
-  bne DrawWordNotGuessed
-
-  txa
-  ldx $0505
-  sta $02A5, x
-  jmp DrawWordEndLoop
-
-DrawWordNotGuessed:
-  lda #$1D
-  ldx $0505
-  sta $02A5, x
-
-DrawWordEndLoop:
-  txa
-  clc
-  adc #$04
-  sta $0505
-
-  iny
-  cpy $0500
-  bne DrawWordLoop
-
-  lda #00
-  sta $0505
-  rts
-
-DrawErrors:
-  lda $0502
-  cmp #$01
-  beq DrawErrorHead
-  cmp #$02
-  beq DrawErrorBody
-  cmp #$03
-  beq DrawErrorLeftArm
-  cmp #$04
-  beq DrawErrorRightArm
-  cmp #$05
-  beq DrawErrorLeftLeg
-  cmp #$06
-  beq DrawErrorRightLeg
-  jmp DrawErrorEnd
-DrawErrorRightLeg:
-  jsr DrawRightLeg
-DrawErrorLeftLeg:
-  jsr DrawLeftLeg
-DrawErrorRightArm:
-  jsr DrawRightArm
-DrawErrorLeftArm:
-  jsr DrawLeftArm
-DrawErrorBody:
-  jsr DrawBody
-DrawErrorHead:
-  jsr DrawHead
-DrawErrorEnd:
-  rts
-
-;----------------------------------------------------------------
 ; END NMI
 ;----------------------------------------------------------------
 
 EndNMI:
-  rti
+  
+
+;----------------------------------------------------------------
+; CONTROLLERS
+;----------------------------------------------------------------
+
+; $0300 saves the selector's offset horizontal position
+; $0301 saves the selector's offset vertical position 
+; $0302 alphabet position
+ 
+SetUpControllers:
+  lda #$02
+  sta $4014   ; set the high byte (02) of the RAM address, start the transfer
+
+; Pressed A
+ReadA: 
+  LDA $4016           ; player 1 - A
+  AND #%00000001      ; only look at bit 0
+  BEQ ReadADone       ; branch to ReadADone if button is NOT pressed (0)
+                      ; add instructions here to do something when button IS pressed (1)
+SelectLetter:
+  ASL $0302           ; counter c = c * 2
+  LDX $0302           
+  ADC #32, x          ; x = c + 32
+  STX $0501           ; selecionar letra
+  LSR $0302           ; counter c = c / 2
+ReadADone:            ; handling this button is done
+  
+; Pressed B
+ReadB: 
+  LDA $4016           ; player 1 - B
+  AND #%00000001      ; only look at bit 0
+  BEQ ReadBDone       ; branch to ReadBDone if button is NOT pressed (0)
+                      ; add instructions here to do something when button IS pressed (1)
+; TODO: Link B to command 'jsr RESET', if in state Win or GameOver (maybe use memory address to know)
+ReadBDone:            ; handling this button is done
+
+; Pressed Select
+ReadSelect: 
+  LDA $4016           ; player 1 - Select
+  AND #%00000001      ; only look at bit 0
+  BEQ ReadSelectDone  ; branch to ReadBDone if button is NOT pressed (0)
+                      ; add instructions here to do something when button IS pressed (1)
+ReadSelectDone:       ; handling this button is done
+
+; Pressed Start
+ReadStart: 
+  LDA $4016           ; player 1 - Select
+  AND #%00000001      ; only look at bit 0
+  BEQ ReadStartDone   ; branch to ReadBDone if button is NOT pressed (0)
+                      ; add instructions here to do something when button IS pressed (1)
+ReadStartDone:        ; handling this button is done
+
+; Pressed Up
+ReadUp: 
+  LDA $4016           ; player 1 - Up
+  AND #%00000001      ; only look at bit 0
+  BEQ ReadUpDone      ; branch to ReadUpDone if button is NOT pressed (0)
+CanMoveUp:
+  LDA $0301           ; load selector y position
+  SBC #1              ; move up y = y - 1
+  BMI ReadUpDone      ; if negative, dont move selector
+  STA $0301           ; else, move onde postion up
+IterateAlphabetUp:
+  LDA $0302           ; load alphabet counter c
+  SBC #7              ; c = c - 7
+  BMI ReadUpDone      ; if negative, dont move selector
+  STA $0302           ; else, move onde postion up
+MoveUp:
+  LDA $0200           ; load sprite Y position
+  SEC                 ; make sure carry flag is set
+  SBC #$10            ; A = A - 16
+  STA $0200           ; save sprite Y position
+  jsr MoveSound
+ReadUpDone:           ; handling this button is done
+
+; Pressed Down
+ReadDown: 
+  LDA $4016           ; player 1 - Down
+  AND #%00000001      ; only look at bit 0
+  BEQ ReadDownDone    ; branch to ReadDownDone if button is NOT pressed (0)
+CanMoveDown:
+  LDA $0301           ; load selector y position
+  CLC
+  ADC #1              ; move up y = y + 1
+  CMP #$4             ; if y > 4
+  BPL ReadDownDone    ; dont move the selector    
+  STA $0301           ; else, move onde postion down
+IterateAlphabetDown:
+  LDA $0302           ; load alphabet counter c
+  ADC #7              ; c = c + 7
+  CMP #$26            ; if c > 26
+  BPL ReadDownDone    ; dont move the selector
+  STA $0302           ; else, move onde postion down
+MoveDown:
+  LDA $0200           ; load sprite Y position
+  CLC                 ; make sure carry flag is set
+  ADC #$10            ; A = A + 16
+  STA $0200           ; save sprite Y position
+  jsr MoveSound
+ReadDownDone:         ; handling this button is done
+
+; Pressed Left
+ReadLeft: 
+  LDA $4016           ; player 1 - Left
+  AND #%00000001      ; only look at bit 0
+  BEQ ReadLeftDone    ; branch to ReadLeftDone if button is NOT pressed (0)
+CanMoveLeft:
+  LDA $0300           ; load selector x position
+  SBC #1              ; move up x = x - 1
+  BMI ReadLeftDone    ; if negative, dont move selector      
+  STA $0300           ; else, move onde postion left
+IterateAlphabetLeft:
+  LDA $0302           ; load alphabet counter c
+  SBC #1              ; c = c - 1
+  BMI ReadLeftDone    ; if negative, dont move selector
+  STA $0302           ; else, move onde postion left
+MoveLeft:
+  LDA $0203           ; load sprite X position
+  SEC                 ; make sure carry flag is set
+  SBC #$10            ; A = A - 16
+  STA $0203           ; save sprite X position
+  jsr MoveSound
+ReadLeftDone:         ; handling this button is done
+
+; Pressed Right
+ReadRight: 
+  LDA $4016           ; player 1 - Right
+  AND #%00000001      ; only look at bit 0
+  BEQ ReadRightDone   ; branch to ReadRightDone if button is NOT pressed (0)
+CanMoveRight:
+  LDA $0300           ; load selector x position
+  CLC
+  ADC #1              ; move up x = x + 1
+  CMP #$7             ; if x > 7
+  BPL ReadRightDone   ; dont move the selector
+  STA $0300           ; else, move onde postion right
+IterateAlphabetRight:
+  LDA $0302           ; load alphabet counter c
+  ADC #1              ; c = c + 1
+  CMP #$26            ; if c > 26
+  BPL ReadRightDone   ; dont move the selector
+  STA $0302           ; else, move onde postion right
+MoveRight:           
+  LDA $0203           ; load sprite X position
+  CLC                 ; make sure carry flag is set
+  ADC #$10            ; A = A + 16
+  STA $0203           ; save sprite X position
+  jsr MoveSound
+ReadRightDone:        ; handling this button is done
+
+  jmp ControllersDone
+
+;----------------------------------------------------------------
+; SOUND (More about sounds: https://patater.com/nes-asm-tutorials/day-14/)
+;----------------------------------------------------------------
+
+MoveSound:
+  ; bit 7: enables/disables sweep (if sweep is 0, tone continues)
+  ; bits 4-6: how fast from 0-7
+  ; bit 3: 1 - increase, 0 - decrease frequency
+  ; bits 0-2: shift to get frequency
+  lda #%110101011
+  sta $4001
+  lda #$aa
+  sta $4002
+  lda #$a0
+  sta $4003
+  lda #%00000001
+  sta $4015
+  rts
+
+WrongLetterSound:
+  lda #%11001011
+  sta $4001
+  lda #$aa
+  sta $4002
+  lda #$aa
+  sta $4003
+  lda #%00000001
+  sta $4015
+  rts
+
+; TODO: CorrectLetterSound
+; TODO: WinSound
+; TODO: GameOverSound
+GameOverSound:
+  lda #%11001000
+  sta $4001
+  lda #$cc
+  sta $4002
+  lda #$a0
+  sta $4003
+  lda #%00000001
+  sta $4015
+  rts
+
+MakeSound:
+  ;Square 1
+  lda #%00011000  ;Duty 00, Volume 8 (half volume)
+  sta $4000
+  lda #$C9        ;$0C9 is a C# in NTSC mode
+  sta $4002       ;low 8 bits of period
+  lda #%11111000
+  sta $4003       ;high 3 bits of period
+ 
+  ;Square 2
+  ;lda #%01110110  ;Duty 01, Volume 6
+  ;sta $4004
+  ;lda #$A9        ;$0A9 is an E in NTSC mode
+  ;sta $4006
+  ;lda #$00
+  ;sta $4007
+ 
+  ;Triangle
+  ;lda #%10000001  ;Triangle channel on
+  ;sta $4008
+  ;lda #$42        ;$042 is a G# in NTSC mode
+  ;sta $400A
+  ;lda #$00
+  ;sta $400B
+
+; stop sound
+  ;lda #%00000000
+  ;sta $4015
+  rts
+
+ControllersDone:
+
+;----------------------------------------------------------------
+; GAME LOGIC
+;----------------------------------------------------------------
+
+CheckCurrentLetter:
+  ldx #$00
+  lda $0501
+  cmp #$00
+  beq CheckCurrentLetterEnd
+CheckCurrentLetterLoop:
+  lda $0508, x
+  cmp $0501
+  bne CheckCurrenterLetterIncX
+  ; set letter as correct
+  tay
+  lda #$01
+  sta $0500, y
+  sta $0503 ; set that a letter was guessed
+  inc $0504
+CheckCurrenterLetterIncX:
+  inx
+  cpx $0500 ; iterate with the size of the word to guess
+  bne CheckCurrentLetterLoop
+  ; check if a letter was guessed
+  lda $0503
+  cmp #$01
+  beq CheckCurrentLetterEnd ; if equals a letter was guessed and the value is equal to one, don't make a sound
+  ;if an error happened
+  inc $0502 ; inc how many erros ocurred
+  ;jsr MakeSound
+CheckCurrentLetterEnd:
+  lda #$00
+  sta $0503
+  sta $0501
+
+CheckWin:
+  lda $0504
+  cmp $0500
+  beq Win
+  lda $0502
+  cmp #06
+  beq GameOver
+  
+  jmp Forever
+
+Win:
+  jsr DrawWin
+; TODO: Link B to command 'jsr RESET', if in state Win or GameOver (maybe use memory address to know)
+  brk
+
+GameOver:
+  jsr DrawGameOver
+; TODO: Link B to command 'jsr RESET', if in state Win or GameOver (maybe use memory address to know)
+  brk
+
 
 ;----------------------------------------------------------------
 ; IRQ
@@ -1056,6 +1043,7 @@ EndNMI:
 
 IRQ:
   rti
+
 
 ;----------------------------------------------------------------
 ; COLOR PALETTE
