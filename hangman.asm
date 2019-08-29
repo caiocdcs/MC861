@@ -2,7 +2,7 @@
 ; CONSTANTS
 ;----------------------------------------------------------------
 
-PRG_COUNT = 1 ;1 = 16KB, 2 = 32KB
+PRG_COUNT = 1     ;1 = 16KB, 2 = 32KB
 MIRRORING = %0001 ;%0000 = horizontal, %0001 = vertical, %1000 = four-screen
 
 ;----------------------------------------------------------------
@@ -30,11 +30,11 @@ MIRRORING = %0001 ;%0000 = horizontal, %0001 = vertical, %1000 = four-screen
 ; HEADER
 ;----------------------------------------------------------------
 
-  .db "NES", $1a ;identification of the iNES header
-  .db PRG_COUNT ;number of 16KB PRG-ROM pages
-  .db $01 ;number of 8KB CHR-ROM pages
+  .db "NES", $1a    ;identification of the iNES header
+  .db PRG_COUNT     ;number of 16KB PRG-ROM pages
+  .db $01           ;number of 8KB CHR-ROM pages
   .db $00|MIRRORING ;mapper 0 and mirroring
-  .dsb 9, $00 ;clear the remaining bytes
+  .dsb 9, $00       ;clear the remaining bytes
 
 ;----------------------------------------------------------------
 ; PROGRAM BANK (BASE)
@@ -93,9 +93,9 @@ vBlankWait2:
 LoadPalettes:
   lda PPU_STATUS    ; read PPU status to reset the high/low latch
   lda #$3F
-  sta PPU_ADDR    ; write the high byte of $3F00 address
+  sta PPU_ADDR      ; write the high byte of $3F00 address
   lda #$00
-  sta PPU_ADDR    ; write the low byte of $3F00 address
+  sta PPU_ADDR      ; write the low byte of $3F00 address
   ldx #$00
 LoadPalette:
   lda palette, x
@@ -114,7 +114,7 @@ LoadSprite:
   lda sprites, x        ; load data from address (sprites +  x)
   sta $0200, x          ; store into RAM address ($0200 + x)
   inx                   ; X = X + 1
-  cpx #$bc            ; Compare X to hex $00bc (each 4 is a sprite) -- change here if more sprites are needed
+  cpx #$bc              ; Compare X to hex $00bc (each 4 is a sprite) -- change here if more sprites are needed
   bne LoadSprite        ; Branch to LoadSprite if compare was Not Equal to zero
 
 ;----------------------------------------------------------------
