@@ -752,7 +752,6 @@ DrawRightLeg:
 ;----------------------------------------------------------------
 
 EndNMI:
-  
 
 ;----------------------------------------------------------------
 ; CONTROLLERS
@@ -773,11 +772,11 @@ ReadA:
   BEQ ReadADone       ; branch to ReadADone if button is NOT pressed (0)
                       ; add instructions here to do something when button IS pressed (1)
 SelectLetter:
-  ASL $0302           ; counter c = c * 2
-  LDX $0302           
-  ADC #32, x          ; x = c + 32
-  STX $0501           ; selecionar letra
-  LSR $0302           ; counter c = c / 2
+  LDA $0302           ; counter c = c * 2
+  STA $0303
+  ASL $0303           
+  ADC #$20            ; x = c + 32
+  STA $0501           ; selecionar letra
 ReadADone:            ; handling this button is done
   
 ; Pressed B
@@ -787,6 +786,7 @@ ReadB:
   BEQ ReadBDone       ; branch to ReadBDone if button is NOT pressed (0)
                       ; add instructions here to do something when button IS pressed (1)
 ; TODO: Link B to command 'jsr RESET', if in state Win or GameOver (maybe use memory address to know)
+  jmp RESET
 ReadBDone:            ; handling this button is done
 
 ; Pressed Select
