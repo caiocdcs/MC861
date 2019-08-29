@@ -424,6 +424,17 @@ ReadStart:
   STA $0501           ; selecionar letra
 ReadStartDone:        ; handling this button is done
 
+CheckIfWin:
+  lda $0310
+  beq CheckIfGameOver
+  jmp ControllersDone
+
+CheckIfGameOver:
+  lda $0311
+  beq ReadUp
+  jmp ControllersDone
+
+
 ; Pressed Up
 ReadUp: 
   LDA $4016           ; player 1 - Up
@@ -609,12 +620,14 @@ CheckWin:
 
 Win:
   jsr DrawWin
-; TODO: Link B to command 'jsr RESET', if in state Win or GameOver (maybe use memory address to know)
+  lda #1
+  sta $0311
   brk
 
 GameOver:
   jsr DrawGameOver
-; TODO: Link B to command 'jsr RESET', if in state Win or GameOver (maybe use memory address to know)
+  lda #1
+  sta $0311
   brk
 
 
