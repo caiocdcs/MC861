@@ -56,7 +56,7 @@ RESET:
   stx $4017
   ldx #$FF
   txs
-  inx
+  ldx #$00
 ; Disable NMI and rendering
   stx PPU_CTRL
   stx PPU_MASK

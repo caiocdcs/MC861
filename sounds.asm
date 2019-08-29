@@ -13,6 +13,17 @@ MoveSound:
   sta $4015
   rts
 
+CorrectLetterSound:
+  lda #%11000001
+  sta $4001
+  lda #$aa
+  sta $4002
+  lda #$a0
+  sta $4003
+  lda #%00000001
+  sta $4015
+  rts
+
 WrongLetterSound:
   lda #%11001011
   sta $4001
@@ -24,7 +35,6 @@ WrongLetterSound:
   sta $4015
   rts
 
-; TODO: CorrectLetterSound
 ; TODO: WinSound
 ; TODO: GameOverSound
 GameOverSound:
