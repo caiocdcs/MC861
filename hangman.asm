@@ -215,10 +215,12 @@ Initialize:
   lda #$00
   sta $0505 ; position for count the tile position that will be drawn, each sprite has 4 bytes
 
-  ; Controller counter c initialization (as 0)
+; Controller counter c initialization (as 0)
   lda #$00
   sta $0302
 
+; $0304 controller timeout counter
+  sta $0304
 ;----------------------------------------------------------------
 ; INFINITE LOOP
 ;----------------------------------------------------------------
@@ -334,6 +336,8 @@ EndNMI:
 ; $0300 saves the selector's offset horizontal position
 ; $0301 saves the selector's offset vertical position 
 ; $0302 alphabet counter
+; $0303 alphabet letter calculated for game logic
+; $0304 controller timeout counter
 
 LatchController:
   LDA #$01
@@ -394,6 +398,17 @@ ReadUp:
   LDA $4016           ; player 1 - Up
   AND #%00000001      ; only look at bit 0
   BEQ ReadUpDone      ; branch to ReadUpDone if button is NOT pressed (0)
+
+; Controllers timeout for arrows (using mod and $0304)
+  lda $0304
+  tay
+Modulus1:
+  sec
+  sbc #$f0    ; divisible by 4
+  cmp #0
+  bpl Modulus1
+  beq ReadUpDone
+
 CanMoveUp:
   LDA $0301           ; load selector y position
   SEC
@@ -419,6 +434,17 @@ ReadDown:
   LDA $4016           ; player 1 - Down
   AND #%00000001      ; only look at bit 0
   BEQ ReadDownDone    ; branch to ReadDownDone if button is NOT pressed (0)
+
+; Controllers timeout for arrows (using mod and $0304)
+  lda $0304
+  tay
+Modulus2:
+  sec
+  sbc #$f0    ; divisible by 4
+  cmp #0
+  bpl Modulus2
+  beq ReadDownDone
+
 CanMoveDown:
   LDA $0301           ; load selector y position
   CLC
@@ -456,6 +482,17 @@ ReadLeft:
   LDA $4016           ; player 1 - Left
   AND #%00000001      ; only look at bit 0
   BEQ ReadLeftDone    ; branch to ReadLeftDone if button is NOT pressed (0)
+
+; Controllers timeout for arrows (using mod and $0304)
+  lda $0304
+  tay
+Modulus3:
+  sec
+  sbc #$f0    ; divisible by 4
+  cmp #0
+  bpl Modulus3
+  beq ReadLeftDone
+
 CanMoveLeft:
   LDA $0300           ; load selector x position
   SEC
@@ -481,6 +518,17 @@ ReadRight:
   LDA $4016           ; player 1 - Right
   AND #%00000001      ; only look at bit 0
   BEQ ReadRightDone   ; branch to ReadRightDone if button is NOT pressed (0)
+
+; Controllers timeout for arrows (using mod and $0304)
+  lda $0304
+  tay
+Modulus4:
+  sec
+  sbc #$f0    ; divisible by 4
+  cmp #0
+  bpl Modulus4
+  beq ReadRightDone
+
 CanMoveRight:
   LDA $0300           ; load selector x position
   CLC
@@ -514,6 +562,8 @@ MoveRight:
 ReadRightDone:        ; handling this button is done
 
 ControllersDone:
+iny
+sty $0304
 
 ;----------------------------------------------------------------
 ; GAME LOGIC
