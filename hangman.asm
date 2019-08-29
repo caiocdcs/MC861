@@ -397,16 +397,19 @@ DrawScreen:
 ; $0300 saves the selector's offset horizontal position
 ; $0301 saves the selector's offset vertical position 
 ; $0302 alphabet position
- 
-SetUpControllers:
-  lda #$02
-  sta $4014   ; set the high byte (02) of the RAM address, start the transfer
 
 LatchController:
   LDA #$01
   STA $4016
   LDA #$00
   STA $4016
+  rts
+ 
+SetUpControllers:
+  lda #$02
+  sta $4014   ; set the high byte (02) of the RAM address, start the transfer
+
+
 
 ; Pressed A
 ReadA: 
