@@ -56,7 +56,7 @@ RESET:
   stx $4017
   ldx #$FF
   txs
-  inx
+  ldx #$00
 ; Disable NMI and rendering
   stx PPU_CTRL
   stx PPU_MASK
@@ -563,23 +563,35 @@ CheckCurrentLetterLoop:
   lda $0508, x
   cmp $0501
   bne CheckCurrenterLetterIncX
-  ; set letter as correct
+  ; check if is the first time the letter is guessed
+SetCorrectLetter:
   tay
   lda #$01
-  sta $0500, y
-  sta $0503 ; set that a letter was guessed
+  sta $0503                 ; set that a letter was guessed
+  lda $0500, y
+  cmp #$01
+  beq CheckCurrenterLetterIncX
   inc $0504
 CheckCurrenterLetterIncX:
   inx
-  cpx $0500 ; iterate with the size of the word to guess
+  cpx $0500                 ; iterate with the size of the word to guess
   bne CheckCurrentLetterLoop
   ; check if a letter was guessed
   lda $0503
   cmp #$01
-  beq CheckCurrentLetterEnd ; if equals a letter was guessed and the value is equal to one, don't make a sound
-  ;if an error happened
-  inc $0502 ; inc how many erros ocurred
-  jsr WrongLetterSound
+  beq CheckCurrentLetterGuessed ; if equals a letter was guessed and the value is equal to one, don't make a sound
+  ldy $0501
+  lda $0500, y
+  cmp #$02
+  beq CheckCurrentLetterEnd
+  lda #$02
+  sta $0500, y
+  inc $0502                 ; inc error count to game over
+  jmp CheckCurrentLetterEnd
+  ;jsr MakeSound
+CheckCurrentLetterGuessed:
+  lda #$01
+  sta $0500, y
 CheckCurrentLetterEnd:
   lda #$00
   sta $0503
