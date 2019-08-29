@@ -397,7 +397,10 @@ ReadB:
   AND #%00000001      ; only look at bit 0
   BEQ ReadBDone       ; branch to ReadBDone if button is NOT pressed (0)
                       ; add instructions here to do something when button IS pressed (1)
-; TODO: Link B to command 'jsr RESET', if in state Win or GameOver (maybe use memory address to know)
+  lda $0310
+  clc
+  adc $0311
+  beq ReadBDone
   jmp RESET
 ReadBDone:            ; handling this button is done
 
@@ -423,6 +426,20 @@ ReadStart:
   ADC #$20            ; x = c + 32
   STA $0501           ; selecionar letra
 ReadStartDone:        ; handling this button is done
+
+
+
+CheckIfWin:
+  lda $0310
+  beq CheckIfGameOver
+  jmp ControllersDone
+
+CheckIfGameOver:
+  lda $0311
+  beq ReadUp
+  jmp ControllersDone
+
+
 
 ; Pressed Up
 ReadUp: 
@@ -554,6 +571,9 @@ ControllersDone:
 ; GAME LOGIC
 ;----------------------------------------------------------------
 
+; $0310 saves the win state -> 0 for false and 1 for true
+; $0311 saves the game over state -> 0 for false and 1 for true 
+
 CheckCurrentLetter:
   ldx #$00
   lda $0501
@@ -596,13 +616,15 @@ CheckWin:
   jmp Forever
 
 Win:
+  lda #1
+  sta $0310
   jsr DrawWin
-; TODO: Link B to command 'jsr RESET', if in state Win or GameOver (maybe use memory address to know)
   brk
 
 GameOver:
+  lda #1
+  sta $0311
   jsr DrawGameOver
-; TODO: Link B to command 'jsr RESET', if in state Win or GameOver (maybe use memory address to know)
   brk
 
 
