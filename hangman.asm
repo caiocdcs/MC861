@@ -396,11 +396,13 @@ ReadUp:
   BEQ ReadUpDone      ; branch to ReadUpDone if button is NOT pressed (0)
 CanMoveUp:
   LDA $0301           ; load selector y position
+  SEC
   SBC #1              ; move up y = y - 1
   BMI ReadUpDone      ; if negative, dont move selector
   STA $0301           ; else, move onde postion up
 IterateAlphabetUp:
   LDA $0302           ; load alphabet counter c
+  SEC
   SBC #7              ; c = c - 7
   BMI ReadUpDone      ; if negative, dont move selector
   STA $0302           ; else, move onde postion up
@@ -426,6 +428,7 @@ CanMoveDown:
   STA $0301           ; else, move onde postion down
 IterateAlphabetDown:
   LDA $0302           ; load alphabet counter c
+  CLC
   ADC #7              ; c = c + 7
   CMP #$26            ; if c > 26
   BPL ReadDownDone    ; dont move the selector
@@ -445,11 +448,13 @@ ReadLeft:
   BEQ ReadLeftDone    ; branch to ReadLeftDone if button is NOT pressed (0)
 CanMoveLeft:
   LDA $0300           ; load selector x position
+  SEC
   SBC #1              ; move up x = x - 1
   BMI ReadLeftDone    ; if negative, dont move selector      
   STA $0300           ; else, move onde postion left
 IterateAlphabetLeft:
   LDA $0302           ; load alphabet counter c
+  SEC
   SBC #1              ; c = c - 1
   BMI ReadLeftDone    ; if negative, dont move selector
   STA $0302           ; else, move onde postion left
@@ -475,6 +480,7 @@ CanMoveRight:
   STA $0300           ; else, move onde postion right
 IterateAlphabetRight:
   LDA $0302           ; load alphabet counter c
+  CLC
   ADC #1              ; c = c + 1
   CMP #$26            ; if c > 26
   BPL ReadRightDone   ; dont move the selector
