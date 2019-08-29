@@ -152,7 +152,7 @@ LoadBackgroundTile4:
   lda bg4, x
   sta PPU_DATA
   inx
-  cpx #$bc
+  cpx #$c0
   bne LoadBackgroundTile4
 
 ;----------------------------------------------------------------
