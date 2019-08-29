@@ -116,7 +116,7 @@ LoadSprite:
   lda sprites, x        ; load data from address (sprites +  x)
   sta $0200, x          ; store into RAM address ($0200 + x)
   inx                   ; X = X + 1
-  cpx #$bc              ; Compare X to hex $00bc (each 4 is a sprite) -- change here if more sprites are needed
+  cpx #$c0              ; Compare X to hex $c0 (each 4 is a sprite) -- change here if more sprites are needed
   bne LoadSprite        ; Branch to LoadSprite if compare was Not Equal to zero
 
 ;----------------------------------------------------------------
@@ -213,8 +213,22 @@ Initialize:
   lda #$20 ; A
   sta $050D
 
-  lda #32
-  sta $0501
+  ;lda #$07 ; word size
+  ;sta $0500
+  ;lda #54 ; L
+  ;sta $0508
+  ;lda #$20 ; A
+  ;sta $0509
+  ;lda #68 ; S
+  ;sta $050A
+  ;lda #$20 ; A
+  ;sta $050B
+  ;lda #$3A ; N
+  ;sta $050C
+  ;lda #46 ; H
+  ;sta $050D
+  ;lda #$20 ; A
+  ;sta $050E
 
   lda #$00
   sta $0505 ; position for count the tile position that will be drawn, each sprite has 4 bytes
@@ -337,8 +351,7 @@ EndNMI:
 
 ; $0300 saves the selector's offset horizontal position
 ; $0301 saves the selector's offset vertical position 
-; $0302 alphabet horizontal position (x)
-; $0303 alphabet vertical position (y)
+; $0302 alphabet counter
 
 LatchController:
   LDA #$01
@@ -356,6 +369,7 @@ SelectLetter:
   LDA $0302           ; counter c = c * 2
   STA $0303
   ASL $0303           
+  LDA $0303
   ADC #$20            ; x = c + 32
   STA $0501           ; selecionar letra
 ReadADone:            ; handling this button is done
@@ -388,6 +402,7 @@ ReadStart:
   LDA $0302           ; counter c = c * 2
   STA $0303
   ASL $0303           
+  LDA $0303
   ADC #$20            ; x = c + 32
   STA $0501           ; selecionar letra
 ReadStartDone:        ; handling this button is done
@@ -629,6 +644,7 @@ sprites:
   .db #72, #88, #00, #108   ; ($02b0-$02b3)
   .db #72, #88, #00, #124   ; ($02b4-$02b7)
   .db #72, #88, #00, #140   ; ($02b8-$02bb)
+  .db #72, #88, #00, #156   ; ($02bc-$02bf)
 
 ;----------------------------------------------------------------
 ; BACKGROUND
