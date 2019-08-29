@@ -35,19 +35,6 @@ WrongLetterSound:
   sta $4015
   rts
 
-; TODO: WinSound
-; TODO: GameOverSound
-GameOverSound:
-  lda #%11001000
-  sta $4001
-  lda #$cc
-  sta $4002
-  lda #$a0
-  sta $4003
-  lda #%00000001
-  sta $4015
-  rts
-
 MakeSound:
   ;Square 1
   lda #%00011000  ;Duty 00, Volume 8 (half volume)
