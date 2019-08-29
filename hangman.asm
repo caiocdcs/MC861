@@ -56,11 +56,28 @@ RESET:
   stx $4017
   ldx #$FF
   txs
-  inx
+  ldx #$00
 ; Disable NMI and rendering
   stx PPU_CTRL
   stx PPU_MASK
   stx $4010
+
+;----------------------------------------------------------------
+; ENABLE SOUNDS
+;----------------------------------------------------------------
+
+ClearAPU:
+  lda #$00
+  ldy #$00
+ClearAPULoop:
+  sta $4000, y
+  iny
+  cpy $18
+  bne ClearAPULoop
+
+;----------------------------------------------------------------
+; WAIT PPU AND CLEAR MEMORY
+;----------------------------------------------------------------
 
 ; Wait for PPU
 vBlankWait1:
@@ -154,6 +171,24 @@ LoadBackgroundTile4:
   inx
   cpx #$c0
   bne LoadBackgroundTile4
+
+;----------------------------------------------------------------
+; LOAD ATTRIBUTES
+;----------------------------------------------------------------
+
+LoadAttributes:
+  lda $2002
+  lda #$23
+  sta $2006
+  lda #$c0
+  sta $2006
+  lda #$00
+  ldy #$00
+LoadAttribute:
+  sta $2007
+  iny
+  cpy #$40
+  bne LoadAttribute
 
 ;----------------------------------------------------------------
 ; PPU CONFIGURATION
