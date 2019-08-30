@@ -254,6 +254,86 @@ Initialize:
   lda #$00
   sta $0302
 
+
+InitAlphabet:
+  lda #$0205
+  sta $0330
+
+  lda #$0209
+  sta $0331
+
+  lda #$020d
+  sta $0332
+
+  lda #$0211
+  sta $0333
+
+  lda #$0215
+  sta $0334
+
+  lda #$0219
+  sta $0335
+
+  lda #$021d
+  sta $0336
+
+  lda #$0221
+  sta $0337
+
+  lda #$0225
+  sta $0338
+
+  lda #$0229
+  sta $0339
+
+  lda #$022d
+  sta $0340
+
+  lda #$0231
+  sta $0341
+
+  lda #$0235
+  sta $0342
+
+  lda #$0239
+  sta $0343
+
+  lda #$023d
+  sta $0344
+
+  lda #$0241
+  sta $0345
+
+  lda #$0245
+  sta $0346
+
+  lda #$0249
+  sta $0347
+
+  lda #$024d
+  sta $0348
+
+  lda #$0251
+  sta $0349
+
+  lda #$0255
+  sta $0350
+
+  lda #$0259
+  sta $0351
+
+  lda #$025d
+  sta $0352
+
+  lda #$0261
+  sta $0353
+
+  lda #$0265
+  sta $0354
+
+  lda #$0269
+  sta $0355
+
 ;----------------------------------------------------------------
 ; INFINITE LOOP
 ;----------------------------------------------------------------
@@ -568,6 +648,23 @@ ControllersDone:
 ; GAME LOGIC
 ;----------------------------------------------------------------
 
+DisableLetter:
+  lda $0501
+  beq CheckWin
+  sec
+  sbc #$20
+  sta $0320
+  lda $0320
+  clc
+  adc $0320
+  sta $0320
+
+  ldx $0320
+  lda $0501
+  clc
+  adc #1
+  sta $0205, x
+
 CheckCurrentLetter:
   ldx #$00
   lda $0501
@@ -610,6 +707,7 @@ CheckCurrentLetterEnd:
   lda #$00
   sta $0503
   sta $0501
+
 
 CheckWin:
   lda $0504
