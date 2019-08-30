@@ -331,6 +331,12 @@ InitAlphabet:
   lda #$0269
   sta $0355
 
+LatchController:
+  LDA #$01
+  STA $4016
+  LDA #$00
+  STA $4016
+
 ;----------------------------------------------------------------
 ; INFINITE LOOP
 ;----------------------------------------------------------------
@@ -353,9 +359,6 @@ SetUpOAMAddr:
   lda #$00        ; load $00 to A
   sta OAM_ADDR    ; store first part in 2003
   sta OAM_ADDR    ; store second part in 2003
-SetUpControllers:
-  lda #$02
-  sta $4014   ; set the high byte (02) of the RAM address, start the transfer
 
   jsr DrawErrors
   jsr DrawWord
@@ -447,11 +450,9 @@ EndNMI:
 ; $0301 saves the selector's offset vertical position 
 ; $0302 alphabet counter
 
-LatchController:
-  LDA #$01
-  STA $4016
-  LDA #$00
-  STA $4016
+SetUpControllers:
+  lda #$02
+  sta $4014   ; set the high byte (02) of the RAM address, start the transfer
 
 ; Pressed A
 ReadA: 
@@ -495,13 +496,6 @@ ReadStart:
   AND #%00000001      ; only look at bit 0
   BEQ ReadStartDone   ; branch to ReadBDone if button is NOT pressed (0)
                       ; add instructions here to do something when button IS pressed (1)
-SelectLetterUsingStart:
-  LDA $0302           ; counter c = c * 2
-  STA $0303
-  ASL $0303           
-  LDA $0303
-  ADC #$20            ; x = c + 32
-  STA $0501           ; selecionar letra
 ReadStartDone:        ; handling this button is done
 
 CheckIfWin:
