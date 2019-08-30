@@ -215,37 +215,34 @@ ConfigurePPU:
 ; initizalize the current word ( banana ) starting in address $0508 ( first letter ) 
 ; $0500 + the letter code choosed will be the place to store if the current letter was guessed right, beginning in $0520
 Initialize:
-  lda #$06 ; word size
-  sta $0500
-  lda #$22 ; B
-  sta $0508
-  lda #$20 ; A
-  sta $0509
-  lda #$3A ; N
-  sta $050A
-  lda #$20 ; A
-  sta $050B
-  lda #$3A ; N
-  sta $050C
-  lda #$20 ; A
-  sta $050D
 
-  ;lda #$07 ; word size
-  ;sta $0500
-  ;lda #54 ; L
-  ;sta $0508
-  ;lda #$20 ; A
-  ;sta $0509
-  ;lda #68 ; S
-  ;sta $050A
-  ;lda #$20 ; A
-  ;sta $050B
-  ;lda #$3A ; N
-  ;sta $050C
-  ;lda #46 ; H
-  ;sta $050D
-  ;lda #$20 ; A
-  ;sta $050E
+; code to generate a ramdom number and pick a word
+RandomNumber:
+	ldx #2     ; iteration count (generates 2 bits)
+	lda seed+0
+
+	asl        ; shift the register
+	rol seed+1
+	bcc :+
+	eor #$2D   ; apply XOR feedback whenever a 1 bit is shifted out
+
+	dex
+	bne :--
+	sta seed+0
+	cmp #0     ; reload flags
+
+GetWord:
+  lda words
+  sta $0500
+  ldx seed
+  ldy #00
+GetWordLoop:
+  lda words, x
+  sta $0508, y
+  inx
+  iny
+  cpy $0500
+  bne GetWordLoop ; load last letter
 
   lda #$00
   sta $0505 ; position for count the tile position that will be drawn, each sprite has 4 bytes
@@ -701,6 +698,17 @@ sprites:
   .db #72, #88, #00, #140   ; ($02b8-$02bb)
   .db #72, #88, #00, #156   ; ($02bc-$02bf)
 
+;----------------------------------------------------------------
+; WORDS
+;----------------------------------------------------------------
+words:               ; each word has his length and eight letters at most
+  .db #07, #54, #32, #68, #32, #58, #46, #32, #00    ;  LASANHA
+  .db #07, #42, #72, #70, #40, #34, #60, #54, #00    ;  FUTEBOL
+  .db #03, #62, #32, #60, #00, #00, #00, #00, #00    ;  PAO
+  .db #04, #54, #32, #70, #32, #00, #00, #00, #00    ;  LATA
+
+seed:
+  .db #01
 ;----------------------------------------------------------------
 ; BACKGROUND
 ;----------------------------------------------------------------
