@@ -495,7 +495,7 @@ ReadStart:
   AND #%00000001      ; only look at bit 0
   BEQ ReadStartDone   ; branch to ReadBDone if button is NOT pressed (0)
                       ; add instructions here to do something when button IS pressed (1)
-; TODO REMOVEEE!
+SelectLetterUsingStart:
   LDA $0302           ; counter c = c * 2
   STA $0303
   ASL $0303           
@@ -695,11 +695,12 @@ CheckCurrenterLetterIncX:
   lda #$02
   sta $0500, y
   inc $0502                 ; inc error count to game over
+  jsr WrongLetterSound
   jmp CheckCurrentLetterEnd
-  ;jsr MakeSound
 CheckCurrentLetterGuessed:
   lda #$01
   sta $0500, y
+  jsr CorrectLetterSound
 CheckCurrentLetterEnd:
   lda #$00
   sta $0503
