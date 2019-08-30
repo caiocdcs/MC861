@@ -206,6 +206,19 @@ ConfigurePPU:
 ;----------------------------------------------------------------
 ; INITIALIZE
 ;----------------------------------------------------------------
+Initialize:
+  jsr GenerateWord
+
+;----------------------------------------------------------------
+; INFINITE LOOP
+;----------------------------------------------------------------
+
+Forever:
+  jmp Forever
+
+;----------------------------------------------------------------
+; GenerateWord
+;----------------------------------------------------------------
 
 ; the size of the word in address $0500
 ; $0501 will be the current letter choosed, to check in the word
@@ -214,27 +227,32 @@ ConfigurePPU:
 ; $0504 how many letters guessed
 ; initizalize the current word ( banana ) starting in address $0508 ( first letter ) 
 ; $0500 + the letter code choosed will be the place to store if the current letter was guessed right, beginning in $0520
-Initialize:
+GenerateWord:
 
+GenerateRandom:
 ; code to generate a ramdom number and pick a word
-RandomNumber:
-	ldx #2     ; iteration count (generates 2 bits)
+  ldx #8     ; iteration count
 	lda seed+0
-
+:
 	asl        ; shift the register
 	rol seed+1
 	bcc :+
 	eor #$2D   ; apply XOR feedback whenever a 1 bit is shifted out
-
+:
 	dex
 	bne :--
 	sta seed+0
 	cmp #0     ; reload flags
+  and #%00000111
+  asl
+  asl
+  asl
 
 GetWord:
-  lda words
+  tax
+  lda words, x
   sta $0500
-  ldx seed
+  inx
   ldy #00
 GetWordLoop:
   lda words, x
@@ -242,7 +260,7 @@ GetWordLoop:
   inx
   iny
   cpy $0500
-  bne GetWordLoop ; load last letter
+  bne GetWordLoop
 
   lda #$00
   sta $0505 ; position for count the tile position that will be drawn, each sprite has 4 bytes
@@ -251,12 +269,7 @@ GetWordLoop:
   lda #$00
   sta $0302
 
-;----------------------------------------------------------------
-; INFINITE LOOP
-;----------------------------------------------------------------
-
-Forever:
-  jmp Forever
+  rts
 
 ;----------------------------------------------------------------
 ; SOUNDS
@@ -605,11 +618,13 @@ CheckWin:
   jmp Forever
 
 Win:
+  jsr GenerateWord
   jsr DrawWin
 ; TODO: Link B to command 'jsr RESET', if in state Win or GameOver (maybe use memory address to know)
   brk
 
 GameOver:
+  jsr GenerateWord
   jsr DrawGameOver
 ; TODO: Link B to command 'jsr RESET', if in state Win or GameOver (maybe use memory address to know)
   brk
@@ -701,14 +716,18 @@ sprites:
 ;----------------------------------------------------------------
 ; WORDS
 ;----------------------------------------------------------------
-words:               ; each word has his length and eight letters at most
-  .db #07, #54, #32, #68, #32, #58, #46, #32, #00    ;  LASANHA
-  .db #07, #42, #72, #70, #40, #34, #60, #54, #00    ;  FUTEBOL
-  .db #03, #62, #32, #60, #00, #00, #00, #00, #00    ;  PAO
-  .db #04, #54, #32, #70, #32, #00, #00, #00, #00    ;  LATA
+words:               ; each word has his length and seven letters at most
+  .db #07, #54, #32, #68, #32, #58, #46, #32    ;  LASANHA
+  .db #07, #42, #72, #70, #40, #34, #60, #54    ;  FUTEBOL
+  .db #03, #62, #32, #60, #00, #00, #00, #00    ;  PAO
+  .db #04, #54, #32, #70, #32, #00, #00, #00    ;  LATA
+  .db #03, #62, #32, #60, #00, #00, #00, #00    ;  PAO
+  .db #04, #54, #32, #70, #32, #00, #00, #00    ;  LATA
+  .db #04, #54, #32, #70, #32, #00, #00, #00    ;  LATA
+  .db #07, #42, #72, #70, #40, #34, #60, #54    ;  FUTEBOL
 
 seed:
-  .db #01
+  .db #03, #04
 ;----------------------------------------------------------------
 ; BACKGROUND
 ;----------------------------------------------------------------
