@@ -2,6 +2,10 @@
 #include <stdlib.h>
 #include <unistd.h>
 
+int getInstruction(int pc, unsigned char *buffer) {
+    return buffer[pc];
+}
+
 int main(int argc, char *argv[]) {
 
     // No parameter for rom file
@@ -12,7 +16,8 @@ int main(int argc, char *argv[]) {
 
     // Variables
     unsigned char buffer[64*1024];
-    int i;
+    int pc = 0;
+    int instruction;
     FILE *fp;
     
     // Open file provided in parameter on read mode
@@ -21,11 +26,22 @@ int main(int argc, char *argv[]) {
     // Read the file
     fread(buffer, sizeof(buffer), 1, fp);
 
-    // Print file content
-    for(i = 0; i < 64*1024; i++) {
-        printf("%u ", buffer[i]);
+    while (1) {
+        instruction = getInstruction(pc, buffer);
+
+        switch(instruction) {
+            // LDA immediate
+            case 0xA9:
+                printf("instruction: %d\n", instruction);
+                // some code
+                break;
+            default:
+                printf("invalid instruction\n");
+        }
+        pc++;
+
+        // printf("pc: %d, instruction: %d\n", pc, instruction);
     }
 
-    printf("nes emulator\n");
     return 0;
 }
