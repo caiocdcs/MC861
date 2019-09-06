@@ -230,11 +230,15 @@ RandomNumber:
 	bne :--
 	sta seed+0
 	cmp #0     ; reload flags
+  and #$00000011
+  asl
+  asl
+  asl
 
 GetWord:
+  tax
   lda words
   sta $0500
-  ldx seed
   ldy #00
 GetWordLoop:
   lda words, x
@@ -823,7 +827,7 @@ words:               ; each word has his length and eight letters at most
   .db #04, #54, #32, #70, #32, #00, #00, #00, #00    ;  LATA
 
 seed:
-  .db #01
+  .db #01, #04
 ;----------------------------------------------------------------
 ; BACKGROUND
 ;----------------------------------------------------------------
