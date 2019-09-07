@@ -16,29 +16,56 @@ class CPU:
         self.pc = 0
         self.memory = Memory()
 
-    def get_next_instruction(self):
+    def get_next_byte(self):
         begin = self.pc
         end = self.pc + 2
         byte = self.program_code[begin:end].upper()
-        self.pc.value = self.pc.value + 2
+        self.pc = self.pc + 2
         return byte
 
-    def run(self):
-        byte = self.get_next_instruction()
+    ####################################################
+    ##########      INSTRUCTION HANDLERS      ##########
+    ####################################################
 
-        while byte:
+    def handleInstructionINX(self):
+        self.x.value = self.x.value + 1
+
+    def handleInstructionLDAImmediate(self):
+        byte = self.get_next_byte()
+        immediate = int(byte, 16)
+        self.a.value = immediate
+
+    def handleInstructionLDXImmediate(self):
+        byte = self.get_next_byte()
+        immediate = int(byte, 16)
+        self.x.value = immediate
+
+    def handleInstructionSTXZeroPage(self):
+        byte = self.get_next_byte()
+        self.memory.set_memory_at_position(byte, self.x)
+
+        logls(self.a.value, self.x.value, self.y.value, self.sp.value, self.pc, self.p.value, byte, self.memory.get_memory_at_position(byte).value)
+
+    def run(self):
+        instruction = self.get_next_byte()
+
+        while instruction:
             # LDA
-            if byte == 'A9':
-                print ("instruction: " + byte)
+            if instruction == 'A9':
+                self.handleInstructionLDAImmediate()
 
             # LDX
-            elif byte == 'A2':
-                print ("instruction: " + byte)
+            elif instruction == 'A2':
+                self.handleInstructionLDXImmediate()
 
             # INX
-            elif byte == 'E8':
-                print ("instruction: " + byte)
-            
-            byte = self.get_next_instruction()
+            elif instruction == 'E8':
+                self.handleInstructionINX()
 
-            log(self.a.value, self.x.value, self.y.value, self.sp.value, self.pc.value, self.p.value)
+            # STX Zero page
+            elif instruction == '86':
+                self.handleInstructionSTXZeroPage()
+            
+            instruction = self.get_next_byte()
+
+            log(self.a.value, self.x.value, self.y.value, self.sp.value, self.pc, self.p.value)
