@@ -36,7 +36,7 @@ void printls(uint8_t a, uint8_t x, uint8_t y, uint16_t sp, uint16_t pc, uint8_t 
     printf("| MEM[0x%x] = 0x%x |\n", addr, data);
 }
   
-int getInstruction(uint16_t pc, unsigned char *buffer) {
+int getInstruction(uint16_t pc, uint8_t *buffer) {
     return buffer[pc];
 }
 
@@ -49,7 +49,7 @@ int main(int argc, char *argv[]) {
     }
 
     // Variables
-    unsigned char buffer[64*1024];
+    uint8_t buffer[64*1024];
     FILE *fp;
 
     uint8_t instruction;
