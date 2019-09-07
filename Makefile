@@ -1,1 +1,2 @@
-gcc main.c -o main
+run: 
+	python3 main.py
