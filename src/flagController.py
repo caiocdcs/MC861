@@ -116,7 +116,7 @@ class FlagController:
         else:
             self.zeroFlag = 0
         
-    def setNegativeZeroIfNeeded(self, value):
+    def setNegativeIfNeeded(self, value):
         if value and 0x80 != 0:
             self.negativeFlag = 1
         else:

@@ -37,10 +37,34 @@ class CPU:
     ##########      INSTRUCTION HANDLERS      ##########
     ####################################################
 
+    ## ADC Instructions
+    def handleInstructionAdcImmediate(self):
+        byte = self.get_next_byte()
+        immediate = int(byte, 16)
+        carry = self.flagController.getCarryFlag()
+        aOldValue = self.a.value
+        sum = aOldValue + immediate + carry
+        self.a.value = sum & 0xFF                           # set a value limiting to one byte            
+         
+        self.flagController.setNegativeIfNeeded(self.a.value) # set negative flag
+        self.flagController.setZeroFlagIfNeeded(self.a.value) # set zero flag
+
+        # set carry flag
+        if sum > 0xFF:
+            self.flagController.setCarryFlag()
+        else:
+            self.flagController.clearCarryFlag()
+
+        # set overflow flag
+        if (aOldValue ^ immediate) & 0x80 == 0 and (aOldValue ^ self.a.value) & 0x80 != 0:
+            self.flagController.setOverflowFlag()
+        else:
+            self.flagController.clearOverflowFlag()
+            
+
     ## INC Instructions
     def handleInstructionINX(self):
         self.x.value = self.x.value + 1
-        self.flagController.setCarryFlag()
 
     def handleInstructionINY(self):
         self.y.value = self.y.value + 1
@@ -58,18 +82,24 @@ class CPU:
 
     def handleInstructionTXA(self):
         self.a.value = self.x.value
+        self.flagController.setNegativeIfNeeded(self.a.value) # set negative flag
+        self.flagController.setZeroFlagIfNeeded(self.a.value) # set zero flag
 
     def handleInstructionTAY(self):
         self.y.value = self.a.value
 
     def handleInstructionTYA(self):
         self.a.value = self.y.value
+        self.flagController.setNegativeIfNeeded(self.a.value) # set negative flag
+        self.flagController.setZeroFlagIfNeeded(self.a.value) # set zero flag
 
     ## Load Instructions
     def handleInstructionLDAImmediate(self):
         byte = self.get_next_byte()
         immediate = int(byte, 16)
         self.a.value = immediate
+        self.flagController.setNegativeIfNeeded(self.a.value) # set negative flag
+        self.flagController.setZeroFlagIfNeeded(self.a.value) # set zero flag
 
     def handleInstructionLDXImmediate(self):
         byte = self.get_next_byte()
@@ -221,6 +251,10 @@ class CPU:
             # JMP Indirect
             elif instruction == '6C':
                 self.handleInstructionJmpIndirect()
+
+            # ADC Immediate
+            elif instruction == '69':
+                self.handleInstructionAdcImmediate()
             
             self.log()
             instruction = self.get_next_byte()
