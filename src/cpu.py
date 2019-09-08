@@ -1,6 +1,7 @@
 from utils import log, logls
 from ctypes import c_uint16, c_uint8
 from memory import Memory
+from flagController import FlagController
 
 from math import ceil
 
@@ -9,19 +10,21 @@ class CPU:
         file = open(program_name, "rb")
         self.program_code = file.read().hex()
 
-        self.p = c_uint16(0)
         self.sp = c_uint16(0)
         self.pc = c_uint16(0)
         self.a = c_uint8(0)
         self.x = c_uint8(0)
         self.y = c_uint8(0)
         self.memory = Memory()
+        self.flagController = FlagController()
     
     def log(self, address = None):
         if (address):
-            logls(self.a.value, self.x.value, self.y.value, self.sp.value, ceil(self.pc.value / 2), self.p.value, address, self.memory.get_memory_at_position(address).value)
+            p = self.flagController.getFlagsStatusByte()
+            logls(self.a.value, self.x.value, self.y.value, self.sp.value, ceil(self.pc.value / 2), p, address, self.memory.get_memory_at_position(address).value)
         else:
-            log(self.a.value, self.x.value, self.y.value, self.sp.value, ceil(self.pc.value / 2), self.p.value)
+            p = self.flagController.getFlagsStatusByte()
+            log(self.a.value, self.x.value, self.y.value, self.sp.value, ceil(self.pc.value / 2), p)
 
     def get_next_byte(self):
         begin = self.pc.value
@@ -37,6 +40,7 @@ class CPU:
     ## INC Instructions
     def handleInstructionINX(self):
         self.x.value = self.x.value + 1
+        self.flagController.setCarryFlag()
 
     def handleInstructionINY(self):
         self.y.value = self.y.value + 1
