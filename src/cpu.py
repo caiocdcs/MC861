@@ -35,6 +35,34 @@ class CPU:
     ####################################################
 
     ## INC Instructions
+    def handleInstructionINCZeroPage(self):
+        byte = self.get_next_byte()
+        address = int(byte, 16)
+        self.memory.set_memory_at_position(address, self.memory.get_memory_at_position(address) + 1)
+
+    def handleInstructionINCZeroPageX(self):
+        byte = self.get_next_byte()
+        address = format((int(byte, 16) + self.x.value), '04x')
+
+        self.memory.set_memory_at_position(address, self.memory.get_memory_at_position(address) + 1)
+
+    def handleInstructionINCAbsolute(self):
+        low_byte = self.get_next_byte()
+        high_byte = self.get_next_byte()
+
+        address = (high_byte + low_byte)
+
+        self.memory.set_memory_at_position(address, self.memory.get_memory_at_position(address) + 1)
+
+    def handleInstructionINCAbsoluteX(self):
+        low_byte = self.get_next_byte()
+        high_byte = self.get_next_byte()
+
+        address = (high_byte + low_byte)
+        final_address = format((int(address, 16) + self.x.value), '04x')
+
+        self.memory.set_memory_at_position(address, self.memory.get_memory_at_position(final_address) + 1)
+
     def handleInstructionINX(self):
         self.x.value = self.x.value + 1
 
@@ -42,6 +70,34 @@ class CPU:
         self.y.value = self.y.value + 1
 
     ## DEC Instructions
+    def handleInstructionDECZeroPage(self):
+        byte = self.get_next_byte()
+        address = int(byte, 16)
+        self.memory.set_memory_at_position(address, self.memory.get_memory_at_position(address) - 1)
+
+    def handleInstructionDECZeroPageX(self):
+        byte = self.get_next_byte()
+        address = format((int(byte, 16) + self.x.value), '04x')
+
+        self.memory.set_memory_at_position(address, self.memory.get_memory_at_position(address) - 1)
+
+    def handleInstructionDECAbsolute(self):
+        low_byte = self.get_next_byte()
+        high_byte = self.get_next_byte()
+
+        address = (high_byte + low_byte)
+
+        self.memory.set_memory_at_position(address, self.memory.get_memory_at_position(address) - 1)
+
+    def handleInstructionDECAbsoluteX(self):
+        low_byte = self.get_next_byte()
+        high_byte = self.get_next_byte()
+
+        address = (high_byte + low_byte)
+        final_address = format((int(address, 16) + self.x.value), '04x')
+
+        self.memory.set_memory_at_position(address, self.memory.get_memory_at_position(final_address) - 1)
+
     def handleInstructionDEX(self):
         self.x.value = self.x.value - 1
 
@@ -72,10 +128,62 @@ class CPU:
         immediate = int(byte, 16)
         self.x.value = immediate
 
+    def handleInstructionLDXZeroPage(self):
+        byte = self.get_next_byte()
+        address = int(byte, 16)
+        self.x.value = self.memory.get_memory_at_position(address)
+
+    def handleInstructionLDXZeroPageY(self):
+        byte = self.get_next_byte()
+        address = format((int(byte, 16) + self.y.value), '04x')
+        self.x.value = self.memory.get_memory_at_position(address)
+
+    def handleInstructionLDXAbsolute(self):
+        low_byte = self.get_next_byte()
+        high_byte = self.get_next_byte()
+
+        address = (high_byte + low_byte)
+        self.x.value = self.memory.get_memory_at_position(address)
+
+    def handleInstructionLDXAbsoluteY(self):
+        low_byte = self.get_next_byte()
+        high_byte = self.get_next_byte()
+
+        address = (high_byte + low_byte)
+        final_address = format((int(address, 16) + self.y.value), '04x')
+
+        self.x.value = self.memory.get_memory_at_position(final_address)
+
     def handleInstructionLDYImmediate(self):
         byte = self.get_next_byte()
         immediate = int(byte, 16)
         self.y.value = immediate
+
+    def handleInstructionLDYZeroPage(self):
+        byte = self.get_next_byte()
+        address = int(byte, 16)
+        self.y.value = self.memory.get_memory_at_position(address)
+
+    def handleInstructionLDYZeroPageX(self):
+        byte = self.get_next_byte()
+        address = format((int(byte, 16) + self.x.value), '04x')
+        self.y.value = self.memory.get_memory_at_position(address)
+
+    def handleInstructionLDYAbsolute(self):
+        low_byte = self.get_next_byte()
+        high_byte = self.get_next_byte()
+
+        address = (high_byte + low_byte)
+        self.y.value = self.memory.get_memory_at_position(address)
+
+    def handleInstructionLDYAbsoluteX(self):
+        low_byte = self.get_next_byte()
+        high_byte = self.get_next_byte()
+
+        address = (high_byte + low_byte)
+        final_address = format((int(address, 16) + self.x.value), '04x')
+
+        self.y.value = self.memory.get_memory_at_position(final_address)
 
     ## Store Instructions
     def handleInstructionSTXZeroPage(self):
@@ -146,6 +254,22 @@ class CPU:
             elif instruction == 'A2':
                 self.handleInstructionLDXImmediate()
 
+            # LDX Zero page
+            elif instruction == 'A6':
+                self.handleInstructionLDXZeroPage()
+                
+            # LDX Zero page Y
+            elif instruction == 'B6':
+                self.handleInstructionLDXZeroPageY()
+
+            # LDX Absolute
+            elif instruction == 'AE':
+                self.handleInstructionLDXAbsolute()
+
+            # LDX Absolute Y
+            elif instruction == 'BE':
+                self.handleInstructionLDXAbsoluteY()
+
             # LDY Immediate
             elif instruction == 'A0':
                 self.handleInstructionLDYImmediate()
@@ -174,6 +298,22 @@ class CPU:
             elif instruction == '8E':
                 self.handleInstructionSTYAbsolute()
 
+            # INC Zero page
+            elif instruction == 'E6':
+                self.handleInstructionINCZeroPage()
+            
+            # INC Zero page X
+            elif instruction == 'F6':
+                self.handleInstructionINCZeroPageX()
+
+            # INC Absolut
+            elif instruction == 'EE':
+                self.handleInstructionINCAbsolute()
+
+            # INC Absolute X
+            elif instruction == 'FE':
+                self.handleInstructionINCAbsoluteX()
+                
             # INX
             elif instruction == 'E8':
                 self.handleInstructionINX()
@@ -181,6 +321,22 @@ class CPU:
             # INY
             elif instruction == 'C8':
                 self.handleInstructionINY()
+
+            # DEC Zero page
+            elif instruction == 'C6':
+                self.handleInstructionINCZeroPage()
+            
+            # DEC Zero page X
+            elif instruction == 'D6':
+                self.handleInstructionINCZeroPageX()
+
+            # DEC Absolut
+            elif instruction == 'CE':
+                self.handleInstructionINCAbsolute()
+
+            # DEC Absolute X
+            elif instruction == 'DE':
+                self.handleInstructionINCAbsoluteX()
 
             # DEX
             elif instruction == 'CA':
@@ -208,6 +364,10 @@ class CPU:
 
             # NOP ( No operation )
             elif instruction == 'EA':
+                continue
+
+            # BRK
+            elif instruction == '00':
                 continue
 
             # JMP Absolute
