@@ -1,4 +1,2 @@
 LDX #5
-STX $0A
 INX
-STX $0A
