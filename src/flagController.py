@@ -117,7 +117,15 @@ class FlagController:
             self.zeroFlag = 0
         
     def setNegativeIfNeeded(self, value):
-        if value and 0x80 != 0:
+        if value & 0x80 != 0:
             self.negativeFlag = 1
         else:
             self.negativeFlag = 0
+
+    def setCarryFlagIfNeeded(self, value):
+        # set carry flag
+        if value > 0xFF:
+            self.setCarryFlag()
+        else:
+            self.clearCarryFlag()
+       

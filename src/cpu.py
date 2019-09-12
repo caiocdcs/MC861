@@ -63,18 +63,14 @@ class CPU:
          
         self.flagController.setNegativeIfNeeded(self.a.value) # set negative flag
         self.flagController.setZeroFlagIfNeeded(self.a.value) # set zero flag
-
-        # set carry flag
-        if sum > 0xFF:
-            self.flagController.setCarryFlag()
-        else:
-            self.flagController.clearCarryFlag()
+        self.flagController.setCarryFlagIfNeeded(sum)
 
         # set overflow flag
         if (aOldValue ^ value) & 0x80 == 0 and (aOldValue ^ self.a.value) & 0x80 != 0:
             self.flagController.setOverflowFlag()
         else:
             self.flagController.clearOverflowFlag()
+
             
     ## AND Instructions
 
@@ -91,23 +87,46 @@ class CPU:
         self.flagController.setNegativeIfNeeded(self.a.value) # set negative flag
         self.flagController.setZeroFlagIfNeeded(self.a.value) # set zero flag
 
+    # FIXME
+    def handleInstructionAndZeroPageX(self):
+        byte = self.get_next_byte()
+        addressStart = int(byte, 16)
+        address = (addressStart + self.x.value) & 0xFF
+        value = self.memory.get_memory_at_position_int(address).value
+        self.a.value = value & self.a.value
+        self.flagController.setNegativeIfNeeded(self.a.value) # set negative flag
+        self.flagController.setZeroFlagIfNeeded(self.a.value) # set zero flag
+
     ## INC Instructions
     def handleInstructionINX(self):
         self.x.value = self.x.value + 1
+        self.flagController.setNegativeIfNeeded(self.x.value) # set negative flag
+        self.flagController.setZeroFlagIfNeeded(self.x.value) # set zero flag
+
 
     def handleInstructionINY(self):
         self.y.value = self.y.value + 1
+        self.flagController.setNegativeIfNeeded(self.y.value) # set negative flag
+        self.flagController.setZeroFlagIfNeeded(self.y.value) # set zero flag
+
 
     ## DEC Instructions
     def handleInstructionDEX(self):
         self.x.value = self.x.value - 1
+        self.flagController.setNegativeIfNeeded(self.x.value) # set negative flag
+        self.flagController.setZeroFlagIfNeeded(self.x.value) # set zero flag
 
     def handleInstructionDEY(self):
         self.y.value = self.y.value - 1
+        self.flagController.setNegativeIfNeeded(self.y.value) # set negative flag
+        self.flagController.setZeroFlagIfNeeded(self.y.value) # set zero flag
+
 
     ## Transfer Instructions
     def handleInstructionTAX(self):
         self.x.value = self.a.value
+        self.flagController.setNegativeIfNeeded(self.x.value) # set negative flag
+        self.flagController.setZeroFlagIfNeeded(self.x.value) # set zero flag
 
     def handleInstructionTXA(self):
         self.a.value = self.x.value
@@ -116,6 +135,8 @@ class CPU:
 
     def handleInstructionTAY(self):
         self.y.value = self.a.value
+        self.flagController.setNegativeIfNeeded(self.y.value) # set negative flag
+        self.flagController.setZeroFlagIfNeeded(self.y.value) # set zero flag
 
     def handleInstructionTYA(self):
         self.a.value = self.y.value
@@ -134,16 +155,22 @@ class CPU:
         byte = self.get_next_byte()
         immediate = int(byte, 16)
         self.x.value = immediate
+        self.flagController.setNegativeIfNeeded(self.x.value) # set negative flag
+        self.flagController.setZeroFlagIfNeeded(self.x.value) # set zero flag
 
     def handleInstructionLDXZeroPage(self):
         address = self.get_next_byte()
         value = self.memory.get_memory_at_position_str(address)
         self.x.value = value.value
+        self.flagController.setNegativeIfNeeded(self.x.value) # set negative flag
+        self.flagController.setZeroFlagIfNeeded(self.x.value) # set zero flag
 
     def handleInstructionLDYImmediate(self):
         byte = self.get_next_byte()
         immediate = int(byte, 16)
         self.y.value = immediate
+        self.flagController.setNegativeIfNeeded(self.y.value) # set negative flag
+        self.flagController.setZeroFlagIfNeeded(self.y.value) # set zero flag
 
     ## Store Instructions
     def handleInstructionSTXZeroPage(self):
@@ -200,6 +227,29 @@ class CPU:
 
         address = (high_byte + low_byte)
         self.pc.value = int(address, 16) * 2
+
+    # Clear flags instructions
+    def handleInstructionClearCarryFlag(self):
+        self.flagController.clearCarryFlag()
+
+    def handleInstructionClearDecimalMode(self):
+        self.flagController.clearDecimalFlag()
+
+    def handleInstructionClearInterruptDisable(self):
+        self.flagController.clearInterrupDisabledtFlag()
+    
+    def handleInstructionClearOverflowFlag(self):
+        self.flagController.clearOverflowFlag()
+
+    # Set flags instructions
+    def handleInstructionSetCarryFlag(self):
+        self.flagController.setCarryFlag()
+
+    def handleInstructionSetDecimalMode(self):
+        self.flagController.setDecimalFlag()
+
+    def handleInstructionSetInterruptDisable(self):
+        self.flagController.setInterrupDisabledtFlag()
 
     def run(self):
         self.log()
@@ -329,6 +379,38 @@ class CPU:
             # AND Zero Page
             elif instruction == '25':
                 self.handleInstructionAndZeroPage()
+
+            # AND Zero Page X
+            elif instruction == '35':
+                self.handleInstructionAndZeroPageX()
+
+            # CLC Clear Carry Flag
+            elif instruction == '18':
+                self.handleInstructionClearCarryFlag()
+
+            # CLD Clear Decimal Mode
+            elif instruction == 'D8':
+                self.handleInstructionClearDecimalMode()
+
+            # CLI Clear Interrupt Disable
+            elif instruction == '58':
+                self.handleInstructionClearInterruptDisable()
+
+            # CLV Clear Overflow Flag
+            elif instruction == 'B8':
+                self.handleInstructionClearOverflowFlag()
+
+            # SEC Set Carry Flag
+            elif instruction == '38':
+                self.handleInstructionSetCarryFlag()
+
+            # SED Set Decimal Flag
+            elif instruction == 'F8':
+                self.handleInstructionSetDecimalMode()
             
+            # SEI Set Interrupt Disable
+            elif instruction == '78':
+                self.handleInstructionSetInterruptDisable()
+
             self.log()
             instruction = self.get_next_byte()
