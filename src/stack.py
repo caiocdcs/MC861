@@ -13,12 +13,4 @@ class Stack:
 
     # def setStackAddress(self, value):
     #     self.stackAddress = value
-
-    # Handlers
-
-    def pushProcessorStatus(self):
-        self.setSomething() # TODO
-
-    def pullProcessorStatus(self):
-        self.setSomething() # TODO
        

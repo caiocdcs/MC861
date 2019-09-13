@@ -1,0 +1,4 @@
+LDA #1210
+PHP
+LDA #4
+PLP
