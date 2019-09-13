@@ -6,8 +6,8 @@ class FlagController:
         self.zeroFlag = 0
         self.interrupDisabledtFlag = 0
         self.decimalFlag = 0
-        self.breakFlag = 0
-        self.unusedFlag = 0
+        self.breakFlag = 1
+        self.unusedFlag = 1
         self.overflowFlag = 0
         self.negativeFlag = 0
 
@@ -24,6 +24,16 @@ class FlagController:
 
         return flagsByte
 
+    def setFlagsStatusByte(self, value):
+        mask =  0b10000000
+        self.carryFlag = 1 if (0b00000001 & value) else 0
+        self.zeroFlag = 1 if (0b00000010 & value) else 0
+        self.interrupDisabledtFlag = 1 if (0b00000100 & value) else 0
+        self.decimalFlag = 1 if (0b00001000 & value) else 0
+        self.breakFlag = 1 if (0b00010000 & value) else 0 # TODO PHP/BRK = 1, IRQ/NMI = 0
+        self.unusedFlag = 1 # if (0b00100000 & value) else 0
+        self.overflowFlag = 1 if (0b01000000 & value) else 0
+        self.negativeFlag = 1 if (0b10000000 & value) else 0
 
     ############ Getters ############
 
