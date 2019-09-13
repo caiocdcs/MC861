@@ -2,6 +2,7 @@ from utils import log, logls
 from ctypes import c_uint16, c_uint8
 from memory import Memory
 from flagController import FlagController
+from stack import Stack
 
 from math import ceil
 
@@ -17,6 +18,7 @@ class CPU:
         self.y = c_uint8(0)
         self.memory = Memory()
         self.flagController = FlagController()
+        self.stack = Stack()
     
     def log(self, address = None):
         if (address):
@@ -250,6 +252,31 @@ class CPU:
 
     def handleInstructionSetInterruptDisable(self):
         self.flagController.setInterrupDisabledtFlag()
+        
+    # Stack instructions
+    def handleInstructionTXS(self):
+        self.sp.value = self.x.value
+
+    def handleInstructionSTX(self):
+        self.x.value = self.sp.value
+
+    def handleInstructionPHA(self):
+        stackAddress = self.stack.getAddress() + (self.sp.value * 8)
+        self.memory.set_memory_at_position_int(stackAddress, self.a.value)
+        self.sp.value = self.sp.value + 1
+
+    def handleInstructionPLA(self):
+        self.sp.value = self.sp.value - 1
+        stackAddress = self.stack.getAddress() + (self.sp.value * 8)
+        self.a.value = self.memory.get_memory_at_position_int(stackAddress)
+
+    def handleInstructionPHP(self):
+        # self.a.value = self.flagController.getFlagsStatusByte() #TODO
+        print('TODO')
+
+    def handleInstructionPLP(self):
+        # self.flagController.setFlagsStatusByte() # TODO undestand where to get from
+        print('TODO')
 
     def run(self):
         self.log()
@@ -411,6 +438,32 @@ class CPU:
             # SEI Set Interrupt Disable
             elif instruction == '78':
                 self.handleInstructionSetInterruptDisable()
+
+            # Stack instructions
+
+            # TXS Transfer X to Stack pointer
+            elif instruction == '9A':
+                self.handleInstructionTXS()
+
+            # STX Transfer Stack pointer to X
+            elif instruction == 'BA':
+                self.handleInstructionSTX()
+
+            # PHA Push Accumulator
+            elif instruction == '48':
+                self.handleInstructionPHA()
+
+            # PLA Pull Accumulator
+            elif instruction == '68':
+                self.handleInstructionPLA()
+
+            # PHP Push Processor status
+            elif instruction == '08':
+                self.handleInstructionPHP()
+
+            # PLP Pull Processor status
+            elif instruction == '28':
+                self.handleInstructionPLP()
 
             self.log()
             instruction = self.get_next_byte()
