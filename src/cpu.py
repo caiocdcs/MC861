@@ -255,10 +255,10 @@ class CPU:
         
     # Stack instructions
     def handleInstructionTXS(self):
-        self.stack.transferXToStackPointer()
+        self.sp.value = self.x.value
 
     def handleInstructionSTX(self):
-        self.stack.transferStackPointerToX()
+        self.x.value = self.sp.value
 
     def handleInstructionPHA(self):
         self.stack.pushAccumulator()

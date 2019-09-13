@@ -14,12 +14,6 @@ class Stack:
 
     # Handlers
 
-    def transferXToStackPointer(self):
-        self.setSomething() # TODO
-
-    def transferStackPointerToX(self):
-        self.setSomething() # TODO
-
     def pushAccumulator(self):
         self.setSomething() # TODO
 
