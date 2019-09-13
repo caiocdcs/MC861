@@ -271,12 +271,16 @@ class CPU:
         self.a.value = self.memory.get_memory_at_position_int(stackAddress)
 
     def handleInstructionPHP(self):
-        # self.a.value = self.flagController.getFlagsStatusByte() #TODO
-        print('TODO')
+        P = self.flagController.getFlagsStatusByte()
+        stackAddress = self.stack.getAddress() + (self.sp.value * 8)
+        self.memory.set_memory_at_position_int(stackAddress, P)
+        self.sp.value = self.sp.value + 1
 
     def handleInstructionPLP(self):
-        # self.flagController.setFlagsStatusByte() # TODO undestand where to get from
-        print('TODO')
+        self.sp.value = self.sp.value - 1
+        stackAddress = self.stack.getAddress() + (self.sp.value * 8)
+        P = self.memory.get_memory_at_position_int(stackAddress)
+        self.flagController.setFlagsStatusByte(P)
 
     def run(self):
         self.log()

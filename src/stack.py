@@ -8,9 +8,3 @@ class Stack:
 
     def getAddress(self) -> int:
         return self.address
-
-    # Setters
-
-    # def setStackAddress(self, value):
-    #     self.stackAddress = value
-       
