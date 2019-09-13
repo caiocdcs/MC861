@@ -261,10 +261,14 @@ class CPU:
         self.x.value = self.sp.value
 
     def handleInstructionPHA(self):
-        self.stack.pushAccumulator()
+        stackAddress = self.stack.getAddress() + (self.sp.value * 8)
+        self.memory.set_memory_at_position_int(stackAddress, self.a.value)
+        self.sp.value = self.sp.value + 1
 
     def handleInstructionPLA(self):
-        self.stack.pullAccumulator()
+        self.sp.value = self.sp.value - 1
+        stackAddress = self.stack.getAddress() + (self.sp.value * 8)
+        self.a.value = self.memory.get_memory_at_position_int(stackAddress)
 
     def handleInstructionPHP(self):
         self.stack.pushProcessorStatus()

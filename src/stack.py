@@ -1,24 +1,20 @@
+# Stack memory: $0100–$01FF
+
 class Stack:
     def __init__(self):
-        self.something = 0
+        self.address = 256
 
     # Getters
 
-    def getSomething(self) -> int:
-        return self.something
+    def getAddress(self) -> int:
+        return self.address
 
     # Setters
 
-    def setSomething(self):
-        self.something = 1
+    # def setStackAddress(self, value):
+    #     self.stackAddress = value
 
     # Handlers
-
-    def pushAccumulator(self):
-        self.setSomething() # TODO
-
-    def pullAccumulator(self):
-        self.setSomething() # TODO
 
     def pushProcessorStatus(self):
         self.setSomething() # TODO
