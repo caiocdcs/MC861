@@ -359,6 +359,10 @@ class CPU:
             elif instruction == 'EA':
                 continue
 
+            # BRK ( No operation )
+            elif instruction == '00':
+                break
+
             # JMP Absolute
             elif instruction == '4C':
                 self.handleInstructionJmpAbsolute()
