@@ -65,6 +65,14 @@ class CPU:
         value = self.memory.get_memory_at_position_int(address).value
         self.adc(value)
 
+    def handleInstructionAdcAbsolute(self):
+        low_byte = self.get_next_byte()
+        high_byte = self.get_next_byte()
+
+        address = (high_byte + low_byte)
+        value = self.memory.get_memory_at_position_str(address).value
+        self.adc(value)
+
     def adc(self, value):
         carry = self.flagController.getCarryFlag()
         aOldValue = self.a.value
