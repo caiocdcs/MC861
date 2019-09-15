@@ -19,6 +19,14 @@ class CPU:
         self.memory = Memory()
         self.flagController = FlagController()
         self.stack = Stack()
+
+        self.read_header()
+
+    def read_header(self):
+        self.pc.value = self.pc.value + 8   # skip 4 header bytes
+        self.prg_rom_size = int(self.get_next_byte(), 16)
+        self.chr_rom_size = int(self.get_next_byte(), 16)
+        self.pc.value = self.pc.value + 20  # skip 10 header bytes
     
     def log(self, address = None):
         if (address):
@@ -362,6 +370,10 @@ class CPU:
             # NOP ( No operation )
             elif instruction == 'EA':
                 continue
+
+            # BRK ( No operation )
+            elif instruction == '00':
+                break
 
             # JMP Absolute
             elif instruction == '4C':
