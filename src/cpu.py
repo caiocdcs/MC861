@@ -4,12 +4,12 @@ from memory import Memory
 from flagController import FlagController
 from stack import Stack
 
-from math import ceil
 
 class CPU:
     def __init__(self, program_name):
         file = open(program_name, "rb")
         self.program_code = file.read().hex()
+        # print(self.program_code)
 
         self.sp = c_uint16(0)
         self.pc = c_uint16(0)
@@ -21,22 +21,45 @@ class CPU:
         self.stack = Stack()
 
         self.read_header()
+        self.load_program()
+
+        self.prg_rom_size = 0
+        self.chr_rom_size = 0
+
+        self.pc.value = 32768   # ( 0x8000 ) PRG ROM
+
+        self.address = None
 
     def read_header(self):
         self.pc.value = self.pc.value + 8   # skip 4 header bytes
-        self.prg_rom_size = int(self.get_next_byte(), 16)
-        self.chr_rom_size = int(self.get_next_byte(), 16)
+        self.prg_rom_size = int(self.get_next_byte_from_code(), 16)
+        self.chr_rom_size = int(self.get_next_byte_from_code(), 16)
         self.pc.value = self.pc.value + 20  # skip 10 header bytes
+
+    def load_program(self):
+        initial_address = 32768     # ( 0x8000 ) PRG ROM
+        for i in range(0, initial_address * self.prg_rom_size):
+            b = self.get_next_byte_from_code()
+            if b != '':
+                byte = c_uint8(int(b, 16))
+                self.memory.set_memory_at_position_int(initial_address + i, byte)
     
-    def log(self, address = None):
-        if (address):
-            p = self.flagController.getFlagsStatusByte()
-            logls(self.a.value, self.x.value, self.y.value, self.sp.value, ceil(self.pc.value / 2), p, address, self.memory.get_memory_at_position_str(address).value)
+    def log(self):
+        p = self.flagController.getFlagsStatusByte()
+        if self.address:
+            logls(self.a.value, self.x.value, self.y.value, self.sp.value, self.pc.value, p, self.address,
+                  self.memory.get_memory_at_position_str(self.address).value)
         else:
-            p = self.flagController.getFlagsStatusByte()
-            log(self.a.value, self.x.value, self.y.value, self.sp.value, ceil(self.pc.value / 2), p)
+            log(self.a.value, self.x.value, self.y.value, self.sp.value, self.pc.value, p)
 
     def get_next_byte(self):
+        if self.pc.value == (2 * 32768 * self.prg_rom_size):      # ( 0x8000 ) PRG ROM + 0x8000 size
+            return None
+        byte = self.memory.get_memory_at_position_int(self.pc.value)
+        self.pc.value = self.pc.value + 1
+        return format(byte.value, '02x').upper()
+
+    def get_next_byte_from_code(self):
         begin = self.pc.value
         self.pc.value = self.pc.value + 2 
         end = self.pc.value
@@ -293,40 +316,43 @@ class CPU:
     ## Store Instructions
     def handleInstructionSTXZeroPage(self):
         byte = self.get_next_byte()
-        self.memory.set_memory_at_position_str(byte, self.x)
+
+        self.address = byte.zfill(4)
+        self.memory.set_memory_at_position_str(self.address, self.x)
 
     def handleInstructionSTXZeroPageY(self):
         byte = self.get_next_byte()
 
-        address = format((int(byte, 16) + self.y.value), '04x')
-        self.memory.set_memory_at_position_str(address, self.x)
-        self.log(address)
+        self.address = format((int(byte, 16) + self.y.value), '04x')
+        self.memory.set_memory_at_position_str(self.address, self.x)
 
     def handleInstructionSTXAbsolute(self):
         low_byte = self.get_next_byte()
         high_byte = self.get_next_byte()
 
-        address = (high_byte + low_byte)
+        self.address = (high_byte + low_byte)
 
-        self.memory.set_memory_at_position_str(address, self.x)
+        self.memory.set_memory_at_position_str(self.address, self.x)
 
     def handleInstructionSTYZeroPage(self):
         byte = self.get_next_byte()
-        self.memory.set_memory_at_position_str(byte, self.y)
 
-    def handleInstructionSTYZeroPageY(self):
+        self.address = byte.zfill(4)
+        self.memory.set_memory_at_position_str(self.address, self.y)
+
+    def handleInstructionSTYZeroPageX(self):
         byte = self.get_next_byte()
 
-        address = format((int(byte, 16) + self.x.value), '04x')
-        self.memory.set_memory_at_position_str(address, self.y)
+        self.address = format((int(byte, 16) + self.x.value), '04x')
+        self.memory.set_memory_at_position_str(self.address, self.y)
 
     def handleInstructionSTYAbsolute(self):
         low_byte = self.get_next_byte()
         high_byte = self.get_next_byte()
 
-        address = (high_byte + low_byte)
+        self.address = (high_byte + low_byte)
 
-        self.memory.set_memory_at_position_str(address, self.y)
+        self.memory.set_memory_at_position_str(self.address, self.y)
 
     ## Jump Instructions
     def handleInstructionJmpAbsolute(self):
@@ -334,7 +360,7 @@ class CPU:
         high_byte = self.get_next_byte()
 
         address = (high_byte + low_byte)
-        self.pc.value = int(address, 16) * 2
+        self.pc.value = int(address, 16)
 
     def handleInstructionJmpIndirect(self):
         byte = self.get_next_byte()
@@ -454,11 +480,11 @@ class CPU:
                 self.handleInstructionSTYZeroPage()
 
             # STY Zero page X
-            elif instruction == '96':
-                self.handleInstructionSTYZeroPageY()
+            elif instruction == '94':
+                self.handleInstructionSTYZeroPageX()
 
             # STY Absolute
-            elif instruction == '8E':
+            elif instruction == '8C':
                 self.handleInstructionSTYAbsolute()
 
             # INC Zero page
@@ -527,7 +553,7 @@ class CPU:
 
             # NOP ( No operation )
             elif instruction == 'EA':
-                continue
+                pass
 
 <<<<<<< HEAD
             # BRK
@@ -646,4 +672,5 @@ class CPU:
                 self.handleInstructionPLP()
 
             self.log()
+            self.address = None
             instruction = self.get_next_byte()
