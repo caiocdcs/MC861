@@ -11,7 +11,7 @@ class CPU:
         self.program_code = file.read().hex()
         # print(self.program_code)
 
-        self.sp = c_uint16(0)
+        self.sp = c_uint16(255) # SP starts at 0xff
         self.pc = c_uint16(0)
         self.a = c_uint8(0)
         self.x = c_uint8(0)
@@ -420,10 +420,10 @@ class CPU:
     def handleInstructionPHA(self):
         stackAddress = self.stack.getAddress() + (self.sp.value * 8)
         self.memory.set_memory_at_position_int(stackAddress, self.a.value)
-        self.sp.value = self.sp.value + 1
+        self.sp.value = self.sp.value - 1
 
     def handleInstructionPLA(self):
-        self.sp.value = self.sp.value - 1
+        self.sp.value = self.sp.value + 1
         stackAddress = self.stack.getAddress() + (self.sp.value * 8)
         self.a.value = self.memory.get_memory_at_position_int(stackAddress)
 
@@ -431,10 +431,10 @@ class CPU:
         P = self.flagController.getFlagsStatusByte()
         stackAddress = self.stack.getAddress() + (self.sp.value * 8)
         self.memory.set_memory_at_position_int(stackAddress, P)
-        self.sp.value = self.sp.value + 1
+        self.sp.value = self.sp.value - 1
 
     def handleInstructionPLP(self):
-        self.sp.value = self.sp.value - 1
+        self.sp.value = self.sp.value + 1
         stackAddress = self.stack.getAddress() + (self.sp.value * 8)
         P = self.memory.get_memory_at_position_int(stackAddress)
         self.flagController.setFlagsStatusByte(P)
