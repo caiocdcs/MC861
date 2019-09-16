@@ -249,27 +249,28 @@ class CPU:
 
     def handleInstructionLDXZeroPage(self):
         address = self.get_next_byte()
-        value = self.memory.get_memory_at_position_str(address)
-        self.x.value = value.value
+        self.x = self.memory.get_memory_at_position_str(address)
+
         self.flagController.setNegativeIfNeeded(self.x.value) # set negative flag
         self.flagController.setZeroFlagIfNeeded(self.x.value) # set zero flag
-
-    def handleInstructionLDXZeroPage(self):
-        byte = self.get_next_byte()
-        address = int(byte, 16)
-        self.x.value = self.memory.get_memory_at_position(address)
 
     def handleInstructionLDXZeroPageY(self):
         byte = self.get_next_byte()
         address = format((int(byte, 16) + self.y.value), '04x')
-        self.x.value = self.memory.get_memory_at_position(address)
+        self.x = self.memory.get_memory_at_position_str(address)
+
+        self.flagController.setNegativeIfNeeded(self.x.value) # set negative flag
+        self.flagController.setZeroFlagIfNeeded(self.x.value) # set zero flag
 
     def handleInstructionLDXAbsolute(self):
         low_byte = self.get_next_byte()
         high_byte = self.get_next_byte()
 
         address = (high_byte + low_byte)
-        self.x.value = self.memory.get_memory_at_position(address)
+        self.x = self.memory.get_memory_at_position_str(address)
+
+        self.flagController.setNegativeIfNeeded(self.x.value) # set negative flag
+        self.flagController.setZeroFlagIfNeeded(self.x.value) # set zero flag
 
     def handleInstructionLDXAbsoluteY(self):
         low_byte = self.get_next_byte()
@@ -278,7 +279,10 @@ class CPU:
         address = (high_byte + low_byte)
         final_address = format((int(address, 16) + self.y.value), '04x')
 
-        self.x.value = self.memory.get_memory_at_position(final_address)
+        self.x = self.memory.get_memory_at_position_str(final_address)
+
+        self.flagController.setNegativeIfNeeded(self.x.value) # set negative flag
+        self.flagController.setZeroFlagIfNeeded(self.x.value) # set zero flag
 
     def handleInstructionLDYImmediate(self):
         byte = self.get_next_byte()
@@ -288,21 +292,29 @@ class CPU:
         self.flagController.setZeroFlagIfNeeded(self.y.value) # set zero flag
 
     def handleInstructionLDYZeroPage(self):
-        byte = self.get_next_byte()
-        address = int(byte, 16)
-        self.y.value = self.memory.get_memory_at_position(address)
+        address = self.get_next_byte()
+        self.y = self.memory.get_memory_at_position_str(address)
+        
+        self.flagController.setNegativeIfNeeded(self.x.value) # set negative flag
+        self.flagController.setZeroFlagIfNeeded(self.x.value) # set zero flag
 
     def handleInstructionLDYZeroPageX(self):
         byte = self.get_next_byte()
         address = format((int(byte, 16) + self.x.value), '04x')
-        self.y.value = self.memory.get_memory_at_position(address)
+        self.y = self.memory.get_memory_at_position_str(address)
+
+        self.flagController.setNegativeIfNeeded(self.x.value) # set negative flag
+        self.flagController.setZeroFlagIfNeeded(self.x.value) # set zero flag
 
     def handleInstructionLDYAbsolute(self):
         low_byte = self.get_next_byte()
         high_byte = self.get_next_byte()
 
         address = (high_byte + low_byte)
-        self.y.value = self.memory.get_memory_at_position(address)
+        self.y = self.memory.get_memory_at_position_str(address)
+
+        self.flagController.setNegativeIfNeeded(self.x.value) # set negative flag
+        self.flagController.setZeroFlagIfNeeded(self.x.value) # set zero flag
 
     def handleInstructionLDYAbsoluteX(self):
         low_byte = self.get_next_byte()
@@ -311,7 +323,10 @@ class CPU:
         address = (high_byte + low_byte)
         final_address = format((int(address, 16) + self.x.value), '04x')
 
-        self.y.value = self.memory.get_memory_at_position(final_address)
+        self.y = self.memory.get_memory_at_position_str(final_address)
+
+        self.flagController.setNegativeIfNeeded(self.x.value) # set negative flag
+        self.flagController.setZeroFlagIfNeeded(self.x.value) # set zero flag
 
     ## Store Instructions
     def handleInstructionSTXZeroPage(self):
@@ -437,7 +452,6 @@ class CPU:
             elif instruction == 'A2':
                 self.handleInstructionLDXImmediate()
 
-<<<<<<< HEAD
             # LDX Zero page
             elif instruction == 'A6':
                 self.handleInstructionLDXZeroPage()
@@ -453,15 +467,26 @@ class CPU:
             # LDX Absolute Y
             elif instruction == 'BE':
                 self.handleInstructionLDXAbsoluteY()
-=======
-            # LDX Zero Page
-            elif instruction == 'A6':
-                self.handleInstructionLDXZeroPage()
->>>>>>> master
 
             # LDY Immediate
             elif instruction == 'A0':
                 self.handleInstructionLDYImmediate()
+
+            # LDY Zero page
+            elif instruction == 'A4':
+                self.handleInstructionLDYZeroPage()
+
+            # LDY Zero page X
+            elif instruction == 'B4':
+                self.handleInstructionLDYZeroPageX()
+
+            # LDY Absolute
+            elif instruction == 'AC':
+                self.handleInstructionLDYAbsolute()
+
+            # LDY Absolute X
+            elif instruction == 'BC':
+                self.handleInstructionLDYAbsoluteX()
 
             # STX Zero page
             elif instruction == '86':
@@ -555,15 +580,9 @@ class CPU:
             elif instruction == 'EA':
                 pass
 
-<<<<<<< HEAD
-            # BRK
-            elif instruction == '00':
-                continue
-=======
             # BRK ( No operation )
             elif instruction == '00':
                 break
->>>>>>> master
 
             # JMP Absolute
             elif instruction == '4C':
