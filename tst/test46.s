@@ -44,13 +44,10 @@ MIRRORING = %0001 ;%0000 = horizontal, %0001 = vertical, %1000 = four-screen
    .base $10000-(PRG_COUNT*$4000)
 
 Reset:
-    LDX #5
-    JMP End
-    INX
-    INX
-End:
-    INX
-    BRK
+   ldy #$21
+   ldx #$09
+   sty $09, x
+   brk
 
 NMI:
 
