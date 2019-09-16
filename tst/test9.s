@@ -44,13 +44,10 @@ MIRRORING = %0001 ;%0000 = horizontal, %0001 = vertical, %1000 = four-screen
    .base $10000-(PRG_COUNT*$4000)
 
 Reset:
-   LDA #12
-   PHA
-   LDA #4
-   PHA
-   LDA #2
-   PLA
-   PLA
+   LDX #4
+   TXS
+   LDX #1
+   TSX
    BRK
 
 NMI:
