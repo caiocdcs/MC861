@@ -128,77 +128,106 @@ class CPU:
         value = self.memory.get_memory_at_position_int(address).value
         self.a.value = value & self.a.value
         self.flagController.setNegativeIfNeeded(self.a.value) # set negative flag
-        self.flagController.setZeroFlagIfNeeded(self.a.value) # set zero flag
 
     ## INC Instructions
     def handleInstructionINCZeroPage(self):
         byte = self.get_next_byte()
-        address = int(byte, 16)
-        self.memory.set_memory_at_position(address, self.memory.get_memory_at_position(address) + 1)
+        self.address = byte.zfill(4)
+
+        value = self.memory.get_memory_at_position_str(self.address).value + 1
+
+        self.memory.set_memory_at_position_str(self.address, c_uint8(value))
+        self.flagController.setNegativeIfNeeded(value) # set negative flag
+        self.flagController.setZeroFlagIfNeeded(value) # set zero flag
 
     def handleInstructionINCZeroPageX(self):
         byte = self.get_next_byte()
-        address = format((int(byte, 16) + self.x.value), '04x')
+        self.address = format((int(byte, 16) + self.x.value), '04x')
 
-        self.memory.set_memory_at_position(address, self.memory.get_memory_at_position(address) + 1)
+        value = self.memory.get_memory_at_position_str(self.address).value + 1
+
+        self.memory.set_memory_at_position_str(self.address, c_uint8(value))
+        self.flagController.setNegativeIfNeeded(value) # set negative flag
+        self.flagController.setZeroFlagIfNeeded(value) # set zero flag
 
     def handleInstructionINCAbsolute(self):
         low_byte = self.get_next_byte()
         high_byte = self.get_next_byte()
 
-        address = (high_byte + low_byte)
+        self.address = (high_byte + low_byte)
+        value = self.memory.get_memory_at_position_str(self.address).value + 1
 
-        self.memory.set_memory_at_position(address, self.memory.get_memory_at_position(address) + 1)
+        self.memory.set_memory_at_position_str(self.address, c_uint8(value))
+        self.flagController.setNegativeIfNeeded(value) # set negative flag
+        self.flagController.setZeroFlagIfNeeded(value) # set zero flag
 
     def handleInstructionINCAbsoluteX(self):
         low_byte = self.get_next_byte()
         high_byte = self.get_next_byte()
 
-        address = (high_byte + low_byte)
-        final_address = format((int(address, 16) + self.x.value), '04x')
+        a = (high_byte + low_byte)
+        self.address = format((int(a, 16) + self.x.value), '04x')
 
-        self.memory.set_memory_at_position(address, self.memory.get_memory_at_position(final_address) + 1)
+        value = self.memory.get_memory_at_position_str(self.address).value + 1
+
+        self.memory.set_memory_at_position_str(self.address, c_uint8(value))
+        self.flagController.setNegativeIfNeeded(value) # set negative flag
+        self.flagController.setZeroFlagIfNeeded(value) # set zero flag
 
     def handleInstructionINX(self):
         self.x.value = self.x.value + 1
         self.flagController.setNegativeIfNeeded(self.x.value) # set negative flag
         self.flagController.setZeroFlagIfNeeded(self.x.value) # set zero flag
 
-
     def handleInstructionINY(self):
         self.y.value = self.y.value + 1
         self.flagController.setNegativeIfNeeded(self.y.value) # set negative flag
         self.flagController.setZeroFlagIfNeeded(self.y.value) # set zero flag
 
-
     ## DEC Instructions
     def handleInstructionDECZeroPage(self):
         byte = self.get_next_byte()
-        address = int(byte, 16)
-        self.memory.set_memory_at_position(address, self.memory.get_memory_at_position(address) - 1)
+        self.address = byte.zfill(4)
+        value = self.memory.get_memory_at_position_str(self.address).value - 1
+
+        self.memory.set_memory_at_position_str(self.address, c_uint8(value))
+        self.flagController.setNegativeIfNeeded(value) # set negative flag
+        self.flagController.setZeroFlagIfNeeded(value) # set zero flag
 
     def handleInstructionDECZeroPageX(self):
         byte = self.get_next_byte()
-        address = format((int(byte, 16) + self.x.value), '04x')
+        self.address = format((int(byte, 16) + self.x.value), '04x')
 
-        self.memory.set_memory_at_position(address, self.memory.get_memory_at_position(address) - 1)
+        value = self.memory.get_memory_at_position_str(self.address).value - 1
+
+        self.memory.set_memory_at_position_str(self.address, c_uint8(value))
+        self.flagController.setNegativeIfNeeded(value) # set negative flag
+        self.flagController.setZeroFlagIfNeeded(value) # set zero flag
 
     def handleInstructionDECAbsolute(self):
         low_byte = self.get_next_byte()
         high_byte = self.get_next_byte()
 
-        address = (high_byte + low_byte)
+        self.address = (high_byte + low_byte)
 
-        self.memory.set_memory_at_position(address, self.memory.get_memory_at_position(address) - 1)
+        value = self.memory.get_memory_at_position_str(self.address).value - 1
+
+        self.memory.set_memory_at_position_str(self.address, c_uint8(value))
+        self.flagController.setNegativeIfNeeded(value) # set negative flag
+        self.flagController.setZeroFlagIfNeeded(value) # set zero flag
 
     def handleInstructionDECAbsoluteX(self):
         low_byte = self.get_next_byte()
         high_byte = self.get_next_byte()
 
-        address = (high_byte + low_byte)
-        final_address = format((int(address, 16) + self.x.value), '04x')
+        a = (high_byte + low_byte)
+        self.address = format((int(a, 16) + self.x.value), '04x')
 
-        self.memory.set_memory_at_position(address, self.memory.get_memory_at_position(final_address) - 1)
+        value = self.memory.get_memory_at_position_str(self.address).value - 1
+
+        self.memory.set_memory_at_position_str(self.address, c_uint8(value))
+        self.flagController.setNegativeIfNeeded(value) # set negative flag
+        self.flagController.setZeroFlagIfNeeded(value) # set zero flag
 
     def handleInstructionDEX(self):
         self.x.value = self.x.value - 1
@@ -237,6 +266,55 @@ class CPU:
         byte = self.get_next_byte()
         immediate = int(byte, 16)
         self.a.value = immediate
+        self.flagController.setNegativeIfNeeded(self.a.value) # set negative flag
+        self.flagController.setZeroFlagIfNeeded(self.a.value) # set zero flag
+
+    def handleInstructionLDAZeroPage(self):
+        address = self.get_next_byte()
+        self.a = self.memory.get_memory_at_position_str(address)
+
+        self.flagController.setNegativeIfNeeded(self.a.value) # set negative flag
+        self.flagController.setZeroFlagIfNeeded(self.a.value) # set zero flag
+
+    def handleInstructionLDAZeroPageX(self):
+        byte = self.get_next_byte()
+        address = format((int(byte, 16) + self.a.value), '04x')
+        self.a = self.memory.get_memory_at_position_str(address)
+
+        self.flagController.setNegativeIfNeeded(self.a.value) # set negative flag
+        self.flagController.setZeroFlagIfNeeded(self.a.value) # set zero flag
+
+    def handleInstructionLDAAbsolute(self):
+        low_byte = self.get_next_byte()
+        high_byte = self.get_next_byte()
+
+        address = (high_byte + low_byte)
+        self.a = self.memory.get_memory_at_position_str(address)
+
+        self.flagController.setNegativeIfNeeded(self.a.value) # set negative flag
+        self.flagController.setZeroFlagIfNeeded(self.a.value) # set zero flag
+
+    def handleInstructionLDAAbsoluteX(self):
+        low_byte = self.get_next_byte()
+        high_byte = self.get_next_byte()
+
+        address = (high_byte + low_byte)
+        final_address = format((int(address, 16) + self.a.value), '04x')
+
+        self.a = self.memory.get_memory_at_position_str(final_address)
+
+        self.flagController.setNegativeIfNeeded(self.a.value) # set negative flag
+        self.flagController.setZeroFlagIfNeeded(self.a.value) # set zero flag
+
+    def handleInstructionLDAAbsoluteY(self):
+        low_byte = self.get_next_byte()
+        high_byte = self.get_next_byte()
+
+        address = (high_byte + low_byte)
+        final_address = format((int(address, 16) + self.y.value), '04x')
+
+        self.a = self.memory.get_memory_at_position_str(final_address)
+
         self.flagController.setNegativeIfNeeded(self.a.value) # set negative flag
         self.flagController.setZeroFlagIfNeeded(self.a.value) # set zero flag
 
@@ -295,16 +373,16 @@ class CPU:
         address = self.get_next_byte()
         self.y = self.memory.get_memory_at_position_str(address)
         
-        self.flagController.setNegativeIfNeeded(self.x.value) # set negative flag
-        self.flagController.setZeroFlagIfNeeded(self.x.value) # set zero flag
+        self.flagController.setNegativeIfNeeded(self.y.value) # set negative flag
+        self.flagController.setZeroFlagIfNeeded(self.y.value) # set zero flag
 
     def handleInstructionLDYZeroPageX(self):
         byte = self.get_next_byte()
         address = format((int(byte, 16) + self.x.value), '04x')
         self.y = self.memory.get_memory_at_position_str(address)
 
-        self.flagController.setNegativeIfNeeded(self.x.value) # set negative flag
-        self.flagController.setZeroFlagIfNeeded(self.x.value) # set zero flag
+        self.flagController.setNegativeIfNeeded(self.y.value) # set negative flag
+        self.flagController.setZeroFlagIfNeeded(self.y.value) # set zero flag
 
     def handleInstructionLDYAbsolute(self):
         low_byte = self.get_next_byte()
@@ -313,8 +391,8 @@ class CPU:
         address = (high_byte + low_byte)
         self.y = self.memory.get_memory_at_position_str(address)
 
-        self.flagController.setNegativeIfNeeded(self.x.value) # set negative flag
-        self.flagController.setZeroFlagIfNeeded(self.x.value) # set zero flag
+        self.flagController.setNegativeIfNeeded(self.y.value) # set negative flag
+        self.flagController.setZeroFlagIfNeeded(self.y.value) # set zero flag
 
     def handleInstructionLDYAbsoluteX(self):
         low_byte = self.get_next_byte()
@@ -325,8 +403,8 @@ class CPU:
 
         self.y = self.memory.get_memory_at_position_str(final_address)
 
-        self.flagController.setNegativeIfNeeded(self.x.value) # set negative flag
-        self.flagController.setZeroFlagIfNeeded(self.x.value) # set zero flag
+        self.flagController.setNegativeIfNeeded(self.y.value) # set negative flag
+        self.flagController.setZeroFlagIfNeeded(self.y.value) # set zero flag
 
     ## Store Instructions
     def handleInstructionSTXZeroPage(self):
@@ -368,6 +446,44 @@ class CPU:
         self.address = (high_byte + low_byte)
 
         self.memory.set_memory_at_position_str(self.address, self.y)
+
+    def handleInstructionSTAZeroPage(self):
+        byte = self.get_next_byte()
+
+        self.address = byte.zfill(4)
+        self.memory.set_memory_at_position_str(self.address, self.a)
+
+    def handleInstructionSTAZeroPageX(self):
+        byte = self.get_next_byte()
+
+        self.address = format((int(byte, 16) + self.x.value), '04x')
+        self.memory.set_memory_at_position_str(self.address, self.a)
+
+    def handleInstructionSTAAbsolute(self):
+        low_byte = self.get_next_byte()
+        high_byte = self.get_next_byte()
+
+        self.address = (high_byte + low_byte)
+
+        self.memory.set_memory_at_position_str(self.address, self.a)
+
+    def handleInstructionSTAAbsoluteX(self):
+        low_byte = self.get_next_byte()
+        high_byte = self.get_next_byte()
+
+        address = (high_byte + low_byte)
+        self.address = format((int(address, 16) + self.x.value), '04x')
+
+        self.memory.set_memory_at_position_str(self.address, self.a)
+
+    def handleInstructionSTAAbsoluteY(self):
+        low_byte = self.get_next_byte()
+        high_byte = self.get_next_byte()
+
+        address = (high_byte + low_byte)
+        self.address = format((int(address, 16) + self.y.value), '04x')
+
+        self.memory.set_memory_at_position_str(self.address, self.a)
 
     ## Jump Instructions
     def handleInstructionJmpAbsolute(self):
@@ -538,19 +654,19 @@ class CPU:
 
             # DEC Zero page
             elif instruction == 'C6':
-                self.handleInstructionINCZeroPage()
+                self.handleInstructionDECZeroPage()
             
             # DEC Zero page X
             elif instruction == 'D6':
-                self.handleInstructionINCZeroPageX()
+                self.handleInstructionDECZeroPageX()
 
-            # DEC Absolut
+            # DEC Absolute
             elif instruction == 'CE':
-                self.handleInstructionINCAbsolute()
+                self.handleInstructionDECAbsolute()
 
             # DEC Absolute X
             elif instruction == 'DE':
-                self.handleInstructionINCAbsoluteX()
+                self.handleInstructionDECAbsoluteX()
 
             # DEX
             elif instruction == 'CA':
