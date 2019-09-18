@@ -413,9 +413,13 @@ class CPU:
     # Stack instructions
     def handleInstructionTXS(self):
         self.sp.value = self.x.value
+        self.flagController.setNegativeIfNeeded(self.sp.value) # set negative flag
+        self.flagController.setZeroFlagIfNeeded(self.sp.value) # set zero flag
 
     def handleInstructionSTX(self):
         self.x.value = self.sp.value
+        self.flagController.setNegativeIfNeeded(self.x.value) # set negative flag
+        self.flagController.setZeroFlagIfNeeded(self.x.value) # set zero flag
 
     def handleInstructionPHA(self):
         stackAddress = self.stack.getAddress() + (self.sp.value * 8)
