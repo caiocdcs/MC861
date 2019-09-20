@@ -340,13 +340,9 @@ class CPU:
         byte = self.get_next_byte()
 
         address = format((int(byte, 16) + self.x.value), '04x')
-        print(self.memory.get_memory_at_position_str(address))
         low_byte = format(self.memory.get_memory_at_position_str(address).value, '02x')
         high_byte = format(self.memory.get_memory_at_position_str(format((int(address, 16) + 1), '04x')).value, '02x')
 
-
-        print(self.memory.get_memory_at_position_str('0001'))
-        print(self.memory.get_memory_at_position_str('0002'))
         final_address = (high_byte + low_byte)
 
         self.a = self.memory.get_memory_at_position_str(final_address)
@@ -532,6 +528,26 @@ class CPU:
         self.address = format((int(address, 16) + self.y.value), '04x')
 
         self.memory.set_memory_at_position_str(self.address, self.a)
+
+    def handleInstructionLSTAIndirectX(self):
+        byte = self.get_next_byte()
+
+        address = format((int(byte, 16) + self.x.value), '04x')
+        low_byte = format(self.memory.get_memory_at_position_str(address).value, '02x')
+        high_byte = format(self.memory.get_memory_at_position_str(format((int(address, 16) + 1), '04x')).value, '02x')
+
+        final_address = (high_byte + low_byte)
+
+        self.memory.set_memory_at_position_str(final_address, self.a)
+
+    def handleInstructionSTAIndirectY(self):
+        low_byte = self.get_next_byte()
+        high_byte = self.get_next_byte()
+
+        address = (high_byte + low_byte)
+        final_address = format((int(address, 16) + self.y.value), '04x')
+
+        self.memory.set_memory_at_position_str(final_address, self.a)
 
     ## Jump Instructions
     def handleInstructionJmpAbsolute(self):
