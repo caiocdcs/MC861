@@ -547,9 +547,8 @@ class CPU:
         high_byte = self.get_next_byte()
 
         address = (high_byte + low_byte)
-        l_byte = format(self.memory.get_memory_at_position_int(int(address, 16)).value, '02x')
+        l_byte = format(self.memory.get_memory_at_position_str(address).value, '02x')
         h_byte = format(self.memory.get_memory_at_position_int(int(address, 16) + 1).value, '02x')
-
         final_address = (h_byte + l_byte)
 
         self.pc.value = int(final_address, 16)
