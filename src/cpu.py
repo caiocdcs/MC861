@@ -826,7 +826,7 @@ class CPU:
             elif instruction == 'EA':
                 pass
 
-            # BRK ( No operation )
+            # BRK ( start NMI operation )  
             elif instruction == '00':
                 break
 
