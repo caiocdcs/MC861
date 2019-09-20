@@ -1,7 +1,0 @@
-LDA #12
-PHA
-LDA #4
-PHA
-LDA #2
-PLA
-PLA
