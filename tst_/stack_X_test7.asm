@@ -1,4 +1,0 @@
-LDX #5
-TXS
-LDX #1
-TSX
