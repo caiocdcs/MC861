@@ -73,6 +73,26 @@ class CPU:
         value = self.memory.get_memory_at_position_str(address).value
         self.adc(value)
 
+    def handleInstructionAdcAbsoluteX(self):
+        low_byte = self.get_next_byte()
+        high_byte = self.get_next_byte()
+
+        addressStr = (high_byte + low_byte)
+        addressStart = int(addressStr, 16)
+        address = (addressStart + self.x.value) & 0xFF
+        value = self.memory.get_memory_at_position_int(address).value
+        self.adc(value)
+
+    def handleInstructionAdcAbsoluteY(self):
+        low_byte = self.get_next_byte()
+        high_byte = self.get_next_byte()
+
+        addressStr = (high_byte + low_byte)
+        addressStart = int(addressStr, 16)
+        address = (addressStart + self.y.value) & 0xFF
+        value = self.memory.get_memory_at_position_int(address).value
+        self.adc(value)
+
     def adc(self, value):
         carry = self.flagController.getCarryFlag()
         aOldValue = self.a.value
@@ -105,13 +125,103 @@ class CPU:
         self.flagController.setNegativeIfNeeded(self.a.value) # set negative flag
         self.flagController.setZeroFlagIfNeeded(self.a.value) # set zero flag
 
-    # FIXME
     def handleInstructionAndZeroPageX(self):
         byte = self.get_next_byte()
         addressStart = int(byte, 16)
         address = (addressStart + self.x.value) & 0xFF
         value = self.memory.get_memory_at_position_int(address).value
         self.a.value = value & self.a.value
+        self.flagController.setNegativeIfNeeded(self.a.value) # set negative flag
+        self.flagController.setZeroFlagIfNeeded(self.a.value) # set zero flag
+
+    def handleInstructionAndAbsolute(self):
+        low_byte = self.get_next_byte()
+        high_byte = self.get_next_byte()
+
+        address = (high_byte + low_byte)
+        value = self.memory.get_memory_at_position_str(address).value
+        self.a.value = value & self.a.value
+        self.flagController.setNegativeIfNeeded(self.a.value) # set negative flag
+        self.flagController.setZeroFlagIfNeeded(self.a.value) # set zero flag
+
+    def handleInstructionAndAbsoluteX(self):
+        low_byte = self.get_next_byte()
+        high_byte = self.get_next_byte()
+
+        addressStr = (high_byte + low_byte)
+        addressStart = int(addressStr, 16)
+        address = (addressStart + self.x.value) & 0xFF
+        value = self.memory.get_memory_at_position_int(address).value
+        self.a.value = value & self.a.value
+        self.flagController.setNegativeIfNeeded(self.a.value) # set negative flag
+        self.flagController.setZeroFlagIfNeeded(self.a.value) # set zero flag
+
+    def handleInstructionAndAbsoluteY(self):
+        low_byte = self.get_next_byte()
+        high_byte = self.get_next_byte()
+
+        addressStr = (high_byte + low_byte)
+        addressStart = int(addressStr, 16)
+        address = (addressStart + self.y.value) & 0xFF
+        value = self.memory.get_memory_at_position_int(address).value
+        self.a.value = value & self.a.value
+        self.flagController.setNegativeIfNeeded(self.a.value) # set negative flag
+        self.flagController.setZeroFlagIfNeeded(self.a.value) # set zero flag
+
+    ## ORA Instructions
+    def handleInstructionORAImmediate(self):
+        byte = self.get_next_byte()
+        self.a.value = int(byte, 16) | self.a.value
+        self.flagController.setNegativeIfNeeded(self.a.value) # set negative flag
+        self.flagController.setZeroFlagIfNeeded(self.a.value) # set zero flag
+
+    def handleInstructionORAZeroPage(self):
+        address = self.get_next_byte()
+        value = self.memory.get_memory_at_position_str(address).value
+        self.a.value = value | self.a.value
+        self.flagController.setNegativeIfNeeded(self.a.value) # set negative flag
+        self.flagController.setZeroFlagIfNeeded(self.a.value) # set zero flag
+
+    def handleInstructionORAZeroPageX(self):
+        byte = self.get_next_byte()
+        addressStart = int(byte, 16)
+        address = (addressStart + self.x.value) & 0xFF
+        value = self.memory.get_memory_at_position_int(address).value
+        self.a.value = value | self.a.value
+        self.flagController.setNegativeIfNeeded(self.a.value) # set negative flag
+        self.flagController.setZeroFlagIfNeeded(self.a.value) # set zero flag
+
+    def handleInstructionORAAbsolute(self):
+        low_byte = self.get_next_byte()
+        high_byte = self.get_next_byte()
+
+        address = (high_byte + low_byte)
+        value = self.memory.get_memory_at_position_str(address).value
+        self.a.value = value | self.a.value
+        self.flagController.setNegativeIfNeeded(self.a.value) # set negative flag
+        self.flagController.setZeroFlagIfNeeded(self.a.value) # set zero flag
+
+    def handleInstructionORAAbsoluteX(self):
+        low_byte = self.get_next_byte()
+        high_byte = self.get_next_byte()
+
+        addressStr = (high_byte + low_byte)
+        addressStart = int(addressStr, 16)
+        address = (addressStart + self.x.value) & 0xFF
+        value = self.memory.get_memory_at_position_int(address).value
+        self.a.value = value | self.a.value
+        self.flagController.setNegativeIfNeeded(self.a.value) # set negative flag
+        self.flagController.setZeroFlagIfNeeded(self.a.value) # set zero flag
+
+    def handleInstructionORAAbsoluteY(self):
+        low_byte = self.get_next_byte()
+        high_byte = self.get_next_byte()
+
+        addressStr = (high_byte + low_byte)
+        addressStart = int(addressStr, 16)
+        address = (addressStart + self.y.value) & 0xFF
+        value = self.memory.get_memory_at_position_int(address).value
+        self.a.value = value | self.a.value
         self.flagController.setNegativeIfNeeded(self.a.value) # set negative flag
         self.flagController.setZeroFlagIfNeeded(self.a.value) # set zero flag
 
@@ -403,17 +513,17 @@ class CPU:
             elif instruction == '75':
                 self.handleInstructionAdcZeroPageX()
 
-            # # ADC Absolute
-            # elif instruction == '6D':
-            #     self.handleInstructionAdcAbsolute()
+            # ADC Absolute
+            elif instruction == '6D':
+                self.handleInstructionAdcAbsolute()
 
-            # # ADC Absolute X
-            # elif instruction == '7D':
-            #     self.handleInstructionAdcAbsoluteX()
+            # ADC Absolute X
+            elif instruction == '7D':
+                self.handleInstructionAdcAbsoluteX()
 
-            # # ADC Absolute Y
-            # elif instruction == '79':
-            #     self.handleInstructionAdcAbsoluteY()
+            # ADC Absolute Y
+            elif instruction == '79':
+                self.handleInstructionAdcAbsoluteY()
 
             # # ADC Indirect X
             # elif instruction == '61':
@@ -434,6 +544,42 @@ class CPU:
             # AND Zero Page X
             elif instruction == '35':
                 self.handleInstructionAndZeroPageX()
+
+            # AND Absolute
+            elif instruction == '2D':
+                self.handleInstructionAndAbsolute()
+
+            # AND Absolute X
+            elif instruction == '3D':
+                self.handleInstructionAndAbsoluteX()
+
+            # AND Absolute Y
+            elif instruction == '39':
+                self.handleInstructionAndAbsoluteY()
+
+            # ORA Inclusive Or Immediate
+            elif instruction == '09':
+                self.handleInstructionORAImmediate()
+
+            # ORA Inclusive Or Zero Page
+            elif instruction == '05':
+                self.handleInstructionORAZeroPage()
+
+            # ORA Inclusive Or Zero Page X
+            elif instruction == '15':
+                self.handleInstructionORAZeroPageX()
+
+            # ORA Inclusive Or Absolute
+            elif instruction == '0D':
+                self.handleInstructionORAAbsolute()
+
+            # ORA Inclusive Or Absolute
+            elif instruction == '1D':
+                self.handleInstructionORAAbsoluteX()
+
+            # ORA Inclusive Or Absolute
+            elif instruction == '19':
+                self.handleInstructionORAAbsoluteY()
 
             # CLC Clear Carry Flag
             elif instruction == '18':
