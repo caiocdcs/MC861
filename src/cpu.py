@@ -1361,8 +1361,41 @@ class CPU:
         self.pc.value = self.memory.get_memory_at_position_int(stackAddress)
 
     # Subroutine Instructions
-    def handleJSRInstruction(self):
-        pass
+    def handleInstructionJSR(self):
+        low_byte = self.get_next_byte()
+        high_byte = self.get_next_byte()
+
+        address = (high_byte + low_byte)
+
+        pc_l = format(self.pc.value, '04x')[0:2]
+        pc_h = format(self.pc.value, '04x')[2:4]
+
+        self.pc.value = int(address, 16)
+
+        # set high byte
+        stackAddress = self.stack.getAddress() + (self.sp.value * 8)
+        self.memory.set_memory_at_position_int(stackAddress, c_uint8(int(pc_h, 16)))
+        self.sp.value = self.sp.value - 1
+
+        # set low byte
+        stackAddress = self.stack.getAddress() + (self.sp.value * 8)
+        self.memory.set_memory_at_position_int(stackAddress, c_uint8(int(pc_l, 16)))
+        self.sp.value = self.sp.value - 1
+
+    def handleInstructionRTS(self):
+        # get high byte
+        self.sp.value = self.sp.value + 1
+        stackAddress = self.stack.getAddress() + (self.sp.value * 8)
+        low_byte = format(self.memory.get_memory_at_position_int(stackAddress).value, '02x')
+
+        # get low byte
+        self.sp.value = self.sp.value + 1
+        stackAddress = self.stack.getAddress() + (self.sp.value * 8)
+        high_byte = format(self.memory.get_memory_at_position_int(stackAddress).value, '02x')
+
+        address = (low_byte + high_byte)
+        self.pc.value = int(address, 16) + 1
+        
 
     def run(self):
         instruction = self.get_next_byte()
@@ -1937,13 +1970,11 @@ class CPU:
 
             # JSR
             elif instruction == '20':
-                #self.handleInstructionJSR()
-                pass
+                self.handleInstructionJSR()
 
             # RTS
             elif instruction == '60':
-                #self.handleInstructionRTS()
-                pass
+                self.handleInstructionRTS()
 
             # RTI
             elif instruction == '40':
