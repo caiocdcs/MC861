@@ -316,6 +316,34 @@ class CPU:
         self.flagController.setNegativeIfNeeded(self.a.value) # set negative flag
         self.flagController.setZeroFlagIfNeeded(self.a.value) # set zero flag
 
+    def handleInstructionAndIndirectX(self):
+        byte = self.get_next_byte()
+
+        address = format((int(byte, 16) + self.x.value), '04x')
+        low_byte = format(self.memory.get_memory_at_position_str(address).value, '02x')
+        high_byte = format(self.memory.get_memory_at_position_str(format((int(address, 16) + 1), '04x')).value, '02x')
+
+        final_address = (high_byte + low_byte)
+
+        value = self.memory.get_memory_at_position_str(final_address).value
+        self.a.value = value & self.a.value
+        self.flagController.setNegativeIfNeeded(self.a.value) # set negative flag
+        self.flagController.setZeroFlagIfNeeded(self.a.value) # set zero flag
+
+    def handleInstructionAndIndirectY(self):
+        byte = self.get_next_byte()
+
+        l_byte = format(self.memory.get_memory_at_position_str(byte).value, '02x')
+        h_byte = format(self.memory.get_memory_at_position_int(int(byte, 16) + 1).value, '02x')
+
+        address = (h_byte + l_byte)
+        final_address = int(address, 16) + self.y.value
+
+        value = self.memory.get_memory_at_position_int(final_address).value
+        self.a.value = value & self.a.value
+        self.flagController.setNegativeIfNeeded(self.a.value) # set negative flag
+        self.flagController.setZeroFlagIfNeeded(self.a.value) # set zero flag
+
     ## ORA Instructions
     def handleInstructionORAImmediate(self):
         byte = self.get_next_byte()
@@ -369,6 +397,34 @@ class CPU:
         addressStart = int(addressStr, 16)
         address = (addressStart + self.y.value) & 0xFF
         value = self.memory.get_memory_at_position_int(address).value
+        self.a.value = value | self.a.value
+        self.flagController.setNegativeIfNeeded(self.a.value) # set negative flag
+        self.flagController.setZeroFlagIfNeeded(self.a.value) # set zero flag
+
+    def handleInstructionORAIndirectX(self):
+        byte = self.get_next_byte()
+
+        address = format((int(byte, 16) + self.x.value), '04x')
+        low_byte = format(self.memory.get_memory_at_position_str(address).value, '02x')
+        high_byte = format(self.memory.get_memory_at_position_str(format((int(address, 16) + 1), '04x')).value, '02x')
+
+        final_address = (high_byte + low_byte)
+
+        value = self.memory.get_memory_at_position_str(final_address).value
+        self.a.value = value | self.a.value
+        self.flagController.setNegativeIfNeeded(self.a.value) # set negative flag
+        self.flagController.setZeroFlagIfNeeded(self.a.value) # set zero flag
+
+    def handleInstructionORAIndirectY(self):
+        byte = self.get_next_byte()
+
+        l_byte = format(self.memory.get_memory_at_position_str(byte).value, '02x')
+        h_byte = format(self.memory.get_memory_at_position_int(int(byte, 16) + 1).value, '02x')
+
+        address = (h_byte + l_byte)
+        final_address = int(address, 16) + self.y.value
+
+        value = self.memory.get_memory_at_position_int(final_address).value
         self.a.value = value | self.a.value
         self.flagController.setNegativeIfNeeded(self.a.value) # set negative flag
         self.flagController.setZeroFlagIfNeeded(self.a.value) # set zero flag
@@ -427,6 +483,34 @@ class CPU:
         addressStart = int(addressStr, 16)
         address = (addressStart + self.y.value) & 0xFF
         value = self.memory.get_memory_at_position_int(address).value
+        self.a.value = value ^ self.a.value
+        self.flagController.setNegativeIfNeeded(self.a.value) # set negative flag
+        self.flagController.setZeroFlagIfNeeded(self.a.value) # set zero flag
+
+    def handleInstructionEORIndirectX(self):
+        byte = self.get_next_byte()
+
+        address = format((int(byte, 16) + self.x.value), '04x')
+        low_byte = format(self.memory.get_memory_at_position_str(address).value, '02x')
+        high_byte = format(self.memory.get_memory_at_position_str(format((int(address, 16) + 1), '04x')).value, '02x')
+
+        final_address = (high_byte + low_byte)
+
+        value = self.memory.get_memory_at_position_str(final_address).value
+        self.a.value = value ^ self.a.value
+        self.flagController.setNegativeIfNeeded(self.a.value) # set negative flag
+        self.flagController.setZeroFlagIfNeeded(self.a.value) # set zero flag
+
+    def handleInstructionEORIndirectY(self):
+        byte = self.get_next_byte()
+
+        l_byte = format(self.memory.get_memory_at_position_str(byte).value, '02x')
+        h_byte = format(self.memory.get_memory_at_position_int(int(byte, 16) + 1).value, '02x')
+
+        address = (h_byte + l_byte)
+        final_address = int(address, 16) + self.y.value
+
+        value = self.memory.get_memory_at_position_int(final_address).value
         self.a.value = value ^ self.a.value
         self.flagController.setNegativeIfNeeded(self.a.value) # set negative flag
         self.flagController.setZeroFlagIfNeeded(self.a.value) # set zero flag
@@ -1217,6 +1301,14 @@ class CPU:
             elif instruction == '39':
                 self.handleInstructionAndAbsoluteY()
 
+            # AND Indirect X
+            elif instruction == '21':
+                self.handleInstructionAndIndirectX()
+
+            # AND Indirect Y
+            elif instruction == '31':
+                self.handleInstructionAndIndirectY()
+
             # ORA Inclusive Or Immediate
             elif instruction == '09':
                 self.handleInstructionORAImmediate()
@@ -1240,6 +1332,14 @@ class CPU:
             # ORA Inclusive Or Absolute
             elif instruction == '19':
                 self.handleInstructionORAAbsoluteY()
+            
+            # ORA Inclusive Or Indirect X
+            elif instruction == '01':
+                self.handleInstructionORAIndirectX()
+
+            # ORA Inclusive Or Indirect Y
+            elif instruction == '11':
+                self.handleInstructionORAIndirectY()
 
             # EOR Exclusive Or Immediate
             elif instruction == '49':
@@ -1265,6 +1365,13 @@ class CPU:
             elif instruction == '59':
                 self.handleInstructionEORAbsoluteY()
 
+            # EOR Exclusive Or Indirect X
+            elif instruction == '41':
+                self.handleInstructionEORIndirectX()
+
+            # EOR Exclusive Or Indirect Y
+            elif instruction == '51':
+                self.handleInstructionEORIndirectY()
 
             # CLC Clear Carry Flag
             elif instruction == '18':
