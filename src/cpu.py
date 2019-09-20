@@ -4,12 +4,13 @@ from memory import Memory
 from flagController import FlagController
 from stack import Stack
 
+KB = 1024
 
 class CPU:
+
     def __init__(self, program_name):
         file = open(program_name, "rb")
         self.program_code = file.read().hex()
-        # print(self.program_code)
 
         self.sp = c_uint16(0)
         self.pc = c_uint16(0)
@@ -20,29 +21,48 @@ class CPU:
         self.flagController = FlagController()
         self.stack = Stack()
 
-        self.read_header()
-        self.load_program()
+        self._read_header()
+        self._load_program()
+        self._load_interrupt_vectors()
 
-        self.prg_rom_size = 0
-        self.chr_rom_size = 0
-
-        self.pc.value = 32768   # ( 0x8000 ) PRG ROM
+        if self.prg_rom_size == 1:
+            self.rom_initial_pos = 32*KB + 16*KB            # initial rom position
+        else:
+            self.rom_initial_pos = 32*KB
+        self.pc.value = self.rom_initial_pos
 
         self.address = None
 
-    def read_header(self):
-        self.pc.value = self.pc.value + 8   # skip 4 header bytes
-        self.prg_rom_size = int(self.get_next_byte_from_code(), 16)
-        self.chr_rom_size = int(self.get_next_byte_from_code(), 16)
-        self.pc.value = self.pc.value + 20  # skip 10 header bytes
+    def _read_header(self):
+        self.prg_rom_size = int(self._get_byte_from_code_position(int('8', 16)))
+        self.chr_rom_size = int(self._get_byte_from_code_position(int('9', 16)))
 
-    def load_program(self):
-        initial_address = 32768     # ( 0x8000 ) PRG ROM
-        for i in range(0, initial_address * self.prg_rom_size):
-            b = self.get_next_byte_from_code()
+    def _load_program(self):
+        rom_size = 16*KB*self.prg_rom_size
+        initial_rom_pos = 32*KB     # ( 0x8000 ) PRG ROM
+        rom_code_initial_pos = 32   # 16 bytes of header
+        code_pos = 0
+        for i in range(0, rom_size):
+            b = self._get_byte_from_code_position(rom_code_initial_pos + code_pos)
             if b != '':
                 byte = c_uint8(int(b, 16))
-                self.memory.set_memory_at_position_int(initial_address + i, byte)
+                self.memory.set_memory_at_position_int(initial_rom_pos + i, byte)
+                if self.prg_rom_size == 1:
+                    self.memory.set_memory_at_position_int(initial_rom_pos + rom_size + i, byte)
+            code_pos += 2
+
+    def _load_interrupt_vectors(self):
+        low_byte = format(self.memory.get_memory_at_position_str('FFFA').value, '02x') 
+        high_byte = format(self.memory.get_memory_at_position_str('FFFB').value, '02x')
+        self.nmi = (high_byte + low_byte)
+
+        low_byte = format(self.memory.get_memory_at_position_str('FFFC').value, '02x') 
+        high_byte = format(self.memory.get_memory_at_position_str('FFFD').value, '02x')
+        self.reset = (high_byte + low_byte)
+
+        low_byte = format(self.memory.get_memory_at_position_str('FFFE').value, '02x') 
+        high_byte = format(self.memory.get_memory_at_position_str('FFFF').value, '02x')
+        self.irq = (high_byte + low_byte)
     
     def log(self):
         p = self.flagController.getFlagsStatusByte()
@@ -53,17 +73,15 @@ class CPU:
             log(self.a.value, self.x.value, self.y.value, self.sp.value, self.pc.value, p)
 
     def get_next_byte(self):
-        if self.pc.value == (2 * 32768 * self.prg_rom_size):      # ( 0x8000 ) PRG ROM + 0x8000 size
+        if (self.pc.value < self.rom_initial_pos) or (self.pc.value > (self.rom_initial_pos * self.prg_rom_size * 16*KB)):
             return None
         byte = self.memory.get_memory_at_position_int(self.pc.value)
         self.pc.value = self.pc.value + 1
         return format(byte.value, '02x').upper()
 
-    def get_next_byte_from_code(self):
-        begin = self.pc.value
-        self.pc.value = self.pc.value + 2 
-        end = self.pc.value
-        byte = self.program_code[begin:end].upper()
+    def _get_byte_from_code_position(self, pos):
+        end = pos + 2
+        byte = self.program_code[pos:end].upper()
         return byte
 
     ####################################################
@@ -278,7 +296,7 @@ class CPU:
 
     def handleInstructionLDAZeroPageX(self):
         byte = self.get_next_byte()
-        address = format((int(byte, 16) + self.a.value), '04x')
+        address = format((int(byte, 16) + self.x.value), '04x')
         self.a = self.memory.get_memory_at_position_str(address)
 
         self.flagController.setNegativeIfNeeded(self.a.value) # set negative flag
@@ -299,7 +317,7 @@ class CPU:
         high_byte = self.get_next_byte()
 
         address = (high_byte + low_byte)
-        final_address = format((int(address, 16) + self.a.value), '04x')
+        final_address = format((int(address, 16) + self.x.value), '04x')
 
         self.a = self.memory.get_memory_at_position_str(final_address)
 
@@ -307,6 +325,36 @@ class CPU:
         self.flagController.setZeroFlagIfNeeded(self.a.value) # set zero flag
 
     def handleInstructionLDAAbsoluteY(self):
+        low_byte = self.get_next_byte()
+        high_byte = self.get_next_byte()
+
+        address = (high_byte + low_byte)
+        final_address = format((int(address, 16) + self.y.value), '04x')
+
+        self.a = self.memory.get_memory_at_position_str(final_address)
+
+        self.flagController.setNegativeIfNeeded(self.a.value) # set negative flag
+        self.flagController.setZeroFlagIfNeeded(self.a.value) # set zero flag
+
+    def handleInstructionLDAIndirectX(self):
+        byte = self.get_next_byte()
+
+        address = format((int(byte, 16) + self.x.value), '04x')
+        print(self.memory.get_memory_at_position_str(address))
+        low_byte = format(self.memory.get_memory_at_position_str(address).value, '02x')
+        high_byte = format(self.memory.get_memory_at_position_str(format((int(address, 16) + 1), '04x')).value, '02x')
+
+
+        print(self.memory.get_memory_at_position_str('0001'))
+        print(self.memory.get_memory_at_position_str('0002'))
+        final_address = (high_byte + low_byte)
+
+        self.a = self.memory.get_memory_at_position_str(final_address)
+
+        self.flagController.setNegativeIfNeeded(self.a.value) # set negative flag
+        self.flagController.setZeroFlagIfNeeded(self.a.value) # set zero flag
+
+    def handleInstructionLDAIndirectY(self):
         low_byte = self.get_next_byte()
         high_byte = self.get_next_byte()
 
@@ -491,17 +539,20 @@ class CPU:
         high_byte = self.get_next_byte()
 
         address = (high_byte + low_byte)
+
         self.pc.value = int(address, 16)
 
     def handleInstructionJmpIndirect(self):
-        byte = self.get_next_byte()
-        byte_h = str(int(byte, 16) + 1)
-        
-        low_byte = str(self.memory.get_memory_at_position_str(byte))
-        high_byte = str(self.memory.get_memory_at_position_str(byte_h))
+        low_byte = self.get_next_byte()
+        high_byte = self.get_next_byte()
 
         address = (high_byte + low_byte)
-        self.pc.value = int(address, 16) * 2
+        l_byte = format(self.memory.get_memory_at_position_int(int(address, 16)).value, '02x')
+        h_byte = format(self.memory.get_memory_at_position_int(int(address, 16) + 1).value, '02x')
+
+        final_address = (h_byte + l_byte)
+
+        self.pc.value = int(final_address, 16)
 
     # Clear flags instructions
     def handleInstructionClearCarryFlag(self):
@@ -563,6 +614,34 @@ class CPU:
             # LDA Immediate
             if instruction == 'A9':
                 self.handleInstructionLDAImmediate()
+
+            # LDA Zero Page
+            if instruction == 'A5':
+                self.handleInstructionLDAZeroPage()
+
+            # LDA Zero Page X
+            if instruction == 'B5':
+                self.handleInstructionLDAZeroPageX()
+
+            # LDA Absolute
+            if instruction == 'AD':
+                self.handleInstructionLDAAbsolute()
+
+            # LDA Absolute X
+            if instruction == 'BD':
+                self.handleInstructionLDAAbsoluteX()
+
+            # LDA Absolute Y
+            if instruction == 'B9':
+                self.handleInstructionLDAAbsoluteY()
+
+            # LDA Indirect X
+            if instruction == 'A1':
+                self.handleInstructionLDAIndirectX()
+
+            # LDA Indirect Y
+            if instruction == 'B1':
+                self.handleInstructionLDAIndirectY()
 
             # LDX Immediate
             elif instruction == 'A2':
