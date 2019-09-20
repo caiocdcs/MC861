@@ -134,6 +134,30 @@ class CPU:
         value = self.memory.get_memory_at_position_int(address).value
         self.adc(value)
 
+    def handleInstructionAdcIndirectX(self):
+        byte = self.get_next_byte()
+
+        address = format((int(byte, 16) + self.x.value), '04x')
+        low_byte = format(self.memory.get_memory_at_position_str(address).value, '02x')
+        high_byte = format(self.memory.get_memory_at_position_str(format((int(address, 16) + 1), '04x')).value, '02x')
+
+        final_address = (high_byte + low_byte)
+
+        value = self.memory.get_memory_at_position_str(final_address)
+        self.adc(value)
+
+    def handleInstructionAdcIndirectY(self):
+        byte = self.get_next_byte()
+
+        l_byte = format(self.memory.get_memory_at_position_str(byte).value, '02x')
+        h_byte = format(self.memory.get_memory_at_position_int(int(byte, 16) + 1).value, '02x')
+
+        address = (h_byte + l_byte)
+        final_address = int(address, 16) + self.y.value
+
+        value = self.memory.get_memory_at_position_str(final_address)
+        self.adc(value)
+
     def adc(self, value):
         carry = self.flagController.getCarryFlag()
         aOldValue = self.a.value
@@ -1101,6 +1125,14 @@ class CPU:
             # ADC Absolute Y
             elif instruction == '79':
                 self.handleInstructionAdcAbsoluteY()
+
+            # ADC Indirect X
+            elif instruction == '61':
+                self.handleInstructionAdcIndirectX()
+
+            # ADC Indirect Y
+            elif instruction == '71':
+                self.handleInstructionAdcIndirectY()
 
             # SBC Immediate
             elif instruction == 'E9':
