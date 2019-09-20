@@ -865,8 +865,11 @@ class CPU:
         P = self.memory.get_memory_at_position_int(stackAddress)
         self.flagController.setFlagsStatusByte(P)
 
+    # Subroutine Instructions
+    def handleJSRInstruction(self):
+        pass
+
     def run(self):
-        self.log()
         instruction = self.get_next_byte()
 
         while instruction:
@@ -1252,6 +1255,16 @@ class CPU:
             # PLP Pull Processor status
             elif instruction == '28':
                 self.handleInstructionPLP()
+
+            # JSR
+            elif instruction == '20':
+                #self.handleInstructionJSR()
+                pass
+
+            # RTS
+            elif instruction == '60':
+                #self.handleInstructionRTS()
+                pass
 
             self.log()
             self.address = None
