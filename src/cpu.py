@@ -143,7 +143,7 @@ class CPU:
 
         final_address = (high_byte + low_byte)
 
-        value = self.memory.get_memory_at_position_str(final_address)
+        value = self.memory.get_memory_at_position_str(final_address).value
         self.adc(value)
 
     def handleInstructionAdcIndirectY(self):
@@ -155,7 +155,7 @@ class CPU:
         address = (h_byte + l_byte)
         final_address = int(address, 16) + self.y.value
 
-        value = self.memory.get_memory_at_position_str(final_address)
+        value = self.memory.get_memory_at_position_str(final_address).value
         self.adc(value)
 
     def adc(self, value):
