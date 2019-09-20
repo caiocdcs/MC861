@@ -45,13 +45,12 @@ MIRRORING = %0001 ;%0000 = horizontal, %0001 = vertical, %1000 = four-screen
 
 Reset:
    LDY #$01
-   LDA #$03
-   STA $01
-   LDA #$07
-   STA $02
-   LDX #$0a
-   STX $0704
-   LDA ($01),Y
+   LDX #$03
+   STX $01
+   LDX #$07
+   STX $02
+   LDA #$2B
+   STA ($01),Y
 
 NMI:
 
