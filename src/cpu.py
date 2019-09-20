@@ -150,6 +150,66 @@ class CPU:
         else:
             self.flagController.clearOverflowFlag()
 
+    ## SBC Instructions
+    def handleInstructionSbcImmediate(self):
+        byte = self.get_next_byte()
+        immediate = int(byte, 16)
+        self.sbc(immediate)
+
+    def handleInstructionSbcZeroPage(self):
+        address = self.get_next_byte()
+        value = self.memory.get_memory_at_position_str(address).value
+        self.sbc(value)
+
+    def handleInstructionSbcZeroPageX(self):
+        byte = self.get_next_byte()
+        addressStart = int(byte, 16)
+        address = (addressStart + self.x.value) & 0xFF
+        value = self.memory.get_memory_at_position_int(address).value
+        self.sbc(value)
+
+    def handleInstructionSbcAbsolute(self):
+        low_byte = self.get_next_byte()
+        high_byte = self.get_next_byte()
+
+        address = (high_byte + low_byte)
+        value = self.memory.get_memory_at_position_str(address).value
+        self.sbc(value)
+
+    def handleInstructionSbcAbsoluteX(self):
+        low_byte = self.get_next_byte()
+        high_byte = self.get_next_byte()
+
+        addressStr = (high_byte + low_byte)
+        addressStart = int(addressStr, 16)
+        address = (addressStart + self.x.value) & 0xFF
+        value = self.memory.get_memory_at_position_int(address).value
+        self.sbc(value)
+
+    def handleInstructionSbcAbsoluteY(self):
+        low_byte = self.get_next_byte()
+        high_byte = self.get_next_byte()
+
+        addressStr = (high_byte + low_byte)
+        addressStart = int(addressStr, 16)
+        address = (addressStart + self.y.value) & 0xFF
+        value = self.memory.get_memory_at_position_int(address).value
+        self.sbc(value)
+
+    def sbc(self, value):
+        carry = self.flagController.getCarryFlag()
+        aOldValue = self.a.value
+        result = aOldValue - value - (1-carry)
+        self.a.value = result & 0xFF                          # set a value limiting to one byte            
+        self.flagController.setNegativeIfNeeded(self.a.value) # set negative flag
+        self.flagController.setZeroFlagIfNeeded(self.a.value) # set zero flag
+        self.flagController.setCarryFlagIfNeeded(result)
+
+        # set overflow flag
+        if (aOldValue ^ value) & 0x80 == 0 and (aOldValue ^ self.a.value) & 0x80 != 0:
+            self.flagController.setOverflowFlag()
+        else:
+            self.flagController.clearOverflowFlag()
             
     ## AND Instructions
 
@@ -1042,13 +1102,29 @@ class CPU:
             elif instruction == '79':
                 self.handleInstructionAdcAbsoluteY()
 
-            # # ADC Indirect X
-            # elif instruction == '61':
-            #     self.handleInstructionAdcIndirectX()
+            # SBC Immediate
+            elif instruction == 'E9':
+                self.handleInstructionSbcImmediate()
 
-            # # ADC Indirect Y
-            # elif instruction == '71':
-            #     self.handleInstructionAdcIndirectY()
+            # SBC Zero Page
+            elif instruction == 'E5':
+                self.handleInstructionSbcZeroPage()
+
+            # SBC Zero Page X
+            elif instruction == 'F5':
+                self.handleInstructionSbcZeroPageX()
+
+            # SBC Absolute
+            elif instruction == 'ED':
+                self.handleInstructionSbcAbsolute()
+
+            # SBC Absolute X
+            elif instruction == 'FD':
+                self.handleInstructionSbcAbsoluteX()
+
+            # SBC Absolute Y
+            elif instruction == 'F9':
+                self.handleInstructionSbcAbsoluteY()
 
             # AND Immediante
             elif instruction == '29':
