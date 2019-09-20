@@ -220,6 +220,30 @@ class CPU:
         value = self.memory.get_memory_at_position_int(address).value
         self.sbc(value)
 
+    def handleInstructionSbcIndirectX(self):
+        byte = self.get_next_byte()
+
+        address = format((int(byte, 16) + self.x.value), '04x')
+        low_byte = format(self.memory.get_memory_at_position_str(address).value, '02x')
+        high_byte = format(self.memory.get_memory_at_position_str(format((int(address, 16) + 1), '04x')).value, '02x')
+
+        final_address = (high_byte + low_byte)
+
+        value = self.memory.get_memory_at_position_str(final_address).value
+        self.sbc(value)
+
+    def handleInstructionSbcIndirectY(self):
+        byte = self.get_next_byte()
+
+        l_byte = format(self.memory.get_memory_at_position_str(byte).value, '02x')
+        h_byte = format(self.memory.get_memory_at_position_int(int(byte, 16) + 1).value, '02x')
+
+        address = (h_byte + l_byte)
+        final_address = int(address, 16) + self.y.value
+
+        value = self.memory.get_memory_at_position_int(final_address).value
+        self.sbc(value)
+
     def sbc(self, value):
         carry = self.flagController.getCarryFlag()
         aOldValue = self.a.value
@@ -1160,6 +1184,14 @@ class CPU:
             # SBC Absolute Y
             elif instruction == 'F9':
                 self.handleInstructionSbcAbsoluteY()
+
+            # SBC Indirect X
+            elif instruction == 'E1':
+                self.handleInstructionSbcIndirectX()
+
+            # SBC Indirect Y
+            elif instruction == 'F1':
+                self.handleInstructionSbcIndirectY()
 
             # AND Immediante
             elif instruction == '29':
