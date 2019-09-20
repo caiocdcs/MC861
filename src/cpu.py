@@ -265,6 +265,64 @@ class CPU:
         self.flagController.setNegativeIfNeeded(self.a.value) # set negative flag
         self.flagController.setZeroFlagIfNeeded(self.a.value) # set zero flag
 
+    ## EOR Instructions
+    def handleInstructionEORImmediate(self):
+        byte = self.get_next_byte()
+        self.a.value = int(byte, 16) ^ self.a.value
+        self.x.value = 9
+        self.flagController.setNegativeIfNeeded(self.a.value) # set negative flag
+        self.flagController.setZeroFlagIfNeeded(self.a.value) # set zero flag
+
+    def handleInstructionEORZeroPage(self):
+        address = self.get_next_byte()
+        value = self.memory.get_memory_at_position_str(address).value
+        self.a.value = value ^ self.a.value
+        self.flagController.setNegativeIfNeeded(self.a.value) # set negative flag
+        self.flagController.setZeroFlagIfNeeded(self.a.value) # set zero flag
+
+    def handleInstructionEORZeroPageX(self):
+        byte = self.get_next_byte()
+        addressStart = int(byte, 16)
+        address = (addressStart + self.x.value) & 0xFF
+        value = self.memory.get_memory_at_position_int(address).value
+        self.a.value = value ^ self.a.value
+        self.flagController.setNegativeIfNeeded(self.a.value) # set negative flag
+        self.flagController.setZeroFlagIfNeeded(self.a.value) # set zero flag
+
+    def handleInstructionEORAbsolute(self):
+        low_byte = self.get_next_byte()
+        high_byte = self.get_next_byte()
+
+        address = (high_byte + low_byte)
+        value = self.memory.get_memory_at_position_str(address).value
+        self.a.value = value ^ self.a.value
+        self.flagController.setNegativeIfNeeded(self.a.value) # set negative flag
+        self.flagController.setZeroFlagIfNeeded(self.a.value) # set zero flag
+
+    def handleInstructionEORAbsoluteX(self):
+        low_byte = self.get_next_byte()
+        high_byte = self.get_next_byte()
+
+        addressStr = (high_byte + low_byte)
+        addressStart = int(addressStr, 16)
+        address = (addressStart + self.x.value) & 0xFF
+        value = self.memory.get_memory_at_position_int(address).value
+        self.a.value = value ^ self.a.value
+        self.flagController.setNegativeIfNeeded(self.a.value) # set negative flag
+        self.flagController.setZeroFlagIfNeeded(self.a.value) # set zero flag
+
+    def handleInstructionEORAbsoluteY(self):
+        low_byte = self.get_next_byte()
+        high_byte = self.get_next_byte()
+
+        addressStr = (high_byte + low_byte)
+        addressStart = int(addressStr, 16)
+        address = (addressStart + self.y.value) & 0xFF
+        value = self.memory.get_memory_at_position_int(address).value
+        self.a.value = value ^ self.a.value
+        self.flagController.setNegativeIfNeeded(self.a.value) # set negative flag
+        self.flagController.setZeroFlagIfNeeded(self.a.value) # set zero flag
+
     ## INC Instructions
     def handleInstructionINCZeroPage(self):
         byte = self.get_next_byte()
@@ -1039,6 +1097,31 @@ class CPU:
             # ORA Inclusive Or Absolute
             elif instruction == '19':
                 self.handleInstructionORAAbsoluteY()
+
+            # EOR Exclusive Or Immediate
+            elif instruction == '49':
+                self.handleInstructionEORImmediate()
+
+            # EOR Exclusive Or Zero Page
+            elif instruction == '45':
+                self.handleInstructionEORZeroPage()
+
+            # EOR Exclusive Or Zero Page X
+            elif instruction == '55':
+                self.handleInstructionEORZeroPageX()
+
+            # EOR Exclusive Or Absolute
+            elif instruction == '4D':
+                self.handleInstructionEORAbsolute()
+
+            # EOR Exclusive Or Absolute X
+            elif instruction == '5D':
+                self.handleInstructionEORAbsoluteX()
+
+            # EOR Exclusive Or Absolute Y
+            elif instruction == '59':
+                self.handleInstructionEORAbsoluteY()
+
 
             # CLC Clear Carry Flag
             elif instruction == '18':
