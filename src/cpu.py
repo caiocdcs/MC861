@@ -647,6 +647,56 @@ class CPU:
         self.flagController.setNegativeIfNeeded(self.a.value) # set negative flag
         self.flagController.setZeroFlagIfNeeded(self.a.value) # set zero flag
 
+    ## ASL Instructions
+    def handleInstructionASLAccumulator(self):
+        carry = 1 if (0b100000000 & self.a.value) else 0
+        self.a.value = self.a.value << 1
+        
+        self.flagController.setCarryFlag() if carry else self.flagController.clearCarryFlag()
+        self.flagController.setNegativeIfNeeded(self.a.value) # set negative flag
+        self.flagController.setZeroFlagIfNeeded(self.a.value) # set zero flag
+
+    def handleInstructionASLZeroPage(self):
+        address = self.get_next_byte()
+        mem = self.memory.get_memory_at_position_str(address)
+        carry = 1 if (0b10000000 & mem.value) else 0
+        self.memory.set_memory_at_position_str(address, c_uint8(mem.value << 1))
+
+        self.flagController.setCarryFlag() if carry else self.flagController.clearCarryFlag()
+
+    def handleInstructionASLZeroPageX(self):
+        byte = self.get_next_byte()
+        address = format((int(byte, 16) + self.x.value), '04x')
+        mem = self.memory.get_memory_at_position_str(address)
+        carry = 1 if (0b10000000 & mem.value) else 0
+        self.memory.set_memory_at_position_str(address, c_uint8(mem.value << 1))
+
+        self.flagController.setCarryFlag() if carry else self.flagController.clearCarryFlag()
+
+    def handleInstructionASLAbsolute(self):
+        low_byte = self.get_next_byte()
+        high_byte = self.get_next_byte()
+
+        address = (high_byte + low_byte)
+        mem = self.memory.get_memory_at_position_str(address)
+        carry = 1 if (0b10000000 & mem.value) else 0
+        self.memory.set_memory_at_position_str(address, c_uint8(mem.value << 1))
+
+        self.flagController.setCarryFlag() if carry else self.flagController.clearCarryFlag()
+
+    def handleInstructionASLAbsoluteX(self):
+        low_byte = self.get_next_byte()
+        high_byte = self.get_next_byte()
+
+        address = (high_byte + low_byte)
+        final_address = format((int(address, 16) + self.x.value), '04x')
+
+        mem = self.memory.get_memory_at_position_str(final_address)
+        carry = 1 if (0b10000000 & mem.value) else 0
+        self.memory.set_memory_at_position_str(final_address, c_uint8(mem.value << 1))
+
+        self.flagController.setCarryFlag() if carry else self.flagController.clearCarryFlag()
+
     ## Load Instructions
     def handleInstructionLDAImmediate(self):
         byte = self.get_next_byte()
@@ -1005,6 +1055,27 @@ class CPU:
         instruction = self.get_next_byte()
 
         while instruction:
+
+            # ASL Accumulator
+            if instruction == '0A':
+                self.handleInstructionASLAccumulator()
+
+            # ASL Zero Page
+            if instruction == '06':
+                self.handleInstructionASLZeroPage()
+
+            # ASL Zero Page X
+            if instruction == '16':
+                self.handleInstructionASLZeroPageX()
+
+            # ASL Absolute
+            if instruction == '0E':
+                self.handleInstructionASLAbsolute()
+
+            # ASL Absolute X
+            if instruction == '1E':
+                self.handleInstructionASLAbsoluteX()
+
             # LDA Immediate
             if instruction == 'A9':
                 self.handleInstructionLDAImmediate()
