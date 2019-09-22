@@ -697,6 +697,92 @@ class CPU:
 
         self.flagController.setCarryFlag() if carry else self.flagController.clearCarryFlag()
 
+    ## BIT
+
+    def handleInstructionBITZeroPage(self):
+        print('TODO:')
+
+    def handleInstructionBITZeroPage(self):
+        print('TODO:')
+
+    ## CMP Instructions
+    def handleInstructionCMPImmediate(self):
+        byte = self.get_next_byte()
+        immediate = int(byte, 16)
+        self.compare(immediate)
+
+    def handleInstructionCMPZeroPage(self):
+        address = self.get_next_byte()
+        value = self.memory.get_memory_at_position_str(address).value
+        self.compare(value)
+
+    def handleInstructionCMPZeroPageX(self):
+        byte = self.get_next_byte()
+        addressStart = int(byte, 16)
+        address = (addressStart + self.x.value) & 0xFF
+        value = self.memory.get_memory_at_position_int(address).value
+        self.compare(value)
+
+    def handleInstructionCMPAbsolute(self):
+        low_byte = self.get_next_byte()
+        high_byte = self.get_next_byte()
+
+        address = (high_byte + low_byte)
+        value = self.memory.get_memory_at_position_str(address).value
+        self.compare(value)
+
+    def handleInstructionCMPAbsoluteX(self):
+        low_byte = self.get_next_byte()
+        high_byte = self.get_next_byte()
+
+        addressStr = (high_byte + low_byte)
+        addressStart = int(addressStr, 16)
+        address = (addressStart + self.x.value) & 0xFF
+        value = self.memory.get_memory_at_position_int(address).value
+        self.compare(value)
+
+    def handleInstructionCMPAbsoluteY(self):
+        low_byte = self.get_next_byte()
+        high_byte = self.get_next_byte()
+
+        addressStr = (high_byte + low_byte)
+        addressStart = int(addressStr, 16)
+        address = (addressStart + self.y.value) & 0xFF
+        value = self.memory.get_memory_at_position_int(address).value
+        self.compare(value)
+
+    def handleInstructionCMPIndirectX(self):
+        byte = self.get_next_byte()
+
+        address = format((int(byte, 16) + self.x.value), '04x')
+        low_byte = format(self.memory.get_memory_at_position_str(address).value, '02x')
+        high_byte = format(self.memory.get_memory_at_position_str(format((int(address, 16) + 1), '04x')).value, '02x')
+
+        final_address = (high_byte + low_byte)
+
+        value = self.memory.get_memory_at_position_str(final_address).value
+        self.compare(value)
+
+    def handleInstructionCMPIndirectY(self):
+        byte = self.get_next_byte()
+
+        l_byte = format(self.memory.get_memory_at_position_str(byte).value, '02x')
+        h_byte = format(self.memory.get_memory_at_position_int(int(byte, 16) + 1).value, '02x')
+
+        address = (h_byte + l_byte)
+        final_address = int(address, 16) + self.y.value
+
+        value = self.memory.get_memory_at_position_int(final_address).value
+        self.compare(value)
+
+    def compare(self, value):
+        result = self.a.value - value
+        res = result & 0xFF                          # set a value limiting to one byte            
+        self.flagController.setNegativeIfNeeded(res) # set negative flag
+        self.flagController.setZeroFlagIfNeeded(res) # set zero flag
+        if result >= 0:
+            self.flagController.setCarryFlag()
+
     ## Load Instructions
     def handleInstructionLDAImmediate(self):
         byte = self.get_next_byte()
@@ -1075,6 +1161,46 @@ class CPU:
             # ASL Absolute X
             if instruction == '1E':
                 self.handleInstructionASLAbsoluteX()
+
+            # BIT Zero Page
+            if instruction == '24':
+                self.handleInstructionBITZeroPage()
+
+            # BIT Absolute
+            if instruction == '2X':
+                self.handleInstructionBITAbsolute()
+
+            # CMP Immediate
+            elif instruction == 'C9':
+                self.handleInstructionCMPImmediate()
+
+            # CMP Zero Page
+            elif instruction == 'C5':
+                self.handleInstructionCMPZeroPage()
+
+            # CMP Zero Page X
+            elif instruction == 'D5':
+                self.handleInstructionCMPZeroPageX()
+
+            # CMP Absolute
+            elif instruction == 'CD':
+                self.handleInstructionCMPAbsolute()
+
+            # CMP Absolute X
+            elif instruction == 'DD':
+                self.handleInstructionCMPAbsoluteX()
+
+            # CMP Absolute Y
+            elif instruction == 'D9':
+                self.handleInstructionCMPAbsoluteY()
+
+            # CMP Indirect X
+            elif instruction == 'C1':
+                self.handleInstructionCMPIndirectX()
+
+            # CMP Indirect Y
+            elif instruction == 'D1':
+                self.handleInstructionCMPIndirectY()
 
             # LDA Immediate
             if instruction == 'A9':
