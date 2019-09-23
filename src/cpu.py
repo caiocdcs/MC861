@@ -773,6 +773,8 @@ class CPU:
         self.memory.set_memory_at_position_str(address, c_uint8(mem.value << 1 | c))
 
         self.flagController.setCarryFlag() if carry else self.flagController.clearCarryFlag()
+        self.flagController.setNegativeIfNeeded(mem.value << 1 | c) # set negative flag
+        self.flagController.setZeroFlagIfNeeded(mem.value << 1 | c) # set zero flag
 
     def handleInstructionROLZeroPageX(self):
         byte = self.get_next_byte()
@@ -783,6 +785,8 @@ class CPU:
         self.memory.set_memory_at_position_str(address, c_uint8(mem.value << 1 | c))
 
         self.flagController.setCarryFlag() if carry else self.flagController.clearCarryFlag()
+        self.flagController.setNegativeIfNeeded(mem.value << 1 | c) # set negative flag
+        self.flagController.setZeroFlagIfNeeded(mem.value << 1 | c) # set zero flag
 
     def handleInstructionROLAbsolute(self):
         low_byte = self.get_next_byte()
@@ -795,6 +799,8 @@ class CPU:
         self.memory.set_memory_at_position_str(address, c_uint8(mem.value << 1 | c))
 
         self.flagController.setCarryFlag() if carry else self.flagController.clearCarryFlag()
+        self.flagController.setNegativeIfNeeded(mem.value << 1 | c) # set negative flag
+        self.flagController.setZeroFlagIfNeeded(mem.value << 1 | c) # set zero flag
 
     def handleInstructionROLAbsoluteX(self):
         low_byte = self.get_next_byte()
@@ -809,12 +815,14 @@ class CPU:
         self.memory.set_memory_at_position_str(final_address, c_uint8(mem.value << 1 | c))
 
         self.flagController.setCarryFlag() if carry else self.flagController.clearCarryFlag()
+        self.flagController.setNegativeIfNeeded(mem.value << 1 | c) # set negative flag
+        self.flagController.setZeroFlagIfNeeded(mem.value << 1 | c) # set zero flag
 
     ## ROR Instructions
     def handleInstructionRORAccumulator(self):
         carry = 1 if (0b00000001 & self.a.value) else 0
         c = self.flagController.getCarryFlag()
-        self.a.value = self.a.value >> 1 | c * 255
+        self.a.value = self.a.value >> 1 | c * 128
         
         self.flagController.setCarryFlag() if carry else self.flagController.clearCarryFlag()
         self.flagController.setNegativeIfNeeded(self.a.value) # set negative flag
@@ -825,9 +833,11 @@ class CPU:
         mem = self.memory.get_memory_at_position_str(address)
         carry = 1 if (0b00000001 & mem.value) else 0
         c = self.flagController.getCarryFlag()
-        self.memory.set_memory_at_position_str(address, c_uint8(mem.value >> 1 | c * 255))
+        self.memory.set_memory_at_position_str(address, c_uint8(mem.value >> 1 | c * 128))
 
         self.flagController.setCarryFlag() if carry else self.flagController.clearCarryFlag()
+        self.flagController.setNegativeIfNeeded(mem.value >> 1 | c * 128) # set negative flag
+        self.flagController.setZeroFlagIfNeeded(mem.value >> 1 | c * 128) # set zero flag
 
     def handleInstructionRORZeroPageX(self):
         byte = self.get_next_byte()
@@ -835,9 +845,11 @@ class CPU:
         mem = self.memory.get_memory_at_position_str(address)
         carry = 1 if (0b00000001 & mem.value) else 0
         c = self.flagController.getCarryFlag()
-        self.memory.set_memory_at_position_str(address, c_uint8(mem.value >> 1 | c * 255))
+        self.memory.set_memory_at_position_str(address, c_uint8(mem.value >> 1 | c * 128))
 
         self.flagController.setCarryFlag() if carry else self.flagController.clearCarryFlag()
+        self.flagController.setNegativeIfNeeded(mem.value >> 1 | c * 128) # set negative flag
+        self.flagController.setZeroFlagIfNeeded(mem.value >> 1 | c * 128) # set zero flag
 
     def handleInstructionRORAbsolute(self):
         low_byte = self.get_next_byte()
@@ -847,9 +859,11 @@ class CPU:
         mem = self.memory.get_memory_at_position_str(address)
         carry = 1 if (0b00000001 & mem.value) else 0
         c = self.flagController.getCarryFlag()
-        self.memory.set_memory_at_position_str(address, c_uint8(mem.value >> 1 | c * 255))
+        self.memory.set_memory_at_position_str(address, c_uint8(mem.value >> 1 | c * 128))
 
         self.flagController.setCarryFlag() if carry else self.flagController.clearCarryFlag()
+        self.flagController.setNegativeIfNeeded(mem.value >> 1 | c * 128) # set negative flag
+        self.flagController.setZeroFlagIfNeeded(mem.value >> 1 | c * 128) # set zero flag
 
     def handleInstructionRORAbsoluteX(self):
         low_byte = self.get_next_byte()
@@ -861,9 +875,11 @@ class CPU:
         mem = self.memory.get_memory_at_position_str(final_address)
         carry = 1 if (0b00000001 & mem.value) else 0
         c = self.flagController.getCarryFlag()
-        self.memory.set_memory_at_position_str(final_address, c_uint8(mem.value >> 1 | c * 255))
+        self.memory.set_memory_at_position_str(final_address, c_uint8(mem.value >> 1 | c * 128))
 
         self.flagController.setCarryFlag() if carry else self.flagController.clearCarryFlag()
+        self.flagController.setNegativeIfNeeded(mem.value >> 1 | c * 128) # set negative flag
+        self.flagController.setZeroFlagIfNeeded(mem.value >> 1 | c * 128) # set zero flag
 
     ## CMP Instructions
     def handleInstructionCMPImmediate(self):
