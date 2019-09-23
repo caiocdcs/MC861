@@ -1238,6 +1238,18 @@ class CPU:
         P = self.memory.get_memory_at_position_int(stackAddress)
         self.flagController.setFlagsStatusByte(P)
 
+    # RTI Return from Interrupt
+    def handleInstructionRTI(self):
+        # Process Status World (flags)
+        self.sp.value = self.sp.value + 1
+        stackAddress = self.stack.getAddress() + (self.sp.value * 8)
+        P = self.memory.get_memory_at_position_int(stackAddress)
+        self.flagController.setFlagsStatusByte(P)
+        # PC
+        self.sp.value = self.sp.value + 1
+        stackAddress = self.stack.getAddress() + (self.sp.value * 8)
+        self.pc.value = self.memory.get_memory_at_position_int(stackAddress)
+
     # Subroutine Instructions
     def handleJSRInstruction(self):
         pass
@@ -1782,6 +1794,10 @@ class CPU:
             elif instruction == '60':
                 #self.handleInstructionRTS()
                 pass
+
+            # RTI
+            elif instruction == '40':
+                self.handleInstructionRTI()
 
             self.log()
             self.address = None
