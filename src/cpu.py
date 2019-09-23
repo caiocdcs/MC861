@@ -649,7 +649,7 @@ class CPU:
 
     ## ASL Instructions
     def handleInstructionASLAccumulator(self):
-        carry = 1 if (0b100000000 & self.a.value) else 0
+        carry = 1 if (0b10000000 & self.a.value) else 0
         self.a.value = self.a.value << 1
         
         self.flagController.setCarryFlag() if carry else self.flagController.clearCarryFlag()
@@ -694,6 +694,56 @@ class CPU:
         mem = self.memory.get_memory_at_position_str(final_address)
         carry = 1 if (0b10000000 & mem.value) else 0
         self.memory.set_memory_at_position_str(final_address, c_uint8(mem.value << 1))
+
+        self.flagController.setCarryFlag() if carry else self.flagController.clearCarryFlag()
+
+    ## LSR Instructions
+    def handleInstructionLSRAccumulator(self):
+        carry = 1 if (0b00000001 & self.a.value) else 0
+        self.a.value = self.a.value >> 1
+        
+        self.flagController.setCarryFlag() if carry else self.flagController.clearCarryFlag()
+        self.flagController.setNegativeIfNeeded(self.a.value) # set negative flag
+        self.flagController.setZeroFlagIfNeeded(self.a.value) # set zero flag
+
+    def handleInstructionLSRZeroPage(self):
+        address = self.get_next_byte()
+        mem = self.memory.get_memory_at_position_str(address)
+        carry = 1 if (0b00000001 & mem.value) else 0
+        self.memory.set_memory_at_position_str(address, c_uint8(mem.value >> 1))
+
+        self.flagController.setCarryFlag() if carry else self.flagController.clearCarryFlag()
+
+    def handleInstructionLSRZeroPageX(self):
+        byte = self.get_next_byte()
+        address = format((int(byte, 16) + self.x.value), '04x')
+        mem = self.memory.get_memory_at_position_str(address)
+        carry = 1 if (0b00000001 & mem.value) else 0
+        self.memory.set_memory_at_position_str(address, c_uint8(mem.value >> 1))
+
+        self.flagController.setCarryFlag() if carry else self.flagController.clearCarryFlag()
+
+    def handleInstructionLSRAbsolute(self):
+        low_byte = self.get_next_byte()
+        high_byte = self.get_next_byte()
+
+        address = (high_byte + low_byte)
+        mem = self.memory.get_memory_at_position_str(address)
+        carry = 1 if (0b00000001 & mem.value) else 0
+        self.memory.set_memory_at_position_str(address, c_uint8(mem.value >> 1))
+
+        self.flagController.setCarryFlag() if carry else self.flagController.clearCarryFlag()
+
+    def handleInstructionLSRAbsoluteX(self):
+        low_byte = self.get_next_byte()
+        high_byte = self.get_next_byte()
+
+        address = (high_byte + low_byte)
+        final_address = format((int(address, 16) + self.x.value), '04x')
+
+        mem = self.memory.get_memory_at_position_str(final_address)
+        carry = 1 if (0b00000001 & mem.value) else 0
+        self.memory.set_memory_at_position_str(final_address, c_uint8(mem.value >> 1))
 
         self.flagController.setCarryFlag() if carry else self.flagController.clearCarryFlag()
 
@@ -1188,6 +1238,18 @@ class CPU:
         P = self.memory.get_memory_at_position_int(stackAddress)
         self.flagController.setFlagsStatusByte(P)
 
+    # RTI Return from Interrupt
+    def handleInstructionRTI(self):
+        # Process Status World (flags)
+        self.sp.value = self.sp.value + 1
+        stackAddress = self.stack.getAddress() + (self.sp.value * 8)
+        P = self.memory.get_memory_at_position_int(stackAddress)
+        self.flagController.setFlagsStatusByte(P)
+        # PC
+        self.sp.value = self.sp.value + 1
+        stackAddress = self.stack.getAddress() + (self.sp.value * 8)
+        self.pc.value = self.memory.get_memory_at_position_int(stackAddress)
+
     # Subroutine Instructions
     def handleJSRInstruction(self):
         pass
@@ -1216,6 +1278,26 @@ class CPU:
             # ASL Absolute X
             if instruction == '1E':
                 self.handleInstructionASLAbsoluteX()
+
+            # LSR Accumulator
+            if instruction == '4A':
+                self.handleInstructionLSRAccumulator()
+
+            # LSR Zero Page
+            if instruction == '46':
+                self.handleInstructionLSRZeroPage()
+
+            # LSR Zero Page X
+            if instruction == '56':
+                self.handleInstructionLSRZeroPageX()
+
+            # LSR Absolute
+            if instruction == '4E':
+                self.handleInstructionLSRAbsolute()
+
+            # LSR Absolute X
+            if instruction == '5E':
+                self.handleInstructionLSRAbsoluteX()
 
             # BIT Zero Page
             if instruction == '24':
@@ -1712,6 +1794,10 @@ class CPU:
             elif instruction == '60':
                 #self.handleInstructionRTS()
                 pass
+
+            # RTI
+            elif instruction == '40':
+                self.handleInstructionRTI()
 
             self.log()
             self.address = None
