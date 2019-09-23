@@ -735,21 +735,21 @@ class CPU:
         low_byte = self.get_next_byte()
         high_byte = self.get_next_byte()
 
-        addressStr = (high_byte + low_byte)
-        addressStart = int(addressStr, 16)
-        address = (addressStart + self.x.value) & 0xFF
-        value = self.memory.get_memory_at_position_int(address).value
-        self.compare(value)
+        address = (high_byte + low_byte)
+        final_address = format((int(address, 16) + self.x.value), '04x')
+
+        mem = self.memory.get_memory_at_position_str(final_address)
+        self.compare(mem.value)
 
     def handleInstructionCMPAbsoluteY(self):
         low_byte = self.get_next_byte()
         high_byte = self.get_next_byte()
 
-        addressStr = (high_byte + low_byte)
-        addressStart = int(addressStr, 16)
-        address = (addressStart + self.y.value) & 0xFF
-        value = self.memory.get_memory_at_position_int(address).value
-        self.compare(value)
+        address = (high_byte + low_byte)
+        final_address = format((int(address, 16) + self.y.value), '04x')
+        
+        mem = self.memory.get_memory_at_position_str(final_address)
+        self.compare(mem.value)
 
     def handleInstructionCMPIndirectX(self):
         byte = self.get_next_byte()
@@ -776,6 +776,7 @@ class CPU:
         self.compare(value)
 
     def compare(self, value):
+        self.flagController.clearCarryFlag()
         result = self.a.value - value
         res = result & 0xFF                          # set a value limiting to one byte            
         self.flagController.setNegativeIfNeeded(res) # set negative flag
