@@ -25,7 +25,6 @@ class FlagController:
         return flagsByte
 
     def setFlagsStatusByte(self, value):
-        mask =  0b10000000
         self.carryFlag = 1 if (0b00000001 & value) else 0
         self.zeroFlag = 1 if (0b00000010 & value) else 0
         self.interrupDisabledtFlag = 1 if (0b00000100 & value) else 0
