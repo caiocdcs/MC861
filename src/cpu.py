@@ -784,6 +784,60 @@ class CPU:
         if result >= 0:
             self.flagController.setCarryFlag()
 
+    def handleInstructionCPXImmediate(self):
+        byte = self.get_next_byte()
+        immediate = int(byte, 16)
+        self.compareX(immediate)
+
+    def handleInstructionCPXZeroPage(self):
+        address = self.get_next_byte()
+        value = self.memory.get_memory_at_position_str(address).value
+        self.compareX(value)
+
+    def handleInstructionCPXAbsolute(self):
+        low_byte = self.get_next_byte()
+        high_byte = self.get_next_byte()
+
+        address = (high_byte + low_byte)
+        value = self.memory.get_memory_at_position_str(address).value
+        self.compareX(value)
+
+    def compareX(self, value):
+        self.flagController.clearCarryFlag()
+        result = self.x.value - value
+        res = result & 0xFF                          # set a value limiting to one byte            
+        self.flagController.setNegativeIfNeeded(res) # set negative flag
+        self.flagController.setZeroFlagIfNeeded(res) # set zero flag
+        if result >= 0:
+            self.flagController.setCarryFlag()
+
+    def handleInstructionCPYImmediate(self):
+        byte = self.get_next_byte()
+        immediate = int(byte, 16)
+        self.compareY(immediate)
+
+    def handleInstructionCPYZeroPage(self):
+        address = self.get_next_byte()
+        value = self.memory.get_memory_at_position_str(address).value
+        self.compareY(value)
+
+    def handleInstructionCPYAbsolute(self):
+        low_byte = self.get_next_byte()
+        high_byte = self.get_next_byte()
+
+        address = (high_byte + low_byte)
+        value = self.memory.get_memory_at_position_str(address).value
+        self.compareY(value)
+
+    def compareY(self, value):
+        self.flagController.clearCarryFlag()
+        result = self.y.value - value
+        res = result & 0xFF                          # set a value limiting to one byte            
+        self.flagController.setNegativeIfNeeded(res) # set negative flag
+        self.flagController.setZeroFlagIfNeeded(res) # set zero flag
+        if result >= 0:
+            self.flagController.setCarryFlag()
+
     ## Load Instructions
     def handleInstructionLDAImmediate(self):
         byte = self.get_next_byte()
@@ -1202,6 +1256,30 @@ class CPU:
             # CMP Indirect Y
             elif instruction == 'D1':
                 self.handleInstructionCMPIndirectY()
+
+            # CPX Immediate
+            elif instruction == 'E0':
+                self.handleInstructionCPXImmediate()
+
+            # CPX Zero Page
+            elif instruction == 'E4':
+                self.handleInstructionCPXZeroPage()
+
+            # CPX Absolute
+            elif instruction == 'EC':
+                self.handleInstructionCPXAbsolute()
+
+            # CPY Immediate
+            elif instruction == 'C0':
+                self.handleInstructionCPYImmediate()
+
+            # CPY Zero Page
+            elif instruction == 'C4':
+                self.handleInstructionCPYZeroPage()
+
+            # CPY Absolute
+            elif instruction == 'CC':
+                self.handleInstructionCPYAbsolute()
 
             # LDA Immediate
             if instruction == 'A9':
