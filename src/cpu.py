@@ -663,6 +663,8 @@ class CPU:
         self.memory.set_memory_at_position_str(address, c_uint8(mem.value << 1))
 
         self.flagController.setCarryFlag() if carry else self.flagController.clearCarryFlag()
+        self.flagController.setNegativeIfNeeded(mem.value << 1) # set negative flag
+        self.flagController.setZeroFlagIfNeeded(mem.value << 1) # set zero flag
 
     def handleInstructionASLZeroPageX(self):
         byte = self.get_next_byte()
@@ -672,6 +674,8 @@ class CPU:
         self.memory.set_memory_at_position_str(address, c_uint8(mem.value << 1))
 
         self.flagController.setCarryFlag() if carry else self.flagController.clearCarryFlag()
+        self.flagController.setNegativeIfNeeded(mem.value << 1) # set negative flag
+        self.flagController.setZeroFlagIfNeeded(mem.value << 1) # set zero flag
 
     def handleInstructionASLAbsolute(self):
         low_byte = self.get_next_byte()
@@ -683,6 +687,8 @@ class CPU:
         self.memory.set_memory_at_position_str(address, c_uint8(mem.value << 1))
 
         self.flagController.setCarryFlag() if carry else self.flagController.clearCarryFlag()
+        self.flagController.setNegativeIfNeeded(mem.value << 1) # set negative flag
+        self.flagController.setZeroFlagIfNeeded(mem.value << 1) # set zero flag
 
     def handleInstructionASLAbsoluteX(self):
         low_byte = self.get_next_byte()
@@ -696,6 +702,8 @@ class CPU:
         self.memory.set_memory_at_position_str(final_address, c_uint8(mem.value << 1))
 
         self.flagController.setCarryFlag() if carry else self.flagController.clearCarryFlag()
+        self.flagController.setNegativeIfNeeded(mem.value << 1) # set negative flag
+        self.flagController.setZeroFlagIfNeeded(mem.value << 1) # set zero flag
 
     ## LSR Instructions
     def handleInstructionLSRAccumulator(self):
@@ -713,6 +721,8 @@ class CPU:
         self.memory.set_memory_at_position_str(address, c_uint8(mem.value >> 1))
 
         self.flagController.setCarryFlag() if carry else self.flagController.clearCarryFlag()
+        self.flagController.setNegativeIfNeeded(mem.value >> 1) # set negative flag
+        self.flagController.setZeroFlagIfNeeded(mem.value >> 1) # set zero flag
 
     def handleInstructionLSRZeroPageX(self):
         byte = self.get_next_byte()
@@ -722,6 +732,8 @@ class CPU:
         self.memory.set_memory_at_position_str(address, c_uint8(mem.value >> 1))
 
         self.flagController.setCarryFlag() if carry else self.flagController.clearCarryFlag()
+        self.flagController.setNegativeIfNeeded(mem.value >> 1) # set negative flag
+        self.flagController.setZeroFlagIfNeeded(mem.value >> 1) # set zero flag
 
     def handleInstructionLSRAbsolute(self):
         low_byte = self.get_next_byte()
@@ -733,6 +745,8 @@ class CPU:
         self.memory.set_memory_at_position_str(address, c_uint8(mem.value >> 1))
 
         self.flagController.setCarryFlag() if carry else self.flagController.clearCarryFlag()
+        self.flagController.setNegativeIfNeeded(mem.value >> 1) # set negative flag
+        self.flagController.setZeroFlagIfNeeded(mem.value >> 1) # set zero flag
 
     def handleInstructionLSRAbsoluteX(self):
         low_byte = self.get_next_byte()
@@ -746,14 +760,34 @@ class CPU:
         self.memory.set_memory_at_position_str(final_address, c_uint8(mem.value >> 1))
 
         self.flagController.setCarryFlag() if carry else self.flagController.clearCarryFlag()
+        self.flagController.setNegativeIfNeeded(mem.value >> 1) # set negative flag
+        self.flagController.setZeroFlagIfNeeded(mem.value >> 1) # set zero flag
 
-    ## BIT
-
+    ## BIT test BITs
     def handleInstructionBITZeroPage(self):
-        print('TODO:')
+        address = self.get_next_byte()
+        mem = self.memory.get_memory_at_position_str(address)
+        self.flagController.setZeroFlagIfNeeded(self.a.value & mem.value) # set zero flag
 
-    def handleInstructionBITZeroPage(self):
-        print('TODO:')
+        neg = 1 if (0b10000000 & mem.value) else 0
+        ovf = 1 if (0b01000000 & mem.value) else 0
+
+        self.flagController.setNegativeFlag() if ovf else self.flagController.clearNegativeFlag()
+        self.flagController.setOverflowFlag() if ovf else self.flagController.clearOverflowFlag()
+
+    def handleInstructionBITAbsolute(self):
+        low_byte = self.get_next_byte()
+        high_byte = self.get_next_byte()
+
+        address = (high_byte + low_byte)
+        mem = self.memory.get_memory_at_position_str(address)
+        self.flagController.setZeroFlagIfNeeded(self.a.value & mem.value) # set zero flag
+
+        neg = 1 if (0b10000000 & mem.value) else 0
+        ovf = 1 if (0b01000000 & mem.value) else 0
+
+        self.flagController.setNegativeFlag() if ovf else self.flagController.clearNegativeFlag()
+        self.flagController.setOverflowFlag() if ovf else self.flagController.clearOverflowFlag()
 
     ## ROL Instructions
     def handleInstructionROLAccumulator(self):
@@ -1503,7 +1537,7 @@ class CPU:
                 self.handleInstructionBITZeroPage()
 
             # BIT Absolute
-            if instruction == '2X':
+            if instruction == '2C':
                 self.handleInstructionBITAbsolute()
 
             # CMP Immediate
