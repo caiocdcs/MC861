@@ -647,6 +647,357 @@ class CPU:
         self.flagController.setNegativeIfNeeded(self.a.value) # set negative flag
         self.flagController.setZeroFlagIfNeeded(self.a.value) # set zero flag
 
+    ## ASL Instructions
+    def handleInstructionASLAccumulator(self):
+        carry = 1 if (0b10000000 & self.a.value) else 0
+        self.a.value = self.a.value << 1
+        
+        self.flagController.setCarryFlag() if carry else self.flagController.clearCarryFlag()
+        self.flagController.setNegativeIfNeeded(self.a.value) # set negative flag
+        self.flagController.setZeroFlagIfNeeded(self.a.value) # set zero flag
+
+    def handleInstructionASLZeroPage(self):
+        address = self.get_next_byte()
+        mem = self.memory.get_memory_at_position_str(address)
+        carry = 1 if (0b10000000 & mem.value) else 0
+        self.memory.set_memory_at_position_str(address, c_uint8(mem.value << 1))
+
+        self.flagController.setCarryFlag() if carry else self.flagController.clearCarryFlag()
+
+    def handleInstructionASLZeroPageX(self):
+        byte = self.get_next_byte()
+        address = format((int(byte, 16) + self.x.value), '04x')
+        mem = self.memory.get_memory_at_position_str(address)
+        carry = 1 if (0b10000000 & mem.value) else 0
+        self.memory.set_memory_at_position_str(address, c_uint8(mem.value << 1))
+
+        self.flagController.setCarryFlag() if carry else self.flagController.clearCarryFlag()
+
+    def handleInstructionASLAbsolute(self):
+        low_byte = self.get_next_byte()
+        high_byte = self.get_next_byte()
+
+        address = (high_byte + low_byte)
+        mem = self.memory.get_memory_at_position_str(address)
+        carry = 1 if (0b10000000 & mem.value) else 0
+        self.memory.set_memory_at_position_str(address, c_uint8(mem.value << 1))
+
+        self.flagController.setCarryFlag() if carry else self.flagController.clearCarryFlag()
+
+    def handleInstructionASLAbsoluteX(self):
+        low_byte = self.get_next_byte()
+        high_byte = self.get_next_byte()
+
+        address = (high_byte + low_byte)
+        final_address = format((int(address, 16) + self.x.value), '04x')
+
+        mem = self.memory.get_memory_at_position_str(final_address)
+        carry = 1 if (0b10000000 & mem.value) else 0
+        self.memory.set_memory_at_position_str(final_address, c_uint8(mem.value << 1))
+
+        self.flagController.setCarryFlag() if carry else self.flagController.clearCarryFlag()
+
+    ## LSR Instructions
+    def handleInstructionLSRAccumulator(self):
+        carry = 1 if (0b00000001 & self.a.value) else 0
+        self.a.value = self.a.value >> 1
+        
+        self.flagController.setCarryFlag() if carry else self.flagController.clearCarryFlag()
+        self.flagController.setNegativeIfNeeded(self.a.value) # set negative flag
+        self.flagController.setZeroFlagIfNeeded(self.a.value) # set zero flag
+
+    def handleInstructionLSRZeroPage(self):
+        address = self.get_next_byte()
+        mem = self.memory.get_memory_at_position_str(address)
+        carry = 1 if (0b00000001 & mem.value) else 0
+        self.memory.set_memory_at_position_str(address, c_uint8(mem.value >> 1))
+
+        self.flagController.setCarryFlag() if carry else self.flagController.clearCarryFlag()
+
+    def handleInstructionLSRZeroPageX(self):
+        byte = self.get_next_byte()
+        address = format((int(byte, 16) + self.x.value), '04x')
+        mem = self.memory.get_memory_at_position_str(address)
+        carry = 1 if (0b00000001 & mem.value) else 0
+        self.memory.set_memory_at_position_str(address, c_uint8(mem.value >> 1))
+
+        self.flagController.setCarryFlag() if carry else self.flagController.clearCarryFlag()
+
+    def handleInstructionLSRAbsolute(self):
+        low_byte = self.get_next_byte()
+        high_byte = self.get_next_byte()
+
+        address = (high_byte + low_byte)
+        mem = self.memory.get_memory_at_position_str(address)
+        carry = 1 if (0b00000001 & mem.value) else 0
+        self.memory.set_memory_at_position_str(address, c_uint8(mem.value >> 1))
+
+        self.flagController.setCarryFlag() if carry else self.flagController.clearCarryFlag()
+
+    def handleInstructionLSRAbsoluteX(self):
+        low_byte = self.get_next_byte()
+        high_byte = self.get_next_byte()
+
+        address = (high_byte + low_byte)
+        final_address = format((int(address, 16) + self.x.value), '04x')
+
+        mem = self.memory.get_memory_at_position_str(final_address)
+        carry = 1 if (0b00000001 & mem.value) else 0
+        self.memory.set_memory_at_position_str(final_address, c_uint8(mem.value >> 1))
+
+        self.flagController.setCarryFlag() if carry else self.flagController.clearCarryFlag()
+
+    ## BIT
+
+    def handleInstructionBITZeroPage(self):
+        print('TODO:')
+
+    def handleInstructionBITZeroPage(self):
+        print('TODO:')
+
+    ## ROL Instructions
+    def handleInstructionROLAccumulator(self):
+        carry = 1 if (0b10000000 & self.a.value) else 0
+        c = self.flagController.getCarryFlag()
+        self.a.value = self.a.value << 1 | c
+        
+        self.flagController.setCarryFlag() if carry else self.flagController.clearCarryFlag()
+        self.flagController.setNegativeIfNeeded(self.a.value) # set negative flag
+        self.flagController.setZeroFlagIfNeeded(self.a.value) # set zero flag
+
+    def handleInstructionROLZeroPage(self):
+        address = self.get_next_byte()
+        mem = self.memory.get_memory_at_position_str(address)
+        carry = 1 if (0b10000000 & mem.value) else 0
+        c = self.flagController.getCarryFlag()
+        self.memory.set_memory_at_position_str(address, c_uint8(mem.value << 1 | c))
+
+        self.flagController.setCarryFlag() if carry else self.flagController.clearCarryFlag()
+
+    def handleInstructionROLZeroPageX(self):
+        byte = self.get_next_byte()
+        address = format((int(byte, 16) + self.x.value), '04x')
+        mem = self.memory.get_memory_at_position_str(address)
+        carry = 1 if (0b10000000 & mem.value) else 0
+        c = self.flagController.getCarryFlag()
+        self.memory.set_memory_at_position_str(address, c_uint8(mem.value << 1 | c))
+
+        self.flagController.setCarryFlag() if carry else self.flagController.clearCarryFlag()
+
+    def handleInstructionROLAbsolute(self):
+        low_byte = self.get_next_byte()
+        high_byte = self.get_next_byte()
+
+        address = (high_byte + low_byte)
+        mem = self.memory.get_memory_at_position_str(address)
+        carry = 1 if (0b10000000 & mem.value) else 0
+        c = self.flagController.getCarryFlag()
+        self.memory.set_memory_at_position_str(address, c_uint8(mem.value << 1 | c))
+
+        self.flagController.setCarryFlag() if carry else self.flagController.clearCarryFlag()
+
+    def handleInstructionROLAbsoluteX(self):
+        low_byte = self.get_next_byte()
+        high_byte = self.get_next_byte()
+
+        address = (high_byte + low_byte)
+        final_address = format((int(address, 16) + self.x.value), '04x')
+
+        mem = self.memory.get_memory_at_position_str(final_address)
+        carry = 1 if (0b10000000 & mem.value) else 0
+        c = self.flagController.getCarryFlag()
+        self.memory.set_memory_at_position_str(final_address, c_uint8(mem.value << 1 | c))
+
+        self.flagController.setCarryFlag() if carry else self.flagController.clearCarryFlag()
+
+    ## ROR Instructions
+    def handleInstructionRORAccumulator(self):
+        carry = 1 if (0b00000001 & self.a.value) else 0
+        c = self.flagController.getCarryFlag()
+        self.a.value = self.a.value >> 1 | c * 255
+        
+        self.flagController.setCarryFlag() if carry else self.flagController.clearCarryFlag()
+        self.flagController.setNegativeIfNeeded(self.a.value) # set negative flag
+        self.flagController.setZeroFlagIfNeeded(self.a.value) # set zero flag
+
+    def handleInstructionRORZeroPage(self):
+        address = self.get_next_byte()
+        mem = self.memory.get_memory_at_position_str(address)
+        carry = 1 if (0b00000001 & mem.value) else 0
+        c = self.flagController.getCarryFlag()
+        self.memory.set_memory_at_position_str(address, c_uint8(mem.value >> 1 | c * 255))
+
+        self.flagController.setCarryFlag() if carry else self.flagController.clearCarryFlag()
+
+    def handleInstructionRORZeroPageX(self):
+        byte = self.get_next_byte()
+        address = format((int(byte, 16) + self.x.value), '04x')
+        mem = self.memory.get_memory_at_position_str(address)
+        carry = 1 if (0b00000001 & mem.value) else 0
+        c = self.flagController.getCarryFlag()
+        self.memory.set_memory_at_position_str(address, c_uint8(mem.value >> 1 | c * 255))
+
+        self.flagController.setCarryFlag() if carry else self.flagController.clearCarryFlag()
+
+    def handleInstructionRORAbsolute(self):
+        low_byte = self.get_next_byte()
+        high_byte = self.get_next_byte()
+
+        address = (high_byte + low_byte)
+        mem = self.memory.get_memory_at_position_str(address)
+        carry = 1 if (0b00000001 & mem.value) else 0
+        c = self.flagController.getCarryFlag()
+        self.memory.set_memory_at_position_str(address, c_uint8(mem.value >> 1 | c * 255))
+
+        self.flagController.setCarryFlag() if carry else self.flagController.clearCarryFlag()
+
+    def handleInstructionRORAbsoluteX(self):
+        low_byte = self.get_next_byte()
+        high_byte = self.get_next_byte()
+
+        address = (high_byte + low_byte)
+        final_address = format((int(address, 16) + self.x.value), '04x')
+
+        mem = self.memory.get_memory_at_position_str(final_address)
+        carry = 1 if (0b00000001 & mem.value) else 0
+        c = self.flagController.getCarryFlag()
+        self.memory.set_memory_at_position_str(final_address, c_uint8(mem.value >> 1 | c * 255))
+
+        self.flagController.setCarryFlag() if carry else self.flagController.clearCarryFlag()
+
+    ## CMP Instructions
+    def handleInstructionCMPImmediate(self):
+        byte = self.get_next_byte()
+        immediate = int(byte, 16)
+        self.compare(immediate)
+
+    def handleInstructionCMPZeroPage(self):
+        address = self.get_next_byte()
+        value = self.memory.get_memory_at_position_str(address).value
+        self.compare(value)
+
+    def handleInstructionCMPZeroPageX(self):
+        byte = self.get_next_byte()
+        addressStart = int(byte, 16)
+        address = (addressStart + self.x.value) & 0xFF
+        value = self.memory.get_memory_at_position_int(address).value
+        self.compare(value)
+
+    def handleInstructionCMPAbsolute(self):
+        low_byte = self.get_next_byte()
+        high_byte = self.get_next_byte()
+
+        address = (high_byte + low_byte)
+        value = self.memory.get_memory_at_position_str(address).value
+        self.compare(value)
+
+    def handleInstructionCMPAbsoluteX(self):
+        low_byte = self.get_next_byte()
+        high_byte = self.get_next_byte()
+
+        address = (high_byte + low_byte)
+        final_address = format((int(address, 16) + self.x.value), '04x')
+
+        mem = self.memory.get_memory_at_position_str(final_address)
+        self.compare(mem.value)
+
+    def handleInstructionCMPAbsoluteY(self):
+        low_byte = self.get_next_byte()
+        high_byte = self.get_next_byte()
+
+        address = (high_byte + low_byte)
+        final_address = format((int(address, 16) + self.y.value), '04x')
+        
+        mem = self.memory.get_memory_at_position_str(final_address)
+        self.compare(mem.value)
+
+    def handleInstructionCMPIndirectX(self):
+        byte = self.get_next_byte()
+
+        address = format((int(byte, 16) + self.x.value), '04x')
+        low_byte = format(self.memory.get_memory_at_position_str(address).value, '02x')
+        high_byte = format(self.memory.get_memory_at_position_str(format((int(address, 16) + 1), '04x')).value, '02x')
+
+        final_address = (high_byte + low_byte)
+
+        value = self.memory.get_memory_at_position_str(final_address).value
+        self.compare(value)
+
+    def handleInstructionCMPIndirectY(self):
+        byte = self.get_next_byte()
+
+        l_byte = format(self.memory.get_memory_at_position_str(byte).value, '02x')
+        h_byte = format(self.memory.get_memory_at_position_int(int(byte, 16) + 1).value, '02x')
+
+        address = (h_byte + l_byte)
+        final_address = int(address, 16) + self.y.value
+
+        value = self.memory.get_memory_at_position_int(final_address).value
+        self.compare(value)
+
+    def compare(self, value):
+        self.flagController.clearCarryFlag()
+        result = self.a.value - value
+        res = result & 0xFF                          # set a value limiting to one byte            
+        self.flagController.setNegativeIfNeeded(res) # set negative flag
+        self.flagController.setZeroFlagIfNeeded(res) # set zero flag
+        if result >= 0:
+            self.flagController.setCarryFlag()
+
+    def handleInstructionCPXImmediate(self):
+        byte = self.get_next_byte()
+        immediate = int(byte, 16)
+        self.compareX(immediate)
+
+    def handleInstructionCPXZeroPage(self):
+        address = self.get_next_byte()
+        value = self.memory.get_memory_at_position_str(address).value
+        self.compareX(value)
+
+    def handleInstructionCPXAbsolute(self):
+        low_byte = self.get_next_byte()
+        high_byte = self.get_next_byte()
+
+        address = (high_byte + low_byte)
+        value = self.memory.get_memory_at_position_str(address).value
+        self.compareX(value)
+
+    def compareX(self, value):
+        self.flagController.clearCarryFlag()
+        result = self.x.value - value
+        res = result & 0xFF                          # set a value limiting to one byte            
+        self.flagController.setNegativeIfNeeded(res) # set negative flag
+        self.flagController.setZeroFlagIfNeeded(res) # set zero flag
+        if result >= 0:
+            self.flagController.setCarryFlag()
+
+    def handleInstructionCPYImmediate(self):
+        byte = self.get_next_byte()
+        immediate = int(byte, 16)
+        self.compareY(immediate)
+
+    def handleInstructionCPYZeroPage(self):
+        address = self.get_next_byte()
+        value = self.memory.get_memory_at_position_str(address).value
+        self.compareY(value)
+
+    def handleInstructionCPYAbsolute(self):
+        low_byte = self.get_next_byte()
+        high_byte = self.get_next_byte()
+
+        address = (high_byte + low_byte)
+        value = self.memory.get_memory_at_position_str(address).value
+        self.compareY(value)
+
+    def compareY(self, value):
+        self.flagController.clearCarryFlag()
+        result = self.y.value - value
+        res = result & 0xFF                          # set a value limiting to one byte            
+        self.flagController.setNegativeIfNeeded(res) # set negative flag
+        self.flagController.setZeroFlagIfNeeded(res) # set zero flag
+        if result >= 0:
+            self.flagController.setCarryFlag()
+
     ## Load Instructions
     def handleInstructionLDAImmediate(self):
         byte = self.get_next_byte()
@@ -1066,6 +1417,18 @@ class CPU:
         P = self.memory.get_memory_at_position_int(stackAddress)
         self.flagController.setFlagsStatusByte(P)
 
+    # RTI Return from Interrupt
+    def handleInstructionRTI(self):
+        # Process Status World (flags)
+        self.sp.value = self.sp.value + 1
+        stackAddress = self.stack.getAddress() + (self.sp.value * 8)
+        P = self.memory.get_memory_at_position_int(stackAddress)
+        self.flagController.setFlagsStatusByte(P)
+        # PC
+        self.sp.value = self.sp.value + 1
+        stackAddress = self.stack.getAddress() + (self.sp.value * 8)
+        self.pc.value = self.memory.get_memory_at_position_int(stackAddress)
+
     # Subroutine Instructions
     def handleInstructionJSR(self):
         low_byte = self.get_next_byte()
@@ -1107,6 +1470,151 @@ class CPU:
         instruction = self.get_next_byte()
 
         while instruction:
+
+            # ASL Accumulator
+            if instruction == '0A':
+                self.handleInstructionASLAccumulator()
+
+            # ASL Zero Page
+            if instruction == '06':
+                self.handleInstructionASLZeroPage()
+
+            # ASL Zero Page X
+            if instruction == '16':
+                self.handleInstructionASLZeroPageX()
+
+            # ASL Absolute
+            if instruction == '0E':
+                self.handleInstructionASLAbsolute()
+
+            # ASL Absolute X
+            if instruction == '1E':
+                self.handleInstructionASLAbsoluteX()
+
+            # LSR Accumulator
+            if instruction == '4A':
+                self.handleInstructionLSRAccumulator()
+
+            # LSR Zero Page
+            if instruction == '46':
+                self.handleInstructionLSRZeroPage()
+
+            # LSR Zero Page X
+            if instruction == '56':
+                self.handleInstructionLSRZeroPageX()
+
+            # LSR Absolute
+            if instruction == '4E':
+                self.handleInstructionLSRAbsolute()
+
+            # LSR Absolute X
+            if instruction == '5E':
+                self.handleInstructionLSRAbsoluteX()
+
+            # ROL Accumulator
+            if instruction == '2A':
+                self.handleInstructionROLAccumulator()
+
+            # ROL Zero Page
+            if instruction == '26':
+                self.handleInstructionROLZeroPage()
+
+            # ROL Zero Page X
+            if instruction == '36':
+                self.handleInstructionROLZeroPageX()
+
+            # ROL Absolute
+            if instruction == '2E':
+                self.handleInstructionROLAbsolute()
+
+            # ROL Absolute X
+            if instruction == '3E':
+                self.handleInstructionROLAbsoluteX()
+
+            # ROR Accumulator
+            if instruction == '6A':
+                self.handleInstructionRORAccumulator()
+
+            # ROR Zero Page
+            if instruction == '66':
+                self.handleInstructionRORZeroPage()
+
+            # ROR Zero Page X
+            if instruction == '76':
+                self.handleInstructionRORZeroPageX()
+
+            # ROR Absolute
+            if instruction == '6E':
+                self.handleInstructionRORAbsolute()
+
+            # ROR Absolute X
+            if instruction == '7E':
+                self.handleInstructionRORAbsoluteX()
+
+            # BIT Zero Page
+            if instruction == '24':
+                self.handleInstructionBITZeroPage()
+
+            # BIT Absolute
+            if instruction == '2X':
+                self.handleInstructionBITAbsolute()
+
+            # CMP Immediate
+            elif instruction == 'C9':
+                self.handleInstructionCMPImmediate()
+
+            # CMP Zero Page
+            elif instruction == 'C5':
+                self.handleInstructionCMPZeroPage()
+
+            # CMP Zero Page X
+            elif instruction == 'D5':
+                self.handleInstructionCMPZeroPageX()
+
+            # CMP Absolute
+            elif instruction == 'CD':
+                self.handleInstructionCMPAbsolute()
+
+            # CMP Absolute X
+            elif instruction == 'DD':
+                self.handleInstructionCMPAbsoluteX()
+
+            # CMP Absolute Y
+            elif instruction == 'D9':
+                self.handleInstructionCMPAbsoluteY()
+
+            # CMP Indirect X
+            elif instruction == 'C1':
+                self.handleInstructionCMPIndirectX()
+
+            # CMP Indirect Y
+            elif instruction == 'D1':
+                self.handleInstructionCMPIndirectY()
+
+            # CPX Immediate
+            elif instruction == 'E0':
+                self.handleInstructionCPXImmediate()
+
+            # CPX Zero Page
+            elif instruction == 'E4':
+                self.handleInstructionCPXZeroPage()
+
+            # CPX Absolute
+            elif instruction == 'EC':
+                self.handleInstructionCPXAbsolute()
+
+            # CPY Immediate
+            elif instruction == 'C0':
+                self.handleInstructionCPYImmediate()
+
+            # CPY Zero Page
+            elif instruction == 'C4':
+                self.handleInstructionCPYZeroPage()
+
+            # CPY Absolute
+            elif instruction == 'CC':
+                self.handleInstructionCPYAbsolute()
+
             # LDA Immediate
             if instruction == 'A9':
                 self.handleInstructionLDAImmediate()
@@ -1537,6 +2045,7 @@ class CPU:
             elif instruction == '60':
                 self.handleInstructionRTS()
 
+<<<<<<< HEAD
             # BPL
             elif instruction == '10':
                 self.handleInstructionBPL()
@@ -1568,6 +2077,11 @@ class CPU:
             # BEQ
             elif instruction == 'F0':
                 self.handleInstructionBEQ()
+=======
+            # RTI
+            elif instruction == '40':
+                self.handleInstructionRTI()
+>>>>>>> master
 
             self.log()
             self.address = None
