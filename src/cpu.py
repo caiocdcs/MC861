@@ -941,6 +941,75 @@ class CPU:
 
         self.pc.value = int(final_address, 16)
 
+    ## Branch instructions
+    def handleInstructionBPL(self):
+        if self.flagController.getNegativeFlag == 0:
+            byte = int(self.get_next_byte(), 16)
+            if byte << 7:
+                address = byte-(1<<8)
+            else:
+                address = byte
+            
+            self.pc.value = self.pc.value = address
+
+    def handleInstructionBMI(self):
+        low_byte = self.get_next_byte()
+        high_byte = self.get_next_byte()
+
+        address = (high_byte + low_byte)
+
+        self.pc.value = int(address, 16)
+
+    def handleInstructionBVC(self):
+        low_byte = self.get_next_byte()
+        high_byte = self.get_next_byte()
+
+        address = (high_byte + low_byte)
+
+        self.pc.value = int(address, 16)
+
+    def handleInstructionBVS(self):
+        low_byte = self.get_next_byte()
+        high_byte = self.get_next_byte()
+
+        address = (high_byte + low_byte)
+
+        self.pc.value = int(address, 16)
+
+    def handleInstructionBCC(self):
+        low_byte = self.get_next_byte()
+        high_byte = self.get_next_byte()
+
+        address = (high_byte + low_byte)
+
+        self.pc.value = int(address, 16)
+
+    def handleInstructionBCS(self):
+        low_byte = self.get_next_byte()
+        high_byte = self.get_next_byte()
+
+        address = (high_byte + low_byte)
+
+        self.pc.value = int(address, 16)
+
+    def handleInstructionBNE(self):
+        low_byte = self.get_next_byte()
+        high_byte = self.get_next_byte()
+
+        address = (high_byte + low_byte)
+
+        self.pc.value = int(address, 16)
+
+    def handleInstructionBEQ(self):
+        if self.flagController.getZeroFlag == 1:
+            byte = int(self.get_next_byte(), 16)
+            if byte << 7:
+                address = byte-(1<<8)
+            else:
+                address = byte
+            
+            self.pc.value = self.pc.value = address
+
     # Clear flags instructions
     def handleInstructionClearCarryFlag(self):
         self.flagController.clearCarryFlag()
@@ -1467,6 +1536,38 @@ class CPU:
             # RTS
             elif instruction == '60':
                 self.handleInstructionRTS()
+
+            # BPL
+            elif instruction == '10':
+                self.handleInstructionBPL()
+
+            # BMI
+            elif instruction == '30':
+                self.handleInstructionBMI()
+
+            # BVC
+            elif instruction == '50':
+                self.handleInstructionBVC()
+
+            # BVS
+            elif instruction == '70':
+                self.handleInstructionBVS()
+
+            # BCC
+            elif instruction == '90':
+                self.handleInstructionBCC()
+
+            # BCS
+            elif instruction == 'B0':
+                self.handleInstructionBCS()
+
+            # BNE
+            elif instruction == 'D0':
+                self.handleInstructionBNE()
+
+            # BEQ
+            elif instruction == 'F0':
+                self.handleInstructionBEQ()
 
             self.log()
             self.address = None
