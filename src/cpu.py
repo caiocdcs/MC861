@@ -755,6 +755,116 @@ class CPU:
     def handleInstructionBITZeroPage(self):
         print('TODO:')
 
+    ## ROL Instructions
+    def handleInstructionROLAccumulator(self):
+        carry = 1 if (0b10000000 & self.a.value) else 0
+        c = self.flagController.getCarryFlag()
+        self.a.value = self.a.value << 1 | c
+        
+        self.flagController.setCarryFlag() if carry else self.flagController.clearCarryFlag()
+        self.flagController.setNegativeIfNeeded(self.a.value) # set negative flag
+        self.flagController.setZeroFlagIfNeeded(self.a.value) # set zero flag
+
+    def handleInstructionROLZeroPage(self):
+        address = self.get_next_byte()
+        mem = self.memory.get_memory_at_position_str(address)
+        carry = 1 if (0b10000000 & mem.value) else 0
+        c = self.flagController.getCarryFlag()
+        self.memory.set_memory_at_position_str(address, c_uint8(mem.value << 1 | c))
+
+        self.flagController.setCarryFlag() if carry else self.flagController.clearCarryFlag()
+
+    def handleInstructionROLZeroPageX(self):
+        byte = self.get_next_byte()
+        address = format((int(byte, 16) + self.x.value), '04x')
+        mem = self.memory.get_memory_at_position_str(address)
+        carry = 1 if (0b10000000 & mem.value) else 0
+        c = self.flagController.getCarryFlag()
+        self.memory.set_memory_at_position_str(address, c_uint8(mem.value << 1 | c))
+
+        self.flagController.setCarryFlag() if carry else self.flagController.clearCarryFlag()
+
+    def handleInstructionROLAbsolute(self):
+        low_byte = self.get_next_byte()
+        high_byte = self.get_next_byte()
+
+        address = (high_byte + low_byte)
+        mem = self.memory.get_memory_at_position_str(address)
+        carry = 1 if (0b10000000 & mem.value) else 0
+        c = self.flagController.getCarryFlag()
+        self.memory.set_memory_at_position_str(address, c_uint8(mem.value << 1 | c))
+
+        self.flagController.setCarryFlag() if carry else self.flagController.clearCarryFlag()
+
+    def handleInstructionROLAbsoluteX(self):
+        low_byte = self.get_next_byte()
+        high_byte = self.get_next_byte()
+
+        address = (high_byte + low_byte)
+        final_address = format((int(address, 16) + self.x.value), '04x')
+
+        mem = self.memory.get_memory_at_position_str(final_address)
+        carry = 1 if (0b10000000 & mem.value) else 0
+        c = self.flagController.getCarryFlag()
+        self.memory.set_memory_at_position_str(final_address, c_uint8(mem.value << 1 | c))
+
+        self.flagController.setCarryFlag() if carry else self.flagController.clearCarryFlag()
+
+    ## ROR Instructions
+    def handleInstructionRORAccumulator(self):
+        carry = 1 if (0b00000001 & self.a.value) else 0
+        c = self.flagController.getCarryFlag()
+        self.a.value = self.a.value >> 1 | c * 255
+        
+        self.flagController.setCarryFlag() if carry else self.flagController.clearCarryFlag()
+        self.flagController.setNegativeIfNeeded(self.a.value) # set negative flag
+        self.flagController.setZeroFlagIfNeeded(self.a.value) # set zero flag
+
+    def handleInstructionRORZeroPage(self):
+        address = self.get_next_byte()
+        mem = self.memory.get_memory_at_position_str(address)
+        carry = 1 if (0b00000001 & mem.value) else 0
+        c = self.flagController.getCarryFlag()
+        self.memory.set_memory_at_position_str(address, c_uint8(mem.value >> 1 | c * 255))
+
+        self.flagController.setCarryFlag() if carry else self.flagController.clearCarryFlag()
+
+    def handleInstructionRORZeroPageX(self):
+        byte = self.get_next_byte()
+        address = format((int(byte, 16) + self.x.value), '04x')
+        mem = self.memory.get_memory_at_position_str(address)
+        carry = 1 if (0b00000001 & mem.value) else 0
+        c = self.flagController.getCarryFlag()
+        self.memory.set_memory_at_position_str(address, c_uint8(mem.value >> 1 | c * 255))
+
+        self.flagController.setCarryFlag() if carry else self.flagController.clearCarryFlag()
+
+    def handleInstructionRORAbsolute(self):
+        low_byte = self.get_next_byte()
+        high_byte = self.get_next_byte()
+
+        address = (high_byte + low_byte)
+        mem = self.memory.get_memory_at_position_str(address)
+        carry = 1 if (0b00000001 & mem.value) else 0
+        c = self.flagController.getCarryFlag()
+        self.memory.set_memory_at_position_str(address, c_uint8(mem.value >> 1 | c * 255))
+
+        self.flagController.setCarryFlag() if carry else self.flagController.clearCarryFlag()
+
+    def handleInstructionRORAbsoluteX(self):
+        low_byte = self.get_next_byte()
+        high_byte = self.get_next_byte()
+
+        address = (high_byte + low_byte)
+        final_address = format((int(address, 16) + self.x.value), '04x')
+
+        mem = self.memory.get_memory_at_position_str(final_address)
+        carry = 1 if (0b00000001 & mem.value) else 0
+        c = self.flagController.getCarryFlag()
+        self.memory.set_memory_at_position_str(final_address, c_uint8(mem.value >> 1 | c * 255))
+
+        self.flagController.setCarryFlag() if carry else self.flagController.clearCarryFlag()
+
     ## CMP Instructions
     def handleInstructionCMPImmediate(self):
         byte = self.get_next_byte()
@@ -1298,6 +1408,46 @@ class CPU:
             # LSR Absolute X
             if instruction == '5E':
                 self.handleInstructionLSRAbsoluteX()
+
+            # ROL Accumulator
+            if instruction == '2A':
+                self.handleInstructionROLAccumulator()
+
+            # ROL Zero Page
+            if instruction == '26':
+                self.handleInstructionROLZeroPage()
+
+            # ROL Zero Page X
+            if instruction == '36':
+                self.handleInstructionROLZeroPageX()
+
+            # ROL Absolute
+            if instruction == '2E':
+                self.handleInstructionROLAbsolute()
+
+            # ROL Absolute X
+            if instruction == '3E':
+                self.handleInstructionROLAbsoluteX()
+
+            # ROR Accumulator
+            if instruction == '6A':
+                self.handleInstructionRORAccumulator()
+
+            # ROR Zero Page
+            if instruction == '66':
+                self.handleInstructionRORZeroPage()
+
+            # ROR Zero Page X
+            if instruction == '76':
+                self.handleInstructionRORZeroPageX()
+
+            # ROR Absolute
+            if instruction == '6E':
+                self.handleInstructionRORAbsolute()
+
+            # ROR Absolute X
+            if instruction == '7E':
+                self.handleInstructionRORAbsoluteX()
 
             # BIT Zero Page
             if instruction == '24':
