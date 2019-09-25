@@ -251,13 +251,14 @@ class CPU:
         self.a.value = result & 0xFF                          # set a value limiting to one byte            
         self.flagController.setNegativeIfNeeded(self.a.value) # set negative flag
         self.flagController.setZeroFlagIfNeeded(self.a.value) # set zero flag
-        self.flagController.setCarryFlagIfNeeded(result)
 
         # set overflow flag
         if (aOldValue ^ value) & 0x80 == 0 and (aOldValue ^ self.a.value) & 0x80 != 0:
             self.flagController.setOverflowFlag()
+            self.flagController.clearCarryFlag()
         else:
             self.flagController.clearOverflowFlag()
+            self.flagController.setCarryFlag()
             
     ## AND Instructions
 
@@ -1449,8 +1450,6 @@ class CPU:
     # Stack instructions
     def handleInstructionTXS(self):
         self.sp.value = self.x.value
-        self.flagController.setNegativeIfNeeded(self.sp.value) # set negative flag
-        self.flagController.setZeroFlagIfNeeded(self.sp.value) # set zero flag
 
     def handleInstructionTSX(self):
         self.x.value = self.sp.value
@@ -2081,7 +2080,7 @@ class CPU:
             elif instruction == '9A':
                 self.handleInstructionTXS()
 
-            # STX Transfer Stack pointer to X
+            # TSX Transfer Stack pointer to X
             elif instruction == 'BA':
                 self.handleInstructionTSX()
 
