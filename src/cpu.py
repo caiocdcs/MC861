@@ -166,7 +166,7 @@ class CPU:
          
         self.flagController.setNegativeIfNeeded(self.a.value) # set negative flag
         self.flagController.setZeroFlagIfNeeded(self.a.value) # set zero flag
-        self.flagController.setCarryFlagIfNeeded(sum)
+        self.flagController.setCarryFlagIfNeeded(sum)         # set carry flag
 
         # set overflow flag
         if (aOldValue ^ value) & 0x80 == 0 and (aOldValue ^ self.a.value) & 0x80 != 0:
@@ -1452,7 +1452,7 @@ class CPU:
         self.flagController.setNegativeIfNeeded(self.sp.value) # set negative flag
         self.flagController.setZeroFlagIfNeeded(self.sp.value) # set zero flag
 
-    def handleInstructionSTX(self):
+    def handleInstructionTSX(self):
         self.x.value = self.sp.value
         self.flagController.setNegativeIfNeeded(self.x.value) # set negative flag
         self.flagController.setZeroFlagIfNeeded(self.x.value) # set zero flag
@@ -1466,6 +1466,8 @@ class CPU:
         self.sp.value = self.sp.value + 1
         stackAddress = self.stack.getAddress() + (self.sp.value * 8)
         self.a.value = self.memory.get_memory_at_position_int(stackAddress)
+        self.flagController.setNegativeIfNeeded(self.a.value) # set negative flag
+        self.flagController.setZeroFlagIfNeeded(self.a.value) # set zero flag
 
     def handleInstructionPHP(self):
         P = self.flagController.getFlagsStatusByte()
@@ -2081,7 +2083,7 @@ class CPU:
 
             # STX Transfer Stack pointer to X
             elif instruction == 'BA':
-                self.handleInstructionSTX()
+                self.handleInstructionTSX()
 
             # PHA Push Accumulator
             elif instruction == '48':
