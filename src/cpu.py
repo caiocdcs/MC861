@@ -1470,9 +1470,9 @@ class CPU:
 
     def handleInstructionPHP(self):
         P = self.flagController.getFlagsStatusByte()
-       # pToPush = P | 0x18                                    # 00011000
+        pToPush = P | 0x18                                    # 00011000
         stackAddress = self.stack.getAddress() + (self.sp.value * 8)
-        self.memory.set_memory_at_position_int(stackAddress, P)
+        self.memory.set_memory_at_position_int(stackAddress, pToPush)
         self.sp.value = self.sp.value - 1
 
     def handleInstructionPLP(self):

@@ -4,9 +4,9 @@ class FlagController:
     def __init__(self):
         self.carryFlag = 0
         self.zeroFlag = 0
-        self.interrupDisabledtFlag = 0
+        self.interrupDisabledtFlag = 1
         self.decimalFlag = 0
-        self.breakFlag = 1
+        self.breakFlag = 0
         self.unusedFlag = 1
         self.overflowFlag = 0
         self.negativeFlag = 0
