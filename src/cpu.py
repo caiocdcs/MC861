@@ -1470,7 +1470,7 @@ class CPU:
 
     def handleInstructionPHP(self):
         P = self.flagController.getFlagsStatusByte()
-        pToPush = P | 0x18                                    # 00011000
+        pToPush = P | 0x30                                    # 00110000
         stackAddress = self.stack.getAddress() + (self.sp.value * 8)
         self.memory.set_memory_at_position_int(stackAddress, pToPush)
         self.sp.value = self.sp.value - 1
@@ -1479,7 +1479,8 @@ class CPU:
         self.sp.value = self.sp.value + 1
         stackAddress = self.stack.getAddress() + (self.sp.value * 8)
         P = self.memory.get_memory_at_position_int(stackAddress)
-        self.flagController.setFlagsStatusByte(P)
+        pToSet = P & 0xEF
+        self.flagController.setFlagsStatusByte(pToSet)
 
     # RTI Return from Interrupt
     def handleInstructionRTI(self):
@@ -1487,7 +1488,8 @@ class CPU:
         self.sp.value = self.sp.value + 1
         stackAddress = self.stack.getAddress() + (self.sp.value * 8)
         P = self.memory.get_memory_at_position_int(stackAddress)
-        self.flagController.setFlagsStatusByte(P)
+        pToSet = P & 0xEF
+        self.flagController.setFlagsStatusByte(pToSet)
         # PC
         self.sp.value = self.sp.value + 1
         stackAddress = self.stack.getAddress() + (self.sp.value * 8)
