@@ -6,7 +6,7 @@ EXT=./ext
 NES=src/main.py
 
 TESTS=$(addprefix ${BIN}/, $(notdir $(patsubst %.s,%,$(sort $(wildcard ${TST}/*.s)))))
-CROSS_AS=${EXT}/asm6f
+CROSS_AS=${EXT}/asm6/asm6
 
 all: ${BIN} ${LOG} ${NES}
 
@@ -19,7 +19,10 @@ ${BIN}/%: ${TST}/%.s
 ${LOG}:
 	@mkdir -p ${LOG}
 
-test: ${BIN} ${LOG} ${NES} ${TESTS}
+${CROSS_AS}:
+	cd ./ext/asm6; make all
+
+test: ${CROSS_AS} ${BIN} ${LOG} ${NES} ${TESTS}
 	@{  echo "************************* Tests ******************************"; \
 		test_failed=0; \
 		test_passed=0; \
@@ -44,4 +47,4 @@ test: ${BIN} ${LOG} ${NES} ${TESTS}
 	}
 
 clean:
-	rm -rf ${BIN}/* ${LOG}/*
+	rm -rf ${BIN}/* ${LOG}/* ${EXT}/asm6/asm6
