@@ -45,7 +45,7 @@ MIRRORING = %0001 ;%0000 = horizontal, %0001 = vertical, %1000 = four-screen
 
 Reset:
    ldy #$21
-   sty $1507
+   sty $0705
    brk
 
 NMI:

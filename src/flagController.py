@@ -6,7 +6,7 @@ class FlagController:
         self.zeroFlag = 0
         self.interrupDisabledtFlag = 1
         self.decimalFlag = 0
-        self.breakFlag = 0
+        self.breakFlag = 1
         self.unusedFlag = 1
         self.overflowFlag = 0
         self.negativeFlag = 0

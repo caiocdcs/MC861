@@ -45,7 +45,7 @@ MIRRORING = %0001 ;%0000 = horizontal, %0001 = vertical, %1000 = four-screen
 
 Reset:
    ldx #$21
-   stx $1507
+   stx $0705
    brk
 
 NMI:
