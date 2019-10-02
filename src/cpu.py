@@ -1487,27 +1487,27 @@ class CPU:
 
     def handleInstructionPHA(self):
         stackAddress = self.stack.getAddress() + (self.sp.value * 8)
-        self._set_address_int(stackAddress, self.a.value)
+        self._set_address_int(stackAddress, self.a, set_address=True)
         self.sp.value = self.sp.value - 1
 
     def handleInstructionPLA(self):
         self.sp.value = self.sp.value + 1
         stackAddress = self.stack.getAddress() + (self.sp.value * 8)
-        self.a.value = self._get_address_int(stackAddress)
+        self.a = self._get_address_int(stackAddress)
         self.flagController.setNegativeIfNeeded(self.a.value) # set negative flag
         self.flagController.setZeroFlagIfNeeded(self.a.value) # set zero flag
 
     def handleInstructionPHP(self):
         P = self.flagController.getFlagsStatusByte()
-        pToPush = P | 0x30                                    # 00110000
+        pToPush = c_uint8(P | 0x30)                                  # 00110000
         stackAddress = self.stack.getAddress() + (self.sp.value * 8)
-        self._set_address_int(stackAddress, pToPush)
+        self._set_address_int(stackAddress, pToPush, set_address=True)
         self.sp.value = self.sp.value - 1
 
     def handleInstructionPLP(self):
         self.sp.value = self.sp.value + 1
         stackAddress = self.stack.getAddress() + (self.sp.value * 8)
-        P = self._get_address_int(stackAddress)
+        P = self._get_address_int(stackAddress).value
         pToSet = P & 0xEF
         self.flagController.setFlagsStatusByte(pToSet)
 
@@ -1516,13 +1516,13 @@ class CPU:
         # Process Status World (flags)
         self.sp.value = self.sp.value + 1
         stackAddress = self.stack.getAddress() + (self.sp.value * 8)
-        P = self._get_address_int(stackAddress)
+        P = self._get_address_int(stackAddress).value
         pToSet = P & 0xEF
         self.flagController.setFlagsStatusByte(pToSet)
         # PC
         self.sp.value = self.sp.value + 1
         stackAddress = self.stack.getAddress() + (self.sp.value * 8)
-        self.pc.value = self._get_address_int(stackAddress)
+        self.pc = self._get_address_int(stackAddress)
 
     # Subroutine Instructions
     def handleInstructionJSR(self):
