@@ -12,6 +12,7 @@ class CPU:
         file = open(program_name, "rb")
         self.program_code = file.read().hex()
 
+        # self.sp = c_uint16(253) # SP starts at 0xfd TODO: use this as SP start
         self.sp = c_uint16(255) # SP starts at 0xff
         self.pc = c_uint16(0)
         self.a = c_uint8(0)
