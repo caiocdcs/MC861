@@ -2,7 +2,7 @@
 
 class Stack:
     def __init__(self):
-        self.address = 256 + 255 # stack starts at 0x01ff
+        self.address = 0x0100 # stack starts at 0x0100
 
     # Getters
 

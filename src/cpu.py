@@ -12,6 +12,7 @@ class CPU:
         file = open(program_name, "rb")
         self.program_code = file.read().hex()
 
+        # self.sp = c_uint16(253) # SP starts at 0xfd TODO: use this as SP start
         self.sp = c_uint16(255) # SP starts at 0xff
         self.pc = c_uint16(0)
         self.a = c_uint8(0)
@@ -1486,13 +1487,13 @@ class CPU:
         self.flagController.setZeroFlagIfNeeded(self.x.value) # set zero flag
 
     def handleInstructionPHA(self):
-        stackAddress = self.stack.getAddress() + (self.sp.value * 8)
+        stackAddress = self.stack.getAddress() + (self.sp.value)
         self._set_address_int(stackAddress, self.a, set_address=True)
         self.sp.value = self.sp.value - 1
 
     def handleInstructionPLA(self):
         self.sp.value = self.sp.value + 1
-        stackAddress = self.stack.getAddress() + (self.sp.value * 8)
+        stackAddress = self.stack.getAddress() + (self.sp.value)
         self.a = self._get_address_int(stackAddress)
         self.flagController.setNegativeIfNeeded(self.a.value) # set negative flag
         self.flagController.setZeroFlagIfNeeded(self.a.value) # set zero flag
@@ -1500,13 +1501,13 @@ class CPU:
     def handleInstructionPHP(self):
         P = self.flagController.getFlagsStatusByte()
         pToPush = c_uint8(P | 0x30)                                  # 00110000
-        stackAddress = self.stack.getAddress() + (self.sp.value * 8)
+        stackAddress = self.stack.getAddress() + (self.sp.value)
         self._set_address_int(stackAddress, pToPush, set_address=True)
         self.sp.value = self.sp.value - 1
 
     def handleInstructionPLP(self):
         self.sp.value = self.sp.value + 1
-        stackAddress = self.stack.getAddress() + (self.sp.value * 8)
+        stackAddress = self.stack.getAddress() + (self.sp.value)
         P = self._get_address_int(stackAddress).value
         pToSet = P & 0xEF
         self.flagController.setFlagsStatusByte(pToSet)
@@ -1515,13 +1516,13 @@ class CPU:
     def handleInstructionRTI(self):
         # Process Status World (flags)
         self.sp.value = self.sp.value + 1
-        stackAddress = self.stack.getAddress() + (self.sp.value * 8)
+        stackAddress = self.stack.getAddress() + (self.sp.value)
         P = self._get_address_int(stackAddress).value
         pToSet = P & 0xEF
         self.flagController.setFlagsStatusByte(pToSet)
         # PC
         self.sp.value = self.sp.value + 1
-        stackAddress = self.stack.getAddress() + (self.sp.value * 8)
+        stackAddress = self.stack.getAddress() + (self.sp.value)
         self.pc = self._get_address_int(stackAddress)
 
     # Subroutine Instructions
@@ -1537,24 +1538,24 @@ class CPU:
         self.pc.value = int(address, 16)
 
         # set high byte
-        stackAddress = self.stack.getAddress() + (self.sp.value * 8)
+        stackAddress = self.stack.getAddress() + (self.sp.value)
         self._set_address_int(stackAddress, c_uint8(int(pc_h, 16)))
         self.sp.value = self.sp.value - 1
 
         # set low byte
-        stackAddress = self.stack.getAddress() + (self.sp.value * 8)
+        stackAddress = self.stack.getAddress() + (self.sp.value)
         self._set_address_int(stackAddress, c_uint8(int(pc_l, 16)))
         self.sp.value = self.sp.value - 1
 
     def handleInstructionRTS(self):
         # get high byte
         self.sp.value = self.sp.value + 1
-        stackAddress = self.stack.getAddress() + (self.sp.value * 8)
+        stackAddress = self.stack.getAddress() + (self.sp.value)
         low_byte = format(self._get_address_int(stackAddress).value, '02x')
 
         # get low byte
         self.sp.value = self.sp.value + 1
-        stackAddress = self.stack.getAddress() + (self.sp.value * 8)
+        stackAddress = self.stack.getAddress() + (self.sp.value)
         high_byte = format(self._get_address_int(stackAddress).value, '02x')
 
         address = (low_byte + high_byte)
