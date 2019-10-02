@@ -95,8 +95,11 @@ class CPU:
             
         return address
 
-    def _get_address_int(self, address):
+    def _get_address_int(self, address, set_address=False):
         value = self._get_correct_address(address)
+
+        if set_address:
+            self.address = format(value, '04x')
         
         return self.memory.get_memory_at_position_int(value)
 
@@ -1494,7 +1497,7 @@ class CPU:
     def handleInstructionPLA(self):
         self.sp.value = self.sp.value + 1
         stackAddress = self.stack.getAddress() + (self.sp.value)
-        self.a = self._get_address_int(stackAddress)
+        self.a = self._get_address_int(stackAddress, set_address=True)
         self.flagController.setNegativeIfNeeded(self.a.value) # set negative flag
         self.flagController.setZeroFlagIfNeeded(self.a.value) # set zero flag
 
@@ -1508,7 +1511,7 @@ class CPU:
     def handleInstructionPLP(self):
         self.sp.value = self.sp.value + 1
         stackAddress = self.stack.getAddress() + (self.sp.value)
-        P = self._get_address_int(stackAddress).value
+        P = self._get_address_int(stackAddress, set_address=True).value
         pToSet = P & 0xEF
         self.flagController.setFlagsStatusByte(pToSet)
 
@@ -1517,13 +1520,13 @@ class CPU:
         # Process Status World (flags)
         self.sp.value = self.sp.value + 1
         stackAddress = self.stack.getAddress() + (self.sp.value)
-        P = self._get_address_int(stackAddress).value
+        P = self._get_address_int(stackAddress, set_address=True).value
         pToSet = P & 0xEF
         self.flagController.setFlagsStatusByte(pToSet)
         # PC
         self.sp.value = self.sp.value + 1
         stackAddress = self.stack.getAddress() + (self.sp.value)
-        self.pc = self._get_address_int(stackAddress)
+        self.pc = self._get_address_int(stackAddress, set_address=True)
 
     # Subroutine Instructions
     def handleInstructionJSR(self):
