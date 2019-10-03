@@ -1093,6 +1093,7 @@ class CPU:
         address = self.get_next_byte()
         self.a = self._get_address_str(address)
 
+        self._set_address_str(address, self.a, set_address=True)
         self.flagController.setNegativeIfNeeded(self.a.value) # set negative flag
         self.flagController.setZeroFlagIfNeeded(self.a.value) # set zero flag
 
@@ -1101,6 +1102,7 @@ class CPU:
         address = format((int(byte, 16) + self.x.value), '04x')
         self.a = self._get_address_str(address)
 
+        self._set_address_str(address, self.a, set_address=True)
         self.flagController.setNegativeIfNeeded(self.a.value) # set negative flag
         self.flagController.setZeroFlagIfNeeded(self.a.value) # set zero flag
 
@@ -1111,6 +1113,7 @@ class CPU:
         address = (high_byte + low_byte)
         self.a = self._get_address_str(address)
 
+        self._set_address_str(address, self.a, set_address=True)
         self.flagController.setNegativeIfNeeded(self.a.value) # set negative flag
         self.flagController.setZeroFlagIfNeeded(self.a.value) # set zero flag
 
@@ -1123,6 +1126,7 @@ class CPU:
 
         self.a = self._get_address_str(final_address)
 
+        self._set_address_str(final_address, self.a, set_address=True)
         self.flagController.setNegativeIfNeeded(self.a.value) # set negative flag
         self.flagController.setZeroFlagIfNeeded(self.a.value) # set zero flag
 
@@ -1135,6 +1139,7 @@ class CPU:
 
         self.a = self._get_address_str(final_address)
 
+        self._set_address_str(final_address, self.a, set_address=True)
         self.flagController.setNegativeIfNeeded(self.a.value) # set negative flag
         self.flagController.setZeroFlagIfNeeded(self.a.value) # set zero flag
 
@@ -1149,6 +1154,7 @@ class CPU:
 
         self.a = self._get_address_str(final_address)
 
+        self._set_address_str(final_address, self.a, set_address=True)
         self.flagController.setNegativeIfNeeded(self.a.value) # set negative flag
         self.flagController.setZeroFlagIfNeeded(self.a.value) # set zero flag
 
@@ -1163,6 +1169,7 @@ class CPU:
 
         self.a = self._get_address_int(final_address)
 
+        self._set_address_int(final_address, self.a, set_address=True)
         self.flagController.setNegativeIfNeeded(self.a.value) # set negative flag
         self.flagController.setZeroFlagIfNeeded(self.a.value) # set zero flag
 
@@ -1177,6 +1184,7 @@ class CPU:
         address = self.get_next_byte()
         self.x = self._get_address_str(address)
 
+        self._set_address_str(address, self.x, set_address=True)
         self.flagController.setNegativeIfNeeded(self.x.value) # set negative flag
         self.flagController.setZeroFlagIfNeeded(self.x.value) # set zero flag
 
@@ -1185,6 +1193,7 @@ class CPU:
         address = format((int(byte, 16) + self.y.value), '04x')
         self.x = self._get_address_str(address)
 
+        self._set_address_str(address, self.x, set_address=True)
         self.flagController.setNegativeIfNeeded(self.x.value) # set negative flag
         self.flagController.setZeroFlagIfNeeded(self.x.value) # set zero flag
 
@@ -1195,6 +1204,7 @@ class CPU:
         address = (high_byte + low_byte)
         self.x = self._get_address_str(address)
 
+        self._set_address_str(address, self.x, set_address=True)
         self.flagController.setNegativeIfNeeded(self.x.value) # set negative flag
         self.flagController.setZeroFlagIfNeeded(self.x.value) # set zero flag
 
@@ -1207,6 +1217,7 @@ class CPU:
 
         self.x = self._get_address_str(final_address)
 
+        self._set_address_str(final_address, self.x, set_address=True)
         self.flagController.setNegativeIfNeeded(self.x.value) # set negative flag
         self.flagController.setZeroFlagIfNeeded(self.x.value) # set zero flag
 
@@ -1221,6 +1232,7 @@ class CPU:
         address = self.get_next_byte()
         self.y = self._get_address_str(address)
         
+        self._set_address_str(address, self.y, set_address=True)
         self.flagController.setNegativeIfNeeded(self.y.value) # set negative flag
         self.flagController.setZeroFlagIfNeeded(self.y.value) # set zero flag
 
@@ -1229,6 +1241,7 @@ class CPU:
         address = format((int(byte, 16) + self.x.value), '04x')
         self.y = self._get_address_str(address)
 
+        self._set_address_str(address, self.y, set_address=True)
         self.flagController.setNegativeIfNeeded(self.y.value) # set negative flag
         self.flagController.setZeroFlagIfNeeded(self.y.value) # set zero flag
 
@@ -1239,6 +1252,7 @@ class CPU:
         address = (high_byte + low_byte)
         self.y = self._get_address_str(address)
 
+        self._set_address_str(address, self.y, set_address=True)
         self.flagController.setNegativeIfNeeded(self.y.value) # set negative flag
         self.flagController.setZeroFlagIfNeeded(self.y.value) # set zero flag
 
@@ -1251,6 +1265,7 @@ class CPU:
 
         self.y = self._get_address_str(final_address)
 
+        self._set_address_str(final_address, self.y, set_address=True)
         self.flagController.setNegativeIfNeeded(self.y.value) # set negative flag
         self.flagController.setZeroFlagIfNeeded(self.y.value) # set zero flag
 
