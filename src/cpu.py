@@ -3,6 +3,7 @@ from ctypes import c_uint16, c_uint8
 from memory import Memory
 from flagController import FlagController
 from stack import Stack
+import time
 
 KB = 1024
 
@@ -2195,4 +2196,5 @@ class CPU:
 
             self.log()
             self.address = None
+            time.sleep(0.000000001)
             instruction = self.get_next_byte()
