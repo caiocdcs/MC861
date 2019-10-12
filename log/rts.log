@@ -2,6 +2,11 @@
 | pc = 0xc00a | a = 0x08 | x = 0x00 | y = 0x00 | sp = 0x00fb | p[NV-BDIZC] = 00110100 |
 | pc = 0xc00c | a = 0x08 | x = 0x00 | y = 0x04 | sp = 0x00fb | p[NV-BDIZC] = 00110100 |
 | pc = 0xc006 | a = 0x08 | x = 0x00 | y = 0x04 | sp = 0x00fd | p[NV-BDIZC] = 00110100 |
-| pc = 0xc007 | a = 0x08 | x = 0x00 | y = 0x04 | sp = 0x00fd | p[NV-BDIZC] = 00110100 |
-| pc = 0xc00d | a = 0x08 | x = 0x00 | y = 0x04 | sp = 0x00fd | p[NV-BDIZC] = 00110100 |
-| pc = 0xc00f | a = 0x08 | x = 0x00 | y = 0x16 | sp = 0x00fd | p[NV-BDIZC] = 00110100 |
+Traceback (most recent call last):
+  File "src/main.py", line 17, in <module>
+    main()
+  File "src/main.py", line 13, in main
+    c.run()
+  File "/Users/caio.cesar/workspace/unicamp/MC861/MC861/src/cpu.py", line 1748, in run
+    self.handlers[instruction]()
+KeyError: '04'

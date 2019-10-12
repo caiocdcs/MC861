@@ -34,6 +34,159 @@ class CPU:
 
         self.address = None
 
+        self.handlers = {
+                '0A': self.handleInstructionASLAccumulator,
+                '06': self.handleInstructionASLZeroPage,
+                '16': self.handleInstructionASLZeroPageX,
+                '0E': self.handleInstructionASLAbsolute,
+                '1E': self.handleInstructionASLAbsoluteX,
+                '4A': self.handleInstructionLSRAccumulator,
+                '46': self.handleInstructionLSRZeroPage,
+                '56': self.handleInstructionLSRZeroPageX,
+                '4E': self.handleInstructionLSRAbsolute,
+                '5E': self.handleInstructionLSRAbsoluteX,
+                '2A': self.handleInstructionROLAccumulator,
+                '26': self.handleInstructionROLZeroPage,
+                '36': self.handleInstructionROLZeroPageX,
+                '2E': self.handleInstructionROLAbsolute,
+                '3E': self.handleInstructionROLAbsoluteX,
+                '6A': self.handleInstructionRORAccumulator,
+                '66': self.handleInstructionRORZeroPage,
+                '76': self.handleInstructionRORZeroPageX,
+                '6E': self.handleInstructionRORAbsolute,
+                '7E': self.handleInstructionRORAbsoluteX,
+                '24': self.handleInstructionBITZeroPage,
+                '2C': self.handleInstructionBITAbsolute,
+                'C9': self.handleInstructionCMPImmediate,
+                'C5': self.handleInstructionCMPZeroPage,
+                'D5': self.handleInstructionCMPZeroPageX,
+                'CD': self.handleInstructionCMPAbsolute,
+                'DD': self.handleInstructionCMPAbsoluteX,
+                'D9': self.handleInstructionCMPAbsoluteY,
+                'C1': self.handleInstructionCMPIndirectX,
+                'D1': self.handleInstructionCMPIndirectY,
+                'E0': self.handleInstructionCPXImmediate,
+                'E4': self.handleInstructionCPXZeroPage,
+                'EC': self.handleInstructionCPXAbsolute,
+                'C0': self.handleInstructionCPYImmediate,
+                'C4': self.handleInstructionCPYZeroPage,
+                'CC': self.handleInstructionCPYAbsolute,
+                'A9': self.handleInstructionLDAImmediate,
+                'A5': self.handleInstructionLDAZeroPage,
+                'B5': self.handleInstructionLDAZeroPageX,
+                'AD': self.handleInstructionLDAAbsolute,
+                'BD': self.handleInstructionLDAAbsoluteX,
+                'B9': self.handleInstructionLDAAbsoluteY,
+                'A1': self.handleInstructionLDAIndirectX,
+                'B1': self.handleInstructionLDAIndirectY,
+                'A2': self.handleInstructionLDXImmediate,
+                'A6': self.handleInstructionLDXZeroPage,
+                'B6': self.handleInstructionLDXZeroPageY,
+                'AE': self.handleInstructionLDXAbsolute,
+                'BE': self.handleInstructionLDXAbsoluteY,
+                'A0': self.handleInstructionLDYImmediate,
+                'A4': self.handleInstructionLDYZeroPage,
+                'B4': self.handleInstructionLDYZeroPageX,
+                'AC': self.handleInstructionLDYAbsolute,
+                'BC': self.handleInstructionLDYAbsoluteX,
+                '85': self.handleInstructionSTAZeroPage,
+                '95': self.handleInstructionSTAZeroPageX,
+                '8D': self.handleInstructionSTAAbsolute,
+                '9D': self.handleInstructionSTAAbsoluteX,
+                '99': self.handleInstructionSTAAbsoluteY,
+                '81': self.handleInstructionSTAIndirectX,
+                '91': self.handleInstructionSTAIndirectY,
+                '8E': self.handleInstructionSTXAbsolute,
+                '86': self.handleInstructionSTXZeroPage,
+                '96': self.handleInstructionSTXZeroPageY,
+                '84': self.handleInstructionSTYZeroPage,
+                '94': self.handleInstructionSTYZeroPageX,
+                '8C': self.handleInstructionSTYAbsolute,
+                'E6': self.handleInstructionINCZeroPage,
+                'F6': self.handleInstructionINCZeroPageX,
+                'EE': self.handleInstructionINCAbsolute,
+                'FE': self.handleInstructionINCAbsoluteX,
+                'E8': self.handleInstructionINX,
+                'C8': self.handleInstructionINY,
+                'C6': self.handleInstructionDECZeroPage,
+                'D6': self.handleInstructionDECZeroPageX,
+                'CE': self.handleInstructionDECAbsolute,
+                'DE': self.handleInstructionDECAbsoluteX,
+                'CA': self.handleInstructionDEX,
+                '88': self.handleInstructionDEY,
+                'AA': self.handleInstructionTAX,
+                '8A': self.handleInstructionTXA,
+                'A8': self.handleInstructionTAY,
+                '98': self.handleInstructionTYA,
+                '4C': self.handleInstructionJmpAbsolute,
+                '6C': self.handleInstructionJmpIndirect,
+                '69': self.handleInstructionAdcImmediate,
+                '65': self.handleInstructionAdcZeroPage,
+                '75': self.handleInstructionAdcZeroPageX,
+                '6D': self.handleInstructionAdcAbsolute,
+                '7D': self.handleInstructionAdcAbsoluteX,
+                '79': self.handleInstructionAdcAbsoluteY,
+                '61': self.handleInstructionAdcIndirectX,
+                '71': self.handleInstructionAdcIndirectY,
+                'E9': self.handleInstructionSbcImmediate,
+                'E5': self.handleInstructionSbcZeroPage,
+                'F5': self.handleInstructionSbcZeroPageX,
+                'ED': self.handleInstructionSbcAbsolute,
+                'FD': self.handleInstructionSbcAbsoluteX,
+                'F9': self.handleInstructionSbcAbsoluteY,
+                'E1': self.handleInstructionSbcIndirectX,
+                'F1': self.handleInstructionSbcIndirectY,
+                '29': self.handleInstructionAndImmediate,
+                '25': self.handleInstructionAndZeroPage,
+                '35': self.handleInstructionAndZeroPageX,
+                '2D': self.handleInstructionAndAbsolute,
+                '3D': self.handleInstructionAndAbsoluteX,
+                '39': self.handleInstructionAndAbsoluteY,
+                '21': self.handleInstructionAndIndirectX,
+                '31': self.handleInstructionAndIndirectY,
+                '09': self.handleInstructionORAImmediate,
+                '05': self.handleInstructionORAZeroPage,
+                '15': self.handleInstructionORAZeroPageX,
+                '0D': self.handleInstructionORAAbsolute,
+                '1D': self.handleInstructionORAAbsoluteX,
+                '19': self.handleInstructionORAAbsoluteY,
+                '01': self.handleInstructionORAIndirectX,
+                '11': self.handleInstructionORAIndirectY,
+                '49': self.handleInstructionEORImmediate,
+                '45': self.handleInstructionEORZeroPage,
+                '55': self.handleInstructionEORZeroPageX,
+                '4D': self.handleInstructionEORAbsolute,
+                '5D': self.handleInstructionEORAbsoluteX,
+                '59': self.handleInstructionEORAbsoluteY,
+                '41': self.handleInstructionEORIndirectX,
+                '51': self.handleInstructionEORIndirectY,
+                '18': self.handleInstructionClearCarryFlag,
+                'D8': self.handleInstructionClearDecimalMode,
+                '58': self.handleInstructionClearInterruptDisable,
+                'B8': self.handleInstructionClearOverflowFlag,
+                '38': self.handleInstructionSetCarryFlag,
+                'F8': self.handleInstructionSetDecimalMode,
+                '78': self.handleInstructionSetInterruptDisable,
+                '9A': self.handleInstructionTXS,
+                'BA': self.handleInstructionTSX,
+                '48': self.handleInstructionPHA,
+                '68': self.handleInstructionPLA,
+                '08': self.handleInstructionPHP,
+                '28': self.handleInstructionPLP,
+                '20': self.handleInstructionJSR,
+                '60': self.handleInstructionRTS,
+                '10': self.handleInstructionBPL,
+                '30': self.handleInstructionBMI,
+                '50': self.handleInstructionBVC,
+                '70': self.handleInstructionBVS,
+                '90': self.handleInstructionBCC,
+                'B0': self.handleInstructionBCS,
+                'D0': self.handleInstructionBNE,
+                'F0': self.handleInstructionBEQ,
+                '40': self.handleInstructionRTI,
+                'EA': self.handleInstructionNoOp
+            }
+
     def _read_header(self):
         self.prg_rom_size = int(self._get_byte_from_code_position(int('8', 16)))
         self.chr_rom_size = int(self._get_byte_from_code_position(int('9', 16)))
@@ -1578,623 +1731,19 @@ class CPU:
 
         address = (low_byte + high_byte)
         self.pc.value = int(address, 16) + 1
-        
+
+    def handleInstructionNoOp(self):
+        pass
 
     def run(self):
         instruction = self.get_next_byte()
 
         while instruction:
-
-            # ASL Accumulator
-            if instruction == '0A':
-                self.handleInstructionASLAccumulator()
-
-            # ASL Zero Page
-            if instruction == '06':
-                self.handleInstructionASLZeroPage()
-
-            # ASL Zero Page X
-            if instruction == '16':
-                self.handleInstructionASLZeroPageX()
-
-            # ASL Absolute
-            if instruction == '0E':
-                self.handleInstructionASLAbsolute()
-
-            # ASL Absolute X
-            if instruction == '1E':
-                self.handleInstructionASLAbsoluteX()
-
-            # LSR Accumulator
-            if instruction == '4A':
-                self.handleInstructionLSRAccumulator()
-
-            # LSR Zero Page
-            if instruction == '46':
-                self.handleInstructionLSRZeroPage()
-
-            # LSR Zero Page X
-            if instruction == '56':
-                self.handleInstructionLSRZeroPageX()
-
-            # LSR Absolute
-            if instruction == '4E':
-                self.handleInstructionLSRAbsolute()
-
-            # LSR Absolute X
-            if instruction == '5E':
-                self.handleInstructionLSRAbsoluteX()
-
-            # ROL Accumulator
-            if instruction == '2A':
-                self.handleInstructionROLAccumulator()
-
-            # ROL Zero Page
-            if instruction == '26':
-                self.handleInstructionROLZeroPage()
-
-            # ROL Zero Page X
-            if instruction == '36':
-                self.handleInstructionROLZeroPageX()
-
-            # ROL Absolute
-            if instruction == '2E':
-                self.handleInstructionROLAbsolute()
-
-            # ROL Absolute X
-            if instruction == '3E':
-                self.handleInstructionROLAbsoluteX()
-
-            # ROR Accumulator
-            if instruction == '6A':
-                self.handleInstructionRORAccumulator()
-
-            # ROR Zero Page
-            if instruction == '66':
-                self.handleInstructionRORZeroPage()
-
-            # ROR Zero Page X
-            if instruction == '76':
-                self.handleInstructionRORZeroPageX()
-
-            # ROR Absolute
-            if instruction == '6E':
-                self.handleInstructionRORAbsolute()
-
-            # ROR Absolute X
-            if instruction == '7E':
-                self.handleInstructionRORAbsoluteX()
-
-            # BIT Zero Page
-            if instruction == '24':
-                self.handleInstructionBITZeroPage()
-
-            # BIT Absolute
-            if instruction == '2C':
-                self.handleInstructionBITAbsolute()
-
-            # CMP Immediate
-            elif instruction == 'C9':
-                self.handleInstructionCMPImmediate()
-
-            # CMP Zero Page
-            elif instruction == 'C5':
-                self.handleInstructionCMPZeroPage()
-
-            # CMP Zero Page X
-            elif instruction == 'D5':
-                self.handleInstructionCMPZeroPageX()
-
-            # CMP Absolute
-            elif instruction == 'CD':
-                self.handleInstructionCMPAbsolute()
-
-            # CMP Absolute X
-            elif instruction == 'DD':
-                self.handleInstructionCMPAbsoluteX()
-
-            # CMP Absolute Y
-            elif instruction == 'D9':
-                self.handleInstructionCMPAbsoluteY()
-
-            # CMP Indirect X
-            elif instruction == 'C1':
-                self.handleInstructionCMPIndirectX()
-
-            # CMP Indirect Y
-            elif instruction == 'D1':
-                self.handleInstructionCMPIndirectY()
-
-            # CPX Immediate
-            elif instruction == 'E0':
-                self.handleInstructionCPXImmediate()
-
-            # CPX Zero Page
-            elif instruction == 'E4':
-                self.handleInstructionCPXZeroPage()
-
-            # CPX Absolute
-            elif instruction == 'EC':
-                self.handleInstructionCPXAbsolute()
-
-            # CPY Immediate
-            elif instruction == 'C0':
-                self.handleInstructionCPYImmediate()
-
-            # CPY Zero Page
-            elif instruction == 'C4':
-                self.handleInstructionCPYZeroPage()
-
-            # CPY Absolute
-            elif instruction == 'CC':
-                self.handleInstructionCPYAbsolute()
-
-            # LDA Immediate
-            if instruction == 'A9':
-                self.handleInstructionLDAImmediate()
-
-            # LDA Zero Page
-            if instruction == 'A5':
-                self.handleInstructionLDAZeroPage()
-
-            # LDA Zero Page X
-            if instruction == 'B5':
-                self.handleInstructionLDAZeroPageX()
-
-            # LDA Absolute
-            if instruction == 'AD':
-                self.handleInstructionLDAAbsolute()
-
-            # LDA Absolute X
-            if instruction == 'BD':
-                self.handleInstructionLDAAbsoluteX()
-
-            # LDA Absolute Y
-            if instruction == 'B9':
-                self.handleInstructionLDAAbsoluteY()
-
-            # LDA Indirect X
-            if instruction == 'A1':
-                self.handleInstructionLDAIndirectX()
-
-            # LDA Indirect Y
-            if instruction == 'B1':
-                self.handleInstructionLDAIndirectY()
-
-            # LDX Immediate
-            elif instruction == 'A2':
-                self.handleInstructionLDXImmediate()
-
-            # LDX Zero page
-            elif instruction == 'A6':
-                self.handleInstructionLDXZeroPage()
-                
-            # LDX Zero page Y
-            elif instruction == 'B6':
-                self.handleInstructionLDXZeroPageY()
-
-            # LDX Absolute
-            elif instruction == 'AE':
-                self.handleInstructionLDXAbsolute()
-
-            # LDX Absolute Y
-            elif instruction == 'BE':
-                self.handleInstructionLDXAbsoluteY()
-
-            # LDY Immediate
-            elif instruction == 'A0':
-                self.handleInstructionLDYImmediate()
-
-            # LDY Zero page
-            elif instruction == 'A4':
-                self.handleInstructionLDYZeroPage()
-
-            # LDY Zero page X
-            elif instruction == 'B4':
-                self.handleInstructionLDYZeroPageX()
-
-            # LDY Absolute
-            elif instruction == 'AC':
-                self.handleInstructionLDYAbsolute()
-
-            # LDY Absolute X
-            elif instruction == 'BC':
-                self.handleInstructionLDYAbsoluteX()
-
-            # STA Zero page
-            elif instruction == '85':
-                self.handleInstructionSTAZeroPage()
-
-            # STA Zero page X
-            elif instruction == '95':
-                self.handleInstructionSTAZeroPageX()
-
-            # STA Absolute
-            elif instruction == '8D':
-                self.handleInstructionSTAAbsolute()
-
-            # STA Absolute X
-            elif instruction == '9D':
-                self.handleInstructionSTAAbsoluteX()
-
-            # STA Absolute Y
-            elif instruction == '99':
-                self.handleInstructionSTAAbsoluteY()
-
-            # STA Indirect X
-            elif instruction == '81':
-                self.handleInstructionSTAIndirectX()
-
-            # STA Indirect Y
-            elif instruction == '91':
-                self.handleInstructionSTAIndirectY()
-
-            # STX Absolute
-            elif instruction == '8E':
-                self.handleInstructionSTXAbsolute()
-
-            # STX Zero page
-            elif instruction == '86':
-                self.handleInstructionSTXZeroPage()
-
-            # STX Zero page Y
-            elif instruction == '96':
-                self.handleInstructionSTXZeroPageY()
-
-            # STX Absolute
-            elif instruction == '8E':
-                self.handleInstructionSTXAbsolute()
-
-            # STY Zero page
-            elif instruction == '84':
-                self.handleInstructionSTYZeroPage()
-
-            # STY Zero page X
-            elif instruction == '94':
-                self.handleInstructionSTYZeroPageX()
-
-            # STY Absolute
-            elif instruction == '8C':
-                self.handleInstructionSTYAbsolute()
-
-            # INC Zero page
-            elif instruction == 'E6':
-                self.handleInstructionINCZeroPage()
-            
-            # INC Zero page X
-            elif instruction == 'F6':
-                self.handleInstructionINCZeroPageX()
-
-            # INC Absolut
-            elif instruction == 'EE':
-                self.handleInstructionINCAbsolute()
-
-            # INC Absolute X
-            elif instruction == 'FE':
-                self.handleInstructionINCAbsoluteX()
-                
-            # INX
-            elif instruction == 'E8':
-                self.handleInstructionINX()
-            
-            # INY
-            elif instruction == 'C8':
-                self.handleInstructionINY()
-
-            # DEC Zero page
-            elif instruction == 'C6':
-                self.handleInstructionDECZeroPage()
-            
-            # DEC Zero page X
-            elif instruction == 'D6':
-                self.handleInstructionDECZeroPageX()
-
-            # DEC Absolute
-            elif instruction == 'CE':
-                self.handleInstructionDECAbsolute()
-
-            # DEC Absolute X
-            elif instruction == 'DE':
-                self.handleInstructionDECAbsoluteX()
-
-            # DEX
-            elif instruction == 'CA':
-                self.handleInstructionDEX()
-            
-            # DEY
-            elif instruction == '88':
-                self.handleInstructionDEY()
-
-            # TAX
-            elif instruction == 'AA':
-                self.handleInstructionTAX()
-
-            # TXA
-            elif instruction == '8A':
-                self.handleInstructionTXA()
-
-            # TAY
-            elif instruction == 'A8':
-                self.handleInstructionTAY()
-
-            # TYA
-            elif instruction == '98':
-                self.handleInstructionTYA()
-
-            # NOP ( No operation )
-            elif instruction == 'EA':
-                pass
-
-            # BRK ( start NMI operation )  
-            elif instruction == '00':
+            # BRK
+            if instruction == '00':
                 break
 
-            # JMP Absolute
-            elif instruction == '4C':
-                self.handleInstructionJmpAbsolute()
-        
-            # JMP Indirect
-            elif instruction == '6C':
-                self.handleInstructionJmpIndirect()
-
-            # ADC Immediate
-            elif instruction == '69':
-                self.handleInstructionAdcImmediate()
-
-            # ADC Zero Page
-            elif instruction == '65':
-                self.handleInstructionAdcZeroPage()
-
-            # ADC Zero Page X
-            elif instruction == '75':
-                self.handleInstructionAdcZeroPageX()
-
-            # ADC Absolute
-            elif instruction == '6D':
-                self.handleInstructionAdcAbsolute()
-
-            # ADC Absolute X
-            elif instruction == '7D':
-                self.handleInstructionAdcAbsoluteX()
-
-            # ADC Absolute Y
-            elif instruction == '79':
-                self.handleInstructionAdcAbsoluteY()
-
-            # ADC Indirect X
-            elif instruction == '61':
-                self.handleInstructionAdcIndirectX()
-
-            # ADC Indirect Y
-            elif instruction == '71':
-                self.handleInstructionAdcIndirectY()
-
-            # SBC Immediate
-            elif instruction == 'E9':
-                self.handleInstructionSbcImmediate()
-
-            # SBC Zero Page
-            elif instruction == 'E5':
-                self.handleInstructionSbcZeroPage()
-
-            # SBC Zero Page X
-            elif instruction == 'F5':
-                self.handleInstructionSbcZeroPageX()
-
-            # SBC Absolute
-            elif instruction == 'ED':
-                self.handleInstructionSbcAbsolute()
-
-            # SBC Absolute X
-            elif instruction == 'FD':
-                self.handleInstructionSbcAbsoluteX()
-
-            # SBC Absolute Y
-            elif instruction == 'F9':
-                self.handleInstructionSbcAbsoluteY()
-
-            # SBC Indirect X
-            elif instruction == 'E1':
-                self.handleInstructionSbcIndirectX()
-
-            # SBC Indirect Y
-            elif instruction == 'F1':
-                self.handleInstructionSbcIndirectY()
-
-            # AND Immediante
-            elif instruction == '29':
-                self.handleInstructionAndImmediate()
-
-            # AND Zero Page
-            elif instruction == '25':
-                self.handleInstructionAndZeroPage()
-
-            # AND Zero Page X
-            elif instruction == '35':
-                self.handleInstructionAndZeroPageX()
-
-            # AND Absolute
-            elif instruction == '2D':
-                self.handleInstructionAndAbsolute()
-
-            # AND Absolute X
-            elif instruction == '3D':
-                self.handleInstructionAndAbsoluteX()
-
-            # AND Absolute Y
-            elif instruction == '39':
-                self.handleInstructionAndAbsoluteY()
-
-            # AND Indirect X
-            elif instruction == '21':
-                self.handleInstructionAndIndirectX()
-
-            # AND Indirect Y
-            elif instruction == '31':
-                self.handleInstructionAndIndirectY()
-
-            # ORA Inclusive Or Immediate
-            elif instruction == '09':
-                self.handleInstructionORAImmediate()
-
-            # ORA Inclusive Or Zero Page
-            elif instruction == '05':
-                self.handleInstructionORAZeroPage()
-
-            # ORA Inclusive Or Zero Page X
-            elif instruction == '15':
-                self.handleInstructionORAZeroPageX()
-
-            # ORA Inclusive Or Absolute
-            elif instruction == '0D':
-                self.handleInstructionORAAbsolute()
-
-            # ORA Inclusive Or Absolute
-            elif instruction == '1D':
-                self.handleInstructionORAAbsoluteX()
-
-            # ORA Inclusive Or Absolute
-            elif instruction == '19':
-                self.handleInstructionORAAbsoluteY()
-            
-            # ORA Inclusive Or Indirect X
-            elif instruction == '01':
-                self.handleInstructionORAIndirectX()
-
-            # ORA Inclusive Or Indirect Y
-            elif instruction == '11':
-                self.handleInstructionORAIndirectY()
-
-            # EOR Exclusive Or Immediate
-            elif instruction == '49':
-                self.handleInstructionEORImmediate()
-
-            # EOR Exclusive Or Zero Page
-            elif instruction == '45':
-                self.handleInstructionEORZeroPage()
-
-            # EOR Exclusive Or Zero Page X
-            elif instruction == '55':
-                self.handleInstructionEORZeroPageX()
-
-            # EOR Exclusive Or Absolute
-            elif instruction == '4D':
-                self.handleInstructionEORAbsolute()
-
-            # EOR Exclusive Or Absolute X
-            elif instruction == '5D':
-                self.handleInstructionEORAbsoluteX()
-
-            # EOR Exclusive Or Absolute Y
-            elif instruction == '59':
-                self.handleInstructionEORAbsoluteY()
-
-            # EOR Exclusive Or Indirect X
-            elif instruction == '41':
-                self.handleInstructionEORIndirectX()
-
-            # EOR Exclusive Or Indirect Y
-            elif instruction == '51':
-                self.handleInstructionEORIndirectY()
-
-            # CLC Clear Carry Flag
-            elif instruction == '18':
-                self.handleInstructionClearCarryFlag()
-
-            # CLD Clear Decimal Mode
-            elif instruction == 'D8':
-                self.handleInstructionClearDecimalMode()
-
-            # CLI Clear Interrupt Disable
-            elif instruction == '58':
-                self.handleInstructionClearInterruptDisable()
-
-            # CLV Clear Overflow Flag
-            elif instruction == 'B8':
-                self.handleInstructionClearOverflowFlag()
-
-            # SEC Set Carry Flag
-            elif instruction == '38':
-                self.handleInstructionSetCarryFlag()
-
-            # SED Set Decimal Flag
-            elif instruction == 'F8':
-                self.handleInstructionSetDecimalMode()
-            
-            # SEI Set Interrupt Disable
-            elif instruction == '78':
-                self.handleInstructionSetInterruptDisable()
-
-            # Stack instructions
-
-            # TXS Transfer X to Stack pointer
-            elif instruction == '9A':
-                self.handleInstructionTXS()
-
-            # TSX Transfer Stack pointer to X
-            elif instruction == 'BA':
-                self.handleInstructionTSX()
-
-            # PHA Push Accumulator
-            elif instruction == '48':
-                self.handleInstructionPHA()
-
-            # PLA Pull Accumulator
-            elif instruction == '68':
-                self.handleInstructionPLA()
-
-            # PHP Push Processor status
-            elif instruction == '08':
-                self.handleInstructionPHP()
-
-            # PLP Pull Processor status
-            elif instruction == '28':
-                self.handleInstructionPLP()
-
-            # JSR
-            elif instruction == '20':
-                self.handleInstructionJSR()
-
-            # RTS
-            elif instruction == '60':
-                self.handleInstructionRTS()
-
-            # BPL
-            elif instruction == '10':
-                self.handleInstructionBPL()
-
-            # BMI
-            elif instruction == '30':
-                self.handleInstructionBMI()
-
-            # BVC
-            elif instruction == '50':
-                self.handleInstructionBVC()
-
-            # BVS
-            elif instruction == '70':
-                self.handleInstructionBVS()
-
-            # BCC
-            elif instruction == '90':
-                self.handleInstructionBCC()
-
-            # BCS
-            elif instruction == 'B0':
-                self.handleInstructionBCS()
-
-            # BNE
-            elif instruction == 'D0':
-                self.handleInstructionBNE()
-
-            # BEQ
-            elif instruction == 'F0':
-                self.handleInstructionBEQ()
-            # RTI
-            elif instruction == '40':
-                self.handleInstructionRTI()
-
+            self.handlers[instruction]()
             self.log()
             self.address = None
-            time.sleep(0.000000001)
             instruction = self.get_next_byte()
