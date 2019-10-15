@@ -1,6 +1,7 @@
 import sys
+import pyglet
 from cpu import CPU
-
+from window import Window
 
 def main():
 
@@ -9,6 +10,8 @@ def main():
 		print ("Provide a .nes file\n")
 		return
 
+	window = Window()
+	pyglet.app.run()
 	c = CPU(sys.argv[1])
 	c.run()
 
