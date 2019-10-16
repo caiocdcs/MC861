@@ -34,157 +34,159 @@ class CPU:
 
         self.address = None
 
+        self.cycles = 0
+
         self.handlers = {
-                '0A': self.handleInstructionASLAccumulator,
-                '06': self.handleInstructionASLZeroPage,
-                '16': self.handleInstructionASLZeroPageX,
-                '0E': self.handleInstructionASLAbsolute,
-                '1E': self.handleInstructionASLAbsoluteX,
-                '4A': self.handleInstructionLSRAccumulator,
-                '46': self.handleInstructionLSRZeroPage,
-                '56': self.handleInstructionLSRZeroPageX,
-                '4E': self.handleInstructionLSRAbsolute,
-                '5E': self.handleInstructionLSRAbsoluteX,
-                '2A': self.handleInstructionROLAccumulator,
-                '26': self.handleInstructionROLZeroPage,
-                '36': self.handleInstructionROLZeroPageX,
-                '2E': self.handleInstructionROLAbsolute,
-                '3E': self.handleInstructionROLAbsoluteX,
-                '6A': self.handleInstructionRORAccumulator,
-                '66': self.handleInstructionRORZeroPage,
-                '76': self.handleInstructionRORZeroPageX,
-                '6E': self.handleInstructionRORAbsolute,
-                '7E': self.handleInstructionRORAbsoluteX,
-                '24': self.handleInstructionBITZeroPage,
-                '2C': self.handleInstructionBITAbsolute,
-                'C9': self.handleInstructionCMPImmediate,
-                'C5': self.handleInstructionCMPZeroPage,
-                'D5': self.handleInstructionCMPZeroPageX,
-                'CD': self.handleInstructionCMPAbsolute,
-                'DD': self.handleInstructionCMPAbsoluteX,
-                'D9': self.handleInstructionCMPAbsoluteY,
-                'C1': self.handleInstructionCMPIndirectX,
-                'D1': self.handleInstructionCMPIndirectY,
-                'E0': self.handleInstructionCPXImmediate,
-                'E4': self.handleInstructionCPXZeroPage,
-                'EC': self.handleInstructionCPXAbsolute,
-                'C0': self.handleInstructionCPYImmediate,
-                'C4': self.handleInstructionCPYZeroPage,
-                'CC': self.handleInstructionCPYAbsolute,
-                'A9': self.handleInstructionLDAImmediate,
-                'A5': self.handleInstructionLDAZeroPage,
-                'B5': self.handleInstructionLDAZeroPageX,
-                'AD': self.handleInstructionLDAAbsolute,
-                'BD': self.handleInstructionLDAAbsoluteX,
-                'B9': self.handleInstructionLDAAbsoluteY,
-                'A1': self.handleInstructionLDAIndirectX,
-                'B1': self.handleInstructionLDAIndirectY,
-                'A2': self.handleInstructionLDXImmediate,
-                'A6': self.handleInstructionLDXZeroPage,
-                'B6': self.handleInstructionLDXZeroPageY,
-                'AE': self.handleInstructionLDXAbsolute,
-                'BE': self.handleInstructionLDXAbsoluteY,
-                'A0': self.handleInstructionLDYImmediate,
-                'A4': self.handleInstructionLDYZeroPage,
-                'B4': self.handleInstructionLDYZeroPageX,
-                'AC': self.handleInstructionLDYAbsolute,
-                'BC': self.handleInstructionLDYAbsoluteX,
-                '85': self.handleInstructionSTAZeroPage,
-                '95': self.handleInstructionSTAZeroPageX,
-                '8D': self.handleInstructionSTAAbsolute,
-                '9D': self.handleInstructionSTAAbsoluteX,
-                '99': self.handleInstructionSTAAbsoluteY,
-                '81': self.handleInstructionSTAIndirectX,
-                '91': self.handleInstructionSTAIndirectY,
-                '8E': self.handleInstructionSTXAbsolute,
-                '86': self.handleInstructionSTXZeroPage,
-                '96': self.handleInstructionSTXZeroPageY,
-                '84': self.handleInstructionSTYZeroPage,
-                '94': self.handleInstructionSTYZeroPageX,
-                '8C': self.handleInstructionSTYAbsolute,
-                'E6': self.handleInstructionINCZeroPage,
-                'F6': self.handleInstructionINCZeroPageX,
-                'EE': self.handleInstructionINCAbsolute,
-                'FE': self.handleInstructionINCAbsoluteX,
-                'E8': self.handleInstructionINX,
-                'C8': self.handleInstructionINY,
-                'C6': self.handleInstructionDECZeroPage,
-                'D6': self.handleInstructionDECZeroPageX,
-                'CE': self.handleInstructionDECAbsolute,
-                'DE': self.handleInstructionDECAbsoluteX,
-                'CA': self.handleInstructionDEX,
-                '88': self.handleInstructionDEY,
-                'AA': self.handleInstructionTAX,
-                '8A': self.handleInstructionTXA,
-                'A8': self.handleInstructionTAY,
-                '98': self.handleInstructionTYA,
-                '4C': self.handleInstructionJmpAbsolute,
-                '6C': self.handleInstructionJmpIndirect,
-                '69': self.handleInstructionAdcImmediate,
-                '65': self.handleInstructionAdcZeroPage,
-                '75': self.handleInstructionAdcZeroPageX,
-                '6D': self.handleInstructionAdcAbsolute,
-                '7D': self.handleInstructionAdcAbsoluteX,
-                '79': self.handleInstructionAdcAbsoluteY,
-                '61': self.handleInstructionAdcIndirectX,
-                '71': self.handleInstructionAdcIndirectY,
-                'E9': self.handleInstructionSbcImmediate,
-                'E5': self.handleInstructionSbcZeroPage,
-                'F5': self.handleInstructionSbcZeroPageX,
-                'ED': self.handleInstructionSbcAbsolute,
-                'FD': self.handleInstructionSbcAbsoluteX,
-                'F9': self.handleInstructionSbcAbsoluteY,
-                'E1': self.handleInstructionSbcIndirectX,
-                'F1': self.handleInstructionSbcIndirectY,
-                '29': self.handleInstructionAndImmediate,
-                '25': self.handleInstructionAndZeroPage,
-                '35': self.handleInstructionAndZeroPageX,
-                '2D': self.handleInstructionAndAbsolute,
-                '3D': self.handleInstructionAndAbsoluteX,
-                '39': self.handleInstructionAndAbsoluteY,
-                '21': self.handleInstructionAndIndirectX,
-                '31': self.handleInstructionAndIndirectY,
-                '09': self.handleInstructionORAImmediate,
-                '05': self.handleInstructionORAZeroPage,
-                '15': self.handleInstructionORAZeroPageX,
-                '0D': self.handleInstructionORAAbsolute,
-                '1D': self.handleInstructionORAAbsoluteX,
-                '19': self.handleInstructionORAAbsoluteY,
-                '01': self.handleInstructionORAIndirectX,
-                '11': self.handleInstructionORAIndirectY,
-                '49': self.handleInstructionEORImmediate,
-                '45': self.handleInstructionEORZeroPage,
-                '55': self.handleInstructionEORZeroPageX,
-                '4D': self.handleInstructionEORAbsolute,
-                '5D': self.handleInstructionEORAbsoluteX,
-                '59': self.handleInstructionEORAbsoluteY,
-                '41': self.handleInstructionEORIndirectX,
-                '51': self.handleInstructionEORIndirectY,
-                '18': self.handleInstructionClearCarryFlag,
-                'D8': self.handleInstructionClearDecimalMode,
-                '58': self.handleInstructionClearInterruptDisable,
-                'B8': self.handleInstructionClearOverflowFlag,
-                '38': self.handleInstructionSetCarryFlag,
-                'F8': self.handleInstructionSetDecimalMode,
-                '78': self.handleInstructionSetInterruptDisable,
-                '9A': self.handleInstructionTXS,
-                'BA': self.handleInstructionTSX,
-                '48': self.handleInstructionPHA,
-                '68': self.handleInstructionPLA,
-                '08': self.handleInstructionPHP,
-                '28': self.handleInstructionPLP,
-                '20': self.handleInstructionJSR,
-                '60': self.handleInstructionRTS,
-                '10': self.handleInstructionBPL,
-                '30': self.handleInstructionBMI,
-                '50': self.handleInstructionBVC,
-                '70': self.handleInstructionBVS,
-                '90': self.handleInstructionBCC,
-                'B0': self.handleInstructionBCS,
-                'D0': self.handleInstructionBNE,
-                'F0': self.handleInstructionBEQ,
-                '40': self.handleInstructionRTI,
-                'EA': self.handleInstructionNoOp
+                '0A': (self.handleInstructionASLAccumulator, 2),
+               '06': (self.handleInstructionASLZeroPage, 5),
+               '16': (self.handleInstructionASLZeroPageX, 6),
+               '0E': (self.handleInstructionASLAbsolute,6),
+               '1E': (self.handleInstructionASLAbsoluteX,7),
+               '4A': (self.handleInstructionLSRAccumulator,2),
+               '46': (self.handleInstructionLSRZeroPage,5),
+               '56': (self.handleInstructionLSRZeroPageX,6),
+               '4E': (self.handleInstructionLSRAbsolute,6),
+               '5E': (self.handleInstructionLSRAbsoluteX,7),
+               '2A': (self.handleInstructionROLAccumulator,2),
+               '26': (self.handleInstructionROLZeroPage,5),
+               '36': (self.handleInstructionROLZeroPageX,6),
+               '2E': (self.handleInstructionROLAbsolute,6),
+               '3E': (self.handleInstructionROLAbsoluteX,7),
+               '6A': (self.handleInstructionRORAccumulator,2),
+               '66': (self.handleInstructionRORZeroPage,5),
+               '76': (self.handleInstructionRORZeroPageX,6),
+               '6E': (self.handleInstructionRORAbsolute,6),
+               '7E': (self.handleInstructionRORAbsoluteX,7),
+               '24': (self.handleInstructionBITZeroPage,3),
+               '2C': (self.handleInstructionBITAbsolute,4),
+               'C9': (self.handleInstructionCMPImmediate,2),
+               'C5': (self.handleInstructionCMPZeroPage,3),
+               'D5': (self.handleInstructionCMPZeroPageX,4),
+               'CD': (self.handleInstructionCMPAbsolute,4),
+               'DD': (self.handleInstructionCMPAbsoluteX,4),
+               'D9': (self.handleInstructionCMPAbsoluteY,4),
+               'C1': (self.handleInstructionCMPIndirectX,6),
+               'D1': (self.handleInstructionCMPIndirectY,5),
+               'E0': (self.handleInstructionCPXImmediate,2),
+               'E4': (self.handleInstructionCPXZeroPage,3),
+               'EC': (self.handleInstructionCPXAbsolute,4),
+               'C0': (self.handleInstructionCPYImmediate,2),
+               'C4': (self.handleInstructionCPYZeroPage,3),
+               'CC': (self.handleInstructionCPYAbsolute,4),
+               'A9': (self.handleInstructionLDAImmediate,2),
+               'A5': (self.handleInstructionLDAZeroPage,3),
+               'B5': (self.handleInstructionLDAZeroPageX,4),
+               'AD': (self.handleInstructionLDAAbsolute,4),
+               'BD': (self.handleInstructionLDAAbsoluteX,4),
+               'B9': (self.handleInstructionLDAAbsoluteY,4),
+               'A1': (self.handleInstructionLDAIndirectX,6),
+               'B1': (self.handleInstructionLDAIndirectY,5),
+               'A2': (self.handleInstructionLDXImmediate,2),
+               'A6': (self.handleInstructionLDXZeroPage,3),
+               'B6': (self.handleInstructionLDXZeroPageY,4),
+               'AE': (self.handleInstructionLDXAbsolute,4),
+               'BE': (self.handleInstructionLDXAbsoluteY,4),
+               'A0': (self.handleInstructionLDYImmediate,2),
+               'A4': (self.handleInstructionLDYZeroPage,3),
+               'B4': (self.handleInstructionLDYZeroPageX,4),
+               'AC': (self.handleInstructionLDYAbsolute,4),
+               'BC': (self.handleInstructionLDYAbsoluteX,4),
+               '85': (self.handleInstructionSTAZeroPage,3),
+               '95': (self.handleInstructionSTAZeroPageX,4),
+               '8D': (self.handleInstructionSTAAbsolute,4),
+               '9D': (self.handleInstructionSTAAbsoluteX,5),
+               '99': (self.handleInstructionSTAAbsoluteY,5),
+               '81': (self.handleInstructionSTAIndirectX,6),
+               '91': (self.handleInstructionSTAIndirectY,6),
+               '8E': (self.handleInstructionSTXAbsolute,3),
+               '86': (self.handleInstructionSTXZeroPage,4),
+               '96': (self.handleInstructionSTXZeroPageY,4),
+               '84': (self.handleInstructionSTYZeroPage,3),
+               '94': (self.handleInstructionSTYZeroPageX,4),
+               '8C': (self.handleInstructionSTYAbsolute,4),
+               'E6': (self.handleInstructionINCZeroPage,5),
+               'F6': (self.handleInstructionINCZeroPageX,6),
+               'EE': (self.handleInstructionINCAbsolute,6),
+               'FE': (self.handleInstructionINCAbsoluteX,7),
+               'E8': (self.handleInstructionINX,2),
+               'C8': (self.handleInstructionINY,2),
+               'C6': (self.handleInstructionDECZeroPage,5),
+               'D6': (self.handleInstructionDECZeroPageX,6),
+               'CE': (self.handleInstructionDECAbsolute,6),
+               'DE': (self.handleInstructionDECAbsoluteX,7),
+               'CA': (self.handleInstructionDEX,2),
+               '88': (self.handleInstructionDEY,2),
+               'AA': (self.handleInstructionTAX,2),
+               '8A': (self.handleInstructionTXA,2),
+               'A8': (self.handleInstructionTAY,2),
+               '98': (self.handleInstructionTYA,2),
+               '4C': (self.handleInstructionJmpAbsolute,3),
+               '6C': (self.handleInstructionJmpIndirect,5),
+               '69': (self.handleInstructionAdcImmediate,2),
+               '65': (self.handleInstructionAdcZeroPage,3),
+               '75': (self.handleInstructionAdcZeroPageX,4),
+               '6D': (self.handleInstructionAdcAbsolute,4),
+               '7D': (self.handleInstructionAdcAbsoluteX,4),
+               '79': (self.handleInstructionAdcAbsoluteY,4),
+               '61': (self.handleInstructionAdcIndirectX,6),
+               '71': (self.handleInstructionAdcIndirectY,5),
+               'E9': (self.handleInstructionSbcImmediate,2),
+               'E5': (self.handleInstructionSbcZeroPage,3),
+               'F5': (self.handleInstructionSbcZeroPageX,4),
+               'ED': (self.handleInstructionSbcAbsolute,4),
+               'FD': (self.handleInstructionSbcAbsoluteX,4),
+               'F9': (self.handleInstructionSbcAbsoluteY,4),
+               'E1': (self.handleInstructionSbcIndirectX,6),
+               'F1': (self.handleInstructionSbcIndirectY,5),
+               '29': (self.handleInstructionAndImmediate,2),
+               '25': (self.handleInstructionAndZeroPage,3),
+               '35': (self.handleInstructionAndZeroPageX,4),
+               '2D': (self.handleInstructionAndAbsolute,4),
+               '3D': (self.handleInstructionAndAbsoluteX,4),
+               '39': (self.handleInstructionAndAbsoluteY,4),
+               '21': (self.handleInstructionAndIndirectX,6),
+               '31': (self.handleInstructionAndIndirectY,5),
+               '09': (self.handleInstructionORAImmediate,2),
+               '05': (self.handleInstructionORAZeroPage,3),
+               '15': (self.handleInstructionORAZeroPageX,4),
+               '0D': (self.handleInstructionORAAbsolute,4),
+               '1D': (self.handleInstructionORAAbsoluteX,4),
+               '19': (self.handleInstructionORAAbsoluteY,4),
+               '01': (self.handleInstructionORAIndirectX,6),
+               '11': (self.handleInstructionORAIndirectY,5),
+               '49': (self.handleInstructionEORImmediate,2),
+               '45': (self.handleInstructionEORZeroPage,3),
+               '55': (self.handleInstructionEORZeroPageX,4),
+               '4D': (self.handleInstructionEORAbsolute,4),
+               '5D': (self.handleInstructionEORAbsoluteX,4),
+               '59': (self.handleInstructionEORAbsoluteY,4),
+               '41': (self.handleInstructionEORIndirectX,6),
+               '51': (self.handleInstructionEORIndirectY,5),
+               '18': (self.handleInstructionClearCarryFlag,2),
+               'D8': (self.handleInstructionClearDecimalMode,2),
+               '58': (self.handleInstructionClearInterruptDisable,2),
+               'B8': (self.handleInstructionClearOverflowFlag,2),
+               '38': (self.handleInstructionSetCarryFlag,2),
+               'F8': (self.handleInstructionSetDecimalMode,2),
+               '78': (self.handleInstructionSetInterruptDisable,2),
+               '9A': (self.handleInstructionTXS,2),
+               'BA': (self.handleInstructionTSX,2),
+               '48': (self.handleInstructionPHA,3),
+               '68': (self.handleInstructionPLA,4),
+               '08': (self.handleInstructionPHP,3),
+               '28': (self.handleInstructionPLP,4),
+               '20': (self.handleInstructionJSR,6),
+               '60': (self.handleInstructionRTS,6),
+               '10': (self.handleInstructionBPL,2),
+               '30': (self.handleInstructionBMI,2),
+               '50': (self.handleInstructionBVC,2),
+               '70': (self.handleInstructionBVS,2),
+               '90': (self.handleInstructionBCC,2),
+               'B0': (self.handleInstructionBCS,2),
+               'D0': (self.handleInstructionBNE,2),
+               'F0': (self.handleInstructionBEQ,2),
+               '40': (self.handleInstructionRTI,1),
+               'EA': (self.handleInstructionNoOp,2)
             }
 
     def _read_header(self):
@@ -222,7 +224,7 @@ class CPU:
         p = self.flagController.getFlagsStatusByte()
         if self.address:
             logls(self.a.value, self.x.value, self.y.value, self.sp.value, self.pc.value, p, self.address,
-                  self._get_address_str(self.address).value)
+                self._get_address_str(self.address).value)
         else:
             log(self.a.value, self.x.value, self.y.value, self.sp.value, self.pc.value, p)
 
@@ -1553,6 +1555,7 @@ class CPU:
             else:
                 address = byte
             
+            self.cycles += 1
             self.pc.value = self.pc.value + address
 
     def handleInstructionBMI(self):
@@ -1563,6 +1566,7 @@ class CPU:
             else:
                 address = byte
             
+            self.cycles += 1
             self.pc.value = self.pc.value + address
 
     def handleInstructionBVC(self):
@@ -1573,6 +1577,7 @@ class CPU:
             else:
                 address = byte
             
+            self.cycles += 1
             self.pc.value = self.pc.value + address
 
     def handleInstructionBVS(self):
@@ -1583,6 +1588,7 @@ class CPU:
             else:
                 address = byte
             
+            self.cycles += 1
             self.pc.value = self.pc.value + address
 
     def handleInstructionBCC(self):
@@ -1593,6 +1599,7 @@ class CPU:
             else:
                 address = byte
             
+            self.cycles += 1
             self.pc.value = self.pc.value + address
 
     def handleInstructionBCS(self):
@@ -1603,6 +1610,7 @@ class CPU:
             else:
                 address = byte
             
+            self.cycles += 1
             self.pc.value = self.pc.value + address
 
     def handleInstructionBNE(self):
@@ -1613,6 +1621,7 @@ class CPU:
             else:
                 address = byte
             
+            self.cycles += 1
             self.pc.value = self.pc.value + address
 
     def handleInstructionBEQ(self):
@@ -1623,6 +1632,7 @@ class CPU:
             else:
                 address = byte
             
+            self.cycles += 1
             self.pc.value = self.pc.value + address
 
     # Clear flags instructions
@@ -1730,7 +1740,7 @@ class CPU:
         high_byte = format(self._get_address_int(stackAddress).value, '02x')
 
         address = (low_byte + high_byte)
-        self.pc.value = int(address, 16) + 1
+        self.pc.value = int(address, 16)
 
     def handleInstructionNoOp(self):
         pass
@@ -1739,11 +1749,15 @@ class CPU:
         instruction = self.get_next_byte()
 
         while instruction:
-            # BRK
+            # BRK ( TODO start nmi operation )
             if instruction == '00':
+                self.cycles += 7
                 break
 
-            self.handlers[instruction]()
+            handler, c = self.handlers[instruction]
+            handler()
+            self.cycles += c
+
             self.log()
             self.address = None
             instruction = self.get_next_byte()

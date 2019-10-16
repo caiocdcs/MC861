@@ -53,6 +53,7 @@ Test:
    RTS
 End:
    LDY #22
+   BRK
 
 NMI:
 
