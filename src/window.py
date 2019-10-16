@@ -30,3 +30,9 @@ class Window(pyglet.window.Window):
     def on_draw(self):
         self.clear()
         self.label.draw()
+        x = 100
+        y = 100
+        dx = 50
+        dy = 50
+        pyglet.graphics.draw(4, pyglet.gl.GL_QUADS, ('v2i', [x, y, x-dx, y, x-dx, y-dy, x, y-dy]))
+
