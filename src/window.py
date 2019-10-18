@@ -6,6 +6,16 @@ class Window(pyglet.window.Window):
     def __init__(self):
         super(Window, self).__init__()
         self.label = pyglet.text.Label('Hello, world!', x=10, y=10)
+        self.x = 100
+        self.y = 100
+        self.dx = 4
+        self.dy = 4
+
+    def drawSpriteWithDimensions(self, x, y, dx, dy):
+        self.x = x
+        self.y = y
+        self.dx = 4*dx  # One pixel of the emulator represents 4 pixels of the screen
+        self.dy = 4*dy
 
     # Enter is start
     # Space is select
@@ -28,11 +38,7 @@ class Window(pyglet.window.Window):
             print('The space key was pressed.')
 
     def on_draw(self):
-        self.clear()
+        # self.clear()
         self.label.draw()
-        x = 100
-        y = 100
-        dx = 50
-        dy = 50
-        pyglet.graphics.draw(4, pyglet.gl.GL_QUADS, ('v2i', [x, y, x-dx, y, x-dx, y-dy, x, y-dy]))
+        pyglet.graphics.draw(4, pyglet.gl.GL_QUADS, ('v2i', [self.x, self.y, self.x - self.dx, self.y, self.x - self.dx, self.y - self.dy, self.x, self.y - self.dy]))
 

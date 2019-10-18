@@ -3,9 +3,6 @@ import pyglet
 from cpu import CPU
 from window import Window
 
-SCREEN_WIDTH = 1280
-SCREEN_HEIGHT = 720
-
 def main():
 
 	# Check if there's a parameter
@@ -14,11 +11,11 @@ def main():
 		return
 
 	window = Window()
-	window.set_size(1280, 720)
-	
+	window.set_size(1024, 960)
+	# Draw one pixel
+	window.drawSpriteWithDimensions(500, 500, 1, 1)
 	pyglet.app.run()
-	window.drawSquare(100, 100, 50, 50)
-
+	
 	c = CPU(sys.argv[1])
 	c.run()
 
