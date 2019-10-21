@@ -19,3 +19,10 @@ Open the `.nes` file in a NES emulator.
 ### Development
 
 Game developed using ARM 6502, in the MacOS environment. Mednafen emulator was used to test.
+
+
+TODO: testar no Mednafen
+TODO:
+- HashMap para instruções
+- Temporizador (Ciclo)
+- PPU (estrutura e biblioteca)

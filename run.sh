@@ -1,0 +1,1 @@
+./ext/asm6/asm6 draw.s draw.nes && python3 src/main.py draw.nes
