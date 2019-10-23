@@ -14,24 +14,24 @@ class Window(pyglet.window.Window):
 
     # this function is only for test
     def executeControllers(self, dt):
-        if self.controllers.a:
+        if self.controllers.read():
             print('The A key was pressed.')
-        if self.controllers.b:
+        if self.controllers.read():
             print('The B arrow key was pressed.')
-        if self.controllers.select:
+        if self.controllers.read():
             print('The space key was pressed.')
-        if self.controllers.start:
+        if self.controllers.read():
             print('The enter key was pressed.')
-        if self.controllers.up:
+        if self.controllers.read():
             print('The up arrow key was pressed.')
             self.y += 4
-        if self.controllers.down:
+        if self.controllers.read():
             print('The down arrow key was pressed.')
             self.y -= 4
-        if self.controllers.left:
+        if self.controllers.read():
             print('The left arrow key was pressed.')
             self.x -= 4
-        if self.controllers.right:
+        if self.controllers.read():
             print('The right arrow key was pressed.')
             self.x += 4
         self.controllers.resetControllers()
@@ -40,21 +40,21 @@ class Window(pyglet.window.Window):
     # Space is select
     def on_key_press(self, symbol, modifiers):
         if symbol == key.A:
-            self.controllers.A = True
+            self.controllers.aButtonPressed()
         elif symbol == key.B:
-            self.controllers.B = True
+            self.controllers.bButtonPressed()
         elif symbol == key.LEFT:
-            self.controllers.left = True
+            self.controllers.leftButtonPressed()
         elif symbol == key.RIGHT:
-            self.controllers.right = True
+            self.controllers.rightButtonPressed()
         elif symbol == key.UP:
-            self.controllers.up = True
+            self.controllers.upButtonPressed()
         elif symbol == key.DOWN:
-            self.controllers.down = True
+            self.controllers.downButtonPressed()
         elif symbol == key.ENTER:
-            self.controllers.enter = True
+            self.controllers.startButtonPressed()
         elif symbol == key.SPACE:
-            self.controllers.space = True
+            self.controllers.selectButtonPressed()
 
     def on_draw(self):
         self.clear()
