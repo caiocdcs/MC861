@@ -1,10 +1,10 @@
-class Controllers:
+class Keyboard:
 
     def __init__(self):
         self.index = 0
         self.keys = [False] * 8
 
-    def resetControllers(self):
+    def resetState(self):
         self.keys = [False] * 8
 
     def aButtonPressed(self):

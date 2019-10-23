@@ -1,60 +1,63 @@
 import pyglet
 from pyglet.window import key
-from controllers import Controllers
+from keyboard import Keyboard
 
 class Window(pyglet.window.Window):
 
     def __init__(self):
         super(Window, self).__init__()
-        self.controllers = Controllers()
+        self.keyboard = Keyboard()
         self.x = 500
         self.y = 500
         self.dx = 10
         self.dy = 10
 
+    def readKeyboard(self):
+        return self.keyboard.read()
+
     # this function is only for test
     def executeControllers(self, dt):
-        if self.controllers.read():
+        if self.keyboard.read():
             print('The A key was pressed.')
-        if self.controllers.read():
+        if self.keyboard.read():
             print('The B arrow key was pressed.')
-        if self.controllers.read():
+        if self.keyboard.read():
             print('The space key was pressed.')
-        if self.controllers.read():
+        if self.keyboard.read():
             print('The enter key was pressed.')
-        if self.controllers.read():
+        if self.keyboard.read():
             print('The up arrow key was pressed.')
             self.y += 4
-        if self.controllers.read():
+        if self.keyboard.read():
             print('The down arrow key was pressed.')
             self.y -= 4
-        if self.controllers.read():
+        if self.keyboard.read():
             print('The left arrow key was pressed.')
             self.x -= 4
-        if self.controllers.read():
+        if self.keyboard.read():
             print('The right arrow key was pressed.')
             self.x += 4
-        self.controllers.resetControllers()
+        self.keyboard.resetState()
 
     # Enter is start
     # Space is select
     def on_key_press(self, symbol, modifiers):
         if symbol == key.A:
-            self.controllers.aButtonPressed()
+            self.keyboard.aButtonPressed()
         elif symbol == key.B:
-            self.controllers.bButtonPressed()
+            self.keyboard.bButtonPressed()
         elif symbol == key.LEFT:
-            self.controllers.leftButtonPressed()
+            self.keyboard.leftButtonPressed()
         elif symbol == key.RIGHT:
-            self.controllers.rightButtonPressed()
+            self.keyboard.rightButtonPressed()
         elif symbol == key.UP:
-            self.controllers.upButtonPressed()
+            self.keyboard.upButtonPressed()
         elif symbol == key.DOWN:
-            self.controllers.downButtonPressed()
+            self.keyboard.downButtonPressed()
         elif symbol == key.ENTER:
-            self.controllers.startButtonPressed()
+            self.keyboard.startButtonPressed()
         elif symbol == key.SPACE:
-            self.controllers.selectButtonPressed()
+            self.keyboard.selectButtonPressed()
 
     def on_draw(self):
         self.clear()
