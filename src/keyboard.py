@@ -40,3 +40,4 @@ class Keyboard:
         self.index += 1
         if self.index > 7:
             self.index = 0
+            self.resetState()
