@@ -26,6 +26,7 @@ class CPU:
 
         self._read_header()
         self._load_program()
+        self._load_rom()
         self._load_interrupt_vectors()
 
         if self.prg_rom_size == 1:
@@ -190,15 +191,15 @@ class CPU:
                '40': (self.handleInstructionRTI,1),
                'EA': (self.handleInstructionNoOp,2)
             }
-        self.window = Window()
-        self.window.set_size(1024, 960)
-        pyglet.clock.schedule_interval(self.run, 0.1)
-        pyglet.clock.schedule_interval(self.window.executeControllers, 0.1)
-        pyglet.app.run()
+        #self.window = Window()
+        #self.window.set_size(1024, 960)
+        ##pyglet.clock.schedule_interval(self.run, 0.1)
+        #pyglet.clock.schedule_interval(self.window.executeControllers, 0.1)
+        #pyglet.app.run()
 
     def _read_header(self):
-        self.prg_rom_size = int(self._get_byte_from_code_position(int('8', 16)))
-        self.chr_rom_size = int(self._get_byte_from_code_position(int('9', 16)))
+        self.prg_rom_size = int(self._get_byte_from_code_position(8))
+        self.chr_rom_size = int(self._get_byte_from_code_position(10))
 
     def _load_program(self):
         rom_size = 16*KB*self.prg_rom_size
@@ -226,7 +227,17 @@ class CPU:
         low_byte = format(self._get_address_str('FFFE').value, '02x') 
         high_byte = format(self._get_address_str('FFFF').value, '02x')
         self.irq = (high_byte + low_byte)
-    
+
+    def _load_rom(self):
+        chr_size = 8*KB*self.chr_rom_size
+        self.chr = []
+        initial_position = (16 + 16*KB*self.prg_rom_size)*2
+        final_position = (initial_position + chr_size)*2
+        for i in range(initial_position, final_position, 2):
+            b = self._get_byte_from_code_position(i)
+            if b != '':
+                self.chr.append(int(b, 16))
+            
     def log(self):
         p = self.flagController.getFlagsStatusByte()
         if self.address:
@@ -246,6 +257,9 @@ class CPU:
         end = pos + 2
         byte = self.program_code[pos:end].upper()
         return byte
+
+    def _get_sprite(self, pos):
+        return self.chr[pos]
 
     def _get_correct_address(self, address):
         if address >= 0x0800 and address <= 0x0FFF:
