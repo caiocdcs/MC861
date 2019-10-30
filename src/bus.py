@@ -39,3 +39,13 @@ class BUS:
     def reset(self):
         self.cpu.reset()
         self.clockCounter = 0
+
+    def clock(self):
+        self.ppu.clock()
+        if self.clockCounter % 3 == 0:
+            self.cpu.clock()
+
+    def setFrame(self, dt):
+        while self.ppu.frameComplete == False:
+            self.clock()
+        self.ppu.frameComplete = False

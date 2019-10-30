@@ -1,7 +1,9 @@
 import sys
+import pyglet
 from bus import BUS
 from cpu import CPU
 from ppu import PPU
+from window import Window
 from cartridge import Cartridge 
 
 def main():
@@ -11,13 +13,18 @@ def main():
 		print ("Provide a .nes file\n")
 		return
 	
+	window = Window()
+	window.set_size(1024, 960)
 	cpu = CPU(sys.argv[1])
-	ppu = PPU()
+	ppu = PPU(window)
 	bus = BUS(cpu, ppu)
 	cart = Cartridge(sys.argv[1])
 	bus.insertCartridge(cart)
 
-	bus.cpuWrite(0x8888, "10")
+	# Do all init (load pallettes, background, set flags...) before running pyglet loop
+	
+	pyglet.clock.schedule_interval(bus.setFrame, 1/60.0)
+	pyglet.app.run()
 	
 
 if __name__ == "__main__":

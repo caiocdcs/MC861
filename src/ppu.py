@@ -2,8 +2,14 @@ from ctypes import c_uint16, c_uint8
 
 class PPU:
 
-    def __init__(self):
-        self.a = 10
+    def __init__(self, window):
+        self.tableName = [c_uint8(0)]*1024*2
+        self.tablePalette = [c_uint8(0)]*32
+        self.scanline = 0           # row
+        self.cycle = 0              # column
+        self.frameComplete = False
+        self.window = window
+
 
     def cpuWrite(self, address, data):
         if address == 0x0000:       # Control
@@ -57,5 +63,17 @@ class PPU:
     def insertCartridge(self, cartridge):
         self.cartridge = cartridge
 
-    # def clock(self):
+    def clock(self):
+
+        self.cycle += 1
         
+        if self.cycle >= 341:
+            self.cycle = 0
+            self.scanline += 1
+
+            if self.scanline >= 261:
+                self.scanline = -1
+                self.frameComplete = True
+                self.window.movePixelDown()
+                print("Frame Complete")
+            
