@@ -75,5 +75,5 @@ class PPU:
                 self.scanline = -1
                 self.frameComplete = True
                 self.window.movePixelDown()
-                print("Frame Complete")
+                # print("Frame Complete")
             

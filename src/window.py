@@ -8,10 +8,14 @@ class Window(pyglet.window.Window):
         super(Window, self).__init__()
         self.player1 = Keyboard()
         self.player2 = Keyboard()
-        self.x = 128*3
-        self.y = 120*3
-        self.dx = 1*3
-        self.dy = 1*3
+        # self.x = 128*3
+        # self.y = 120*3
+        # self.dx = 1*3
+        # self.dy = 1*3
+        self.x = 128
+        self.y = 120
+        self.dx = 1
+        self.dy = 1
         self.color = {
             0x00: (84, 84, 84),
             0x01: (0, 30, 116),
@@ -143,8 +147,9 @@ class Window(pyglet.window.Window):
         # rgb = (255, 255, 255)
         color = 0x20
         rgb = self.color[color]
+        pyglet.graphics.draw(1, pyglet.gl.GL_POINTS,('v2i', (self.x + self.dx, self.y + self.dy)), ('c3B', rgb))
         # TODO: link color
-        pyglet.graphics.draw(4, pyglet.gl.GL_QUADS, ('v2i', [self.x, self.y, self.x - self.dx, self.y, self.x - self.dx, self.y - self.dy, self.x, self.y - self.dy]))
+        # pyglet.graphics.draw(4, pyglet.gl.GL_QUADS, ('v2i', [self.x, self.y, self.x - self.dx, self.y, self.x - self.dx, self.y - self.dy, self.x, self.y - self.dy]))
         # TODO: Pass correct byte array, located from TILE (for example, 16 bytes which should be 0, 1, 2, 3, 0, 1, 2, 3; being 8 of each)
         b = [0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
         self.draw_sprite(10, 10, b)
@@ -152,18 +157,28 @@ class Window(pyglet.window.Window):
     def draw_sprite(self, x, y, byteArray):
         # byteArray must be a value of 16 bytes, which represents the sprite
         # for each bit, the color is decided by n and n+8 bit, which means de first 8 bytes are the LSB and the following 8 the MSB
-        # therefore we can make the following calculation for converting it to a single array
+        # therefore we can make the following calculation for converting it to a single array:
         res = []
         for i in range(64):
             res.append(byteArray[i] + (byteArray[i + 64]) * 2)
-        # print(res)
         for j in range(8):
             for i in range(8):
+                # square_cords = (
+                #     x*3, y*3,
+                #     x*3 + i*3, y*3,
+                #     x*3 + i*3, y*3 - j*3,
+                #     x*3, y*3 - j*3
+                # )
                 # TODO: based on JUNK and Pallete (Pattern) Table, get correct color to display
                 if (byteArray[j * 8 + i]) == 0:
                     rgb = self.color[0x0D]
+                    # color_pairs = rgb * int(len(square_cords)/2)
                 else:
                     rgb = self.color[0x20]
-                # TODO: link color
-                pyglet.graphics.draw(4, pyglet.gl.GL_QUADS, ('v2i', [x*3, y*3, x*3 + i*3, y*3, x*3 + i*3, y*3 - j*3, x*3, y*3 - j*3]))
-                # pyglet.graphics.draw(1, pyglet.gl.GL_POINTS,('v2i', (x + i, y + j)), ('c3B', rgb))
+                    # color_pairs = rgb * int(len(square_cords)/2)
+                # # print(color_pairs)
+                # # TODO: link color
+                # pyglet.graphics.draw_indexed(4, pyglet.gl.GL_QUADS, [0,1,2,3], ('v2i', square_cords), ('c3B', color_pairs))
+                # # TODO: pyglet is drawing all squares as one of the same color, how to color them individually?
+                # # pyglet.graphics.draw_indexed(4, pyglet.gl.GL_QUADS, [0,1,2,3], ('v2i', square_cords), ('c3B', (0, 0, 255, 0, 0, 255, 0, 255, 0,  0, 255, 0)))
+                pyglet.graphics.draw(1, pyglet.gl.GL_POINTS,('v2i', (x + i, y + j)), ('c3B', rgb))

@@ -304,7 +304,8 @@ class CPU:
 
     def clock(self):
         # TODO: Implement clock
-        print("cpu clock")
+        # print("cpu clock")
+        return False # TODO: remove this line
 
     ####################################################
     ##########      INSTRUCTION HANDLERS      ##########
