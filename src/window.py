@@ -8,10 +8,10 @@ class Window(pyglet.window.Window):
         super(Window, self).__init__()
         self.player1 = Keyboard()
         self.player2 = Keyboard()
-        self.x = 128
-        self.y = 120
-        self.dx = 1
-        self.dy = 1
+        self.x = 128*4
+        self.y = 120*4
+        self.dx = 1*4
+        self.dy = 1*4
         self.color = {
             0x00: (84, 84, 84),
             0x01: (0, 30, 116),

@@ -26,7 +26,7 @@ class CPU:
 
         self._read_header()
         self._load_program()
-        self._load_rom()
+        self._load_chr()
         self._load_interrupt_vectors()
 
         if self.prg_rom_size == 1:
@@ -192,7 +192,7 @@ class CPU:
                'EA': (self.handleInstructionNoOp,2)
             }
         self.window = Window()
-        self.window.set_size(256, 240)
+        self.window.set_size(1024, 960)
         #pyglet.clock.schedule_interval(self.run, 0.1)
         pyglet.clock.schedule_interval(self.window.executeControllers, 0.1)
         pyglet.app.run()
@@ -228,13 +228,13 @@ class CPU:
         high_byte = format(self._get_address_str('FFFF').value, '02x')
         self.irq = (high_byte + low_byte)
 
-    def _load_rom(self):
+    def _load_chr(self):
         chr_size = 8*KB*self.chr_rom_size
         self.chr = []
         initial_position = (16 + 16*KB*self.prg_rom_size)*2
         final_position = (initial_position + chr_size)*2
-        for i in range(initial_position, final_position, 2):
-            b = self._get_byte_from_code_position(i)
+        for i in range(initial_position, final_position, 32):
+            b = self._get_byte_from_code_position(i, size=32)
             if b != '':
                 self.chr.append(int(b, 16))
             
@@ -253,8 +253,8 @@ class CPU:
         self.pc.value = self.pc.value + 1
         return format(byte.value, '02x').upper()
 
-    def _get_byte_from_code_position(self, pos):
-        end = pos + 2
+    def _get_byte_from_code_position(self, pos, size=2):
+        end = pos + size
         byte = self.program_code[pos:end].upper()
         return byte
 
@@ -262,14 +262,12 @@ class CPU:
         return self.chr[pos]
 
     def _get_correct_address(self, address):
-        if address >= 0x0800 and address <= 0x0FFF:
-            return address - 0x0800
-        elif address >= 0x1000 and address <= 0x17FF:
-            return address - 0x1000
-        elif address >= 0x1800 and address <= 0x1FFF:
-            return address - 0x1800
+        if address >= 0x0800 and address <= 0x1FFF:
+            return address % 0x0800
+
         elif address < 0x4000:
-            pass # return self.PPU.readRegister(0x2000 | (address & 0x7))
+            return address % 0x2008 # return self.PPU.readRegister(0x2000 | (address & 0x7))
+    
         elif address == 0x4014:
             pass # return self.PPU.readRegister(address)
         elif address == 0x4015:
