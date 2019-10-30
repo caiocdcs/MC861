@@ -1,5 +1,7 @@
 import sys
+from bus import BUS
 from cpu import CPU
+from ppu import PPU
 
 def main():
 
@@ -8,7 +10,11 @@ def main():
 		print ("Provide a .nes file\n")
 		return
 	
-	c = CPU(sys.argv[1])
+	cpu = CPU(sys.argv[1])
+	ppu = PPU()
+	bus = BUS(cpu, ppu)
+	bus.cpuRead(0x1234)
+	
 
 if __name__ == "__main__":
 	main()

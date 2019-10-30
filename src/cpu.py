@@ -191,11 +191,11 @@ class CPU:
                '40': (self.handleInstructionRTI,1),
                'EA': (self.handleInstructionNoOp,2)
             }
-        self.window = Window()
-        self.window.set_size(1024, 960)
-        #pyglet.clock.schedule_interval(self.run, 0.1)
-        pyglet.clock.schedule_interval(self.window.executeControllers, 0.1)
-        pyglet.app.run()
+        # self.window = Window()
+        # self.window.set_size(1024, 960)
+        # pyglet.clock.schedule_interval(self.run, 0.1)
+        # pyglet.clock.schedule_interval(self.window.executeControllers, 0.1)
+        # pyglet.app.run()
 
     def _read_header(self):
         self.prg_rom_size = int(self._get_byte_from_code_position(8))
