@@ -4,7 +4,9 @@ class Cartridge:
 
     def __init__(self, program_name):
         file = open(program_name, "rb")
-        self.prgMemory = file.read().hex()
+        prg = file.read().hex()
+        self.prgMemory = list(map(''.join, zip(*[iter(prg)]*2)))
+        self.chrMemory = list(map(''.join, zip(*[iter(prg)]*2)))
         self.mapperId = 0
         self.prgBanks = 0
         self.chrBanks = 0
@@ -27,13 +29,13 @@ class Cartridge:
     def ppuRead(self, address):
         mappedAddress = self.mapper0.ppuMapRead(address)
         if mappedAddress != None :
-            data = self.prgMemory[mappedAddress] 
+            data = self.chrMemory[mappedAddress] 
             return data
         return None
 
     def ppuWrite(self, address, data):
         mappedAddress = self.mapper0.ppuMapWrite(address)
         if mappedAddress != None :
-            self.prgMemory[mappedAddress] = data
+            self.chrMemory[mappedAddress] = data
             return True
         return False

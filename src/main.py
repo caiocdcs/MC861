@@ -17,7 +17,7 @@ def main():
 	cart = Cartridge(sys.argv[1])
 	bus.insertCartridge(cart)
 
-	print(bus.cpuRead(0x8888, False))
+	bus.cpuWrite(0x8888, "10")
 	
 
 if __name__ == "__main__":
