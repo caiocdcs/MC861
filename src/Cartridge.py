@@ -1,18 +1,39 @@
+from mapper0 import Mapper0 
+
 class Cartridge:
 
-    def __init__(self):
-        self.a = 10
+    def __init__(self, program_name):
+        file = open(program_name, "rb")
+        self.prgMemory = file.read().hex()
+        self.mapperId = 0
+        self.prgBanks = 0
+        self.chrBanks = 0
+        self.mapper0 = Mapper0(self.prgBanks, self.chrBanks)
 
-    def changeAValue(self, value):
-        self.a = value
+    def cpuRead(self, address):
+        mappedAddress = self.mapper0.cpuMapRead(address)
+        if mappedAddress != None :
+            data = self.prgMemory[mappedAddress] 
+            return data
+        return None
 
-    def printValue(self):
-        print(self.a)
+    def cpuWrite(self, address, data):
+        mappedAddress = self.mapper0.cpuMapWrite(address)
+        if mappedAddress != None :
+            self.prgMemory[mappedAddress] = data
+            return True
+        return False
 
-    # def cpuWrite(self, adress, data):
+    def ppuRead(self, address):
+        mappedAddress = self.mapper0.ppuMapRead(address)
+        if mappedAddress != None :
+            data = self.prgMemory[mappedAddress] 
+            return data
+        return None
 
-    # def cpuRead(self, address, readOnly):
-
-    # def ppuWrite(self):
-
-    # def ppuRead(self):
+    def ppuWrite(self, address, data):
+        mappedAddress = self.mapper0.ppuMapWrite(address)
+        if mappedAddress != None :
+            self.prgMemory[mappedAddress] = data
+            return True
+        return False

@@ -14,8 +14,10 @@ def main():
 	cpu = CPU(sys.argv[1])
 	ppu = PPU()
 	bus = BUS(cpu, ppu)
-	cart = Cartridge()
+	cart = Cartridge(sys.argv[1])
 	bus.insertCartridge(cart)
+
+	print(bus.cpuRead(0x8888, False))
 	
 
 if __name__ == "__main__":

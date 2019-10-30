@@ -13,6 +13,9 @@ class BUS:
     def cpuRead(self, address, readOnly):
         data = c_uint8(0)
 
+        cartridgeData = self.cartridge.cpuRead(address)
+        if cartridgeData != None:
+            data = cartridgeData
         if address >= 0x0000 and address <= 0x1FFF:
             data = self.cpuRam[address & 0x07FF]
         elif address >= 0x2000 and address <= 0x3FFF:
@@ -21,7 +24,9 @@ class BUS:
         return data  
 
     def cpuWrite(self, address, data):
-        if address >= 0x0000 and address <= 0x1FFF:
+        if self.cartridge.cpuWrite(address, data):
+            pass
+        elif address >= 0x0000 and address <= 0x1FFF:
             self.cpuRam[address & 0x07FF] = data
         elif address >= 0x2000 and address <= 0x3FFF:
             self.ppu.cpuWrite(address & 0x0007, data)
