@@ -305,6 +305,10 @@ class CPU:
     def _set_address_str(self, address, data, set_address=False):
         return self._set_address_int(int(address, 16), data, set_address)
 
+    def reset():
+        # TODO: Implement reset
+        print("cpu reset")
+
     ####################################################
     ##########      INSTRUCTION HANDLERS      ##########
     ####################################################

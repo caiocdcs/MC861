@@ -2,6 +2,7 @@ import sys
 from bus import BUS
 from cpu import CPU
 from ppu import PPU
+from cartridge import Cartridge 
 
 def main():
 
@@ -13,7 +14,8 @@ def main():
 	cpu = CPU(sys.argv[1])
 	ppu = PPU()
 	bus = BUS(cpu, ppu)
-	bus.cpuRead(0x1234)
+	cart = Cartridge()
+	bus.insertCartridge(cart)
 	
 
 if __name__ == "__main__":
