@@ -85,6 +85,9 @@ class Window(pyglet.window.Window):
     def readKeyboardFromPlayer1(self):
         return self.player1.read()
 
+    def movePixelDown(self):
+        self.y -= 1
+
     # this function is only for test
     def executeControllers(self, dt):
         if self.player1.read():
