@@ -14,7 +14,7 @@ def main():
 		return
 	
 	window = Window()
-	window.set_size(1024, 960)
+	window.set_size(768, 720)
 	cpu = CPU(sys.argv[1])
 	ppu = PPU(window)
 	bus = BUS(cpu, ppu)

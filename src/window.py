@@ -8,10 +8,10 @@ class Window(pyglet.window.Window):
         super(Window, self).__init__()
         self.player1 = Keyboard()
         self.player2 = Keyboard()
-        self.x = 128*4
-        self.y = 120*4
-        self.dx = 1*4
-        self.dy = 1*4
+        self.x = 128*3
+        self.y = 120*3
+        self.dx = 1*3
+        self.dy = 1*3
         self.color = {
             0x00: (84, 84, 84),
             0x01: (0, 30, 116),
@@ -165,5 +165,5 @@ class Window(pyglet.window.Window):
                 else:
                     rgb = self.color[0x20]
                 # TODO: link color
-                pyglet.graphics.draw(4, pyglet.gl.GL_QUADS, ('v2i', [x*4, y*4, x*4 + i*4, y*4, x*4 + i*4, y*4 - j*4, x*4, y*4 - j*4]))
+                pyglet.graphics.draw(4, pyglet.gl.GL_QUADS, ('v2i', [x*3, y*3, x*3 + i*3, y*3, x*3 + i*3, y*3 - j*3, x*3, y*3 - j*3]))
                 # pyglet.graphics.draw(1, pyglet.gl.GL_POINTS,('v2i', (x + i, y + j)), ('c3B', rgb))
