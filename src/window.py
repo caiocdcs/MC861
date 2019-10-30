@@ -165,5 +165,5 @@ class Window(pyglet.window.Window):
                 else:
                     rgb = self.color[0x20]
                 # TODO: link color
-                pyglet.graphics.draw(4, pyglet.gl.GL_QUADS, ('v2i', [x, y, x + i*4, y, x + i*4, y + j*4, x, y + j*4]))
+                pyglet.graphics.draw(4, pyglet.gl.GL_QUADS, ('v2i', [x*4, y*4, x*4 + i*4, y*4, x*4 + i*4, y*4 - j*4, x*4, y*4 - j*4]))
                 # pyglet.graphics.draw(1, pyglet.gl.GL_POINTS,('v2i', (x + i, y + j)), ('c3B', rgb))

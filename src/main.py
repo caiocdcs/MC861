@@ -4,7 +4,7 @@ from bus import BUS
 from cpu import CPU
 from ppu import PPU
 from window import Window
-from cartridge import Cartridge 
+from Cartridge import Cartridge 
 
 def main():
 

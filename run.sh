@@ -1,1 +1,1 @@
-python3 src/main.py bin/adcAbs
+python3 src/main.py src/movePixel.nes
