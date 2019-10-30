@@ -140,7 +140,8 @@ class Window(pyglet.window.Window):
         # rgb = (255, 255, 255)
         color = 0x20
         rgb = self.color[color]
-        pyglet.graphics.draw(1, pyglet.gl.GL_POINTS,('v2i', (self.x, self.y)), ('c3B', rgb))
+        # TODO: link color
+        pyglet.graphics.draw(4, pyglet.gl.GL_QUADS, ('v2i', [self.x, self.y, self.x - self.dx, self.y, self.x - self.dx, self.y - self.dy, self.x, self.y - self.dy]))
         # TODO: Pass correct byte array, located from TILE (for example, 16 bytes which should be 0, 1, 2, 3, 0, 1, 2, 3; being 8 of each)
         b = [0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
         self.draw_sprite(10, 10, b)
@@ -160,4 +161,6 @@ class Window(pyglet.window.Window):
                     rgb = self.color[0x0D]
                 else:
                     rgb = self.color[0x20]
-                pyglet.graphics.draw(1, pyglet.gl.GL_POINTS,('v2i', (x + i, y + j)), ('c3B', rgb))
+                # TODO: link color
+                pyglet.graphics.draw(4, pyglet.gl.GL_QUADS, ('v2i', [x, y, x + i*4, y, x + i*4, y + j*4, x, y + j*4]))
+                # pyglet.graphics.draw(1, pyglet.gl.GL_POINTS,('v2i', (x + i, y + j)), ('c3B', rgb))
