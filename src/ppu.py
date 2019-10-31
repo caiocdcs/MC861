@@ -34,8 +34,11 @@ class control:
 class PPU:
 
     def __init__(self, window):
+        # Tables
         self.tableName = [c_uint8(0)]*1024*2
         self.tablePalette = [c_uint8(0)]*32
+        self.tablePattern = [c_uint8(0)]*4096*2
+
         self.scanline = 0           # row
         self.cycle = 0              # column
         self.frameComplete = False
@@ -320,6 +323,7 @@ class PPU:
                         pixel = (tile_lsb & 0x01) + (tile_msb & 0x01)
                         tile_lsb >>= 1
                         tile_msb >>= 1
+                        pyglet.graphics.draw(1, pyglet.gl.GL_POINTS,('v2i', (nTileX * 8 + (7 - col), nTileY * 8 + row)), ('c3B', getColourFromPaletteRam(palette, pixel)))
                         # TODO: set pixel
                         # sprPatternTable[i].setPixel(
                         #     nTileX * 8 + (7 - col),
