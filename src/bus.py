@@ -50,5 +50,7 @@ class BUS:
         while self.ppu.frameComplete == False:
             self.clock()
 
+        self.clockCounter = 0
         self.ppu.frameComplete = False
         self.cpu.nmi()
+        self.cpu.on_interrupt = False

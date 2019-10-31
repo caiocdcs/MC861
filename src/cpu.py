@@ -212,8 +212,6 @@ class CPU:
 
         self.cycles = 0
 
-        self.on_interrupt = False
-
     def irq(self):
         if self.flagController.geInterrupDisabledtFlag() == 0:
             pc_l = format(self.pc.value, '04x')[2:4]
@@ -240,28 +238,27 @@ class CPU:
             self.cycles += 7
 
     def nmi(self):
-            pc_l = format(self.pc.value, '04x')[2:4]
-            pc_h = format(self.pc.value, '04x')[0:2]
+        pc_l = format(self.pc.value, '04x')[2:4]
+        pc_h = format(self.pc.value, '04x')[0:2]
 
-            stackAddress = self.stack.getAddress() + (self.sp.value)
-            self._set_address_int(stackAddress, c_uint8(int(pc_h, 16)))
-            self.sp.value = self.sp.value - 1
+        stackAddress = self.stack.getAddress() + (self.sp.value)
+        self._set_address_int(stackAddress, c_uint8(int(pc_h, 16)))
+        self.sp.value = self.sp.value - 1
 
-            stackAddress = self.stack.getAddress() + (self.sp.value)
-            self._set_address_int(stackAddress, c_uint8(int(pc_l, 16)))
-            self.sp.value = self.sp.value - 1
+        stackAddress = self.stack.getAddress() + (self.sp.value)
+        self._set_address_int(stackAddress, c_uint8(int(pc_l, 16)))
+        self.sp.value = self.sp.value - 1
 
-            self.flagController.setInterrupDisabledtFlag()
-            self.flagController.clearBreakFlag()
-            self.flagController.setUnusedFlag()
-            self.handleInstructionPHP()
+        self.flagController.setInterrupDisabledtFlag()
+        self.flagController.clearBreakFlag()
+        self.flagController.setUnusedFlag()
+        self.handleInstructionPHP()
 
-            low_byte = self.bus.cpuRead(0xFFFA)
-            high_byte = self.bus.cpuRead(0xFFFB)
+        low_byte = self.bus.cpuRead(0xFFFA)
+        high_byte = self.bus.cpuRead(0xFFFB)
+        self.pc.value = (high_byte.value << 8) | low_byte.value
 
-            self.pc.value = (high_byte.value << 8) | low_byte.value
-
-            self.cycles += 7
+        self.cycles += 7
 
     def clock(self):
 
