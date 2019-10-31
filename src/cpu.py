@@ -1,6 +1,5 @@
 from utils import log, logls
 from ctypes import c_uint16, c_uint8
-from memory import Memory
 from flagController import FlagController
 from stack import Stack
 import time
@@ -9,33 +8,8 @@ KB = 1024
 
 class CPU:
 
-    def __init__(self, program_name):
-        file = open(program_name, "rb")
-        self.program_code = file.read().hex()
-
-        self.sp = c_uint16(253) # SP starts at 0xfd
-        self.pc = c_uint16(0)
-        self.a = c_uint8(0)
-        self.x = c_uint8(0)
-        self.y = c_uint8(0)
-        self.memory = Memory()
-        self.flagController = FlagController()
-        self.stack = Stack()
-
-        self._read_header()
-        self._load_program()
-        self._load_chr()
-        self._load_interrupt_vectors()
-
-        if self.prg_rom_size == 1:
-            self.rom_initial_pos = 32*KB + 16*KB            # initial rom position
-        else:
-            self.rom_initial_pos = 32*KB
-        self.pc.value = int(self.reset, 16)
-
-        self.address = None
-
-        self.cycles = 0
+    def __init__(self):
+        self.reset()
 
         self.handlers = {
                 '0A': (self.handleInstructionASLAccumulator, 2),
@@ -187,49 +161,17 @@ class CPU:
                'D0': (self.handleInstructionBNE,2),
                'F0': (self.handleInstructionBEQ,2),
                '40': (self.handleInstructionRTI,1),
-               'EA': (self.handleInstructionNoOp,2)
+               'EA': (self.handleInstructionNoOp,2),
+               '00': (self.handleInstructionBrk,7)
             }
 
-    def _read_header(self):
-        self.prg_rom_size = int(self._get_byte_from_code_position(8))
-        self.chr_rom_size = int(self._get_byte_from_code_position(10))
+    def connectBus(self, bus):
+        self.bus = bus
 
-    def _load_program(self):
-        rom_size = 16*KB*self.prg_rom_size
-        initial_rom_pos = 32*KB     # ( 0x8000 ) PRG ROM
-        rom_code_initial_pos = 32   # 16 bytes of header
-        code_pos = 0
-        for i in range(0, rom_size):
-            b = self._get_byte_from_code_position(rom_code_initial_pos + code_pos)
-            if b != '':
-                byte = c_uint8(int(b, 16))
-                self._set_address_int(initial_rom_pos + i, byte)
-                if self.prg_rom_size == 1:
-                    self._set_address_int(initial_rom_pos + rom_size + i, byte)
-            code_pos += 2
+        low_byte = self.bus.cpuRead(0xFFFC)
+        high_byte = self.bus.cpuRead(0xFFFD)
 
-    def _load_interrupt_vectors(self):
-        low_byte = format(self._get_address_str('FFFA').value, '02x') 
-        high_byte = format(self._get_address_str('FFFB').value, '02x')
-        self.nmi = (high_byte + low_byte)
-
-        low_byte = format(self._get_address_str('FFFC').value, '02x') 
-        high_byte = format(self._get_address_str('FFFD').value, '02x')
-        self.reset = (high_byte + low_byte)
-
-        low_byte = format(self._get_address_str('FFFE').value, '02x') 
-        high_byte = format(self._get_address_str('FFFF').value, '02x')
-        self.irq = (high_byte + low_byte)
-
-    def _load_chr(self):
-        chr_size = 8*KB*self.chr_rom_size
-        self.chr = []
-        initial_position = (16 + 16*KB*self.prg_rom_size)*2
-        final_position = (initial_position + chr_size)*2
-        for i in range(initial_position, final_position, 32):
-            b = self._get_byte_from_code_position(i, size=32)
-            if b != '':
-                self.chr.append(int(b, 16))
+        self.pc.value = (high_byte.value << 8) | low_byte.value
             
     def log(self):
         p = self.flagController.getFlagsStatusByte()
@@ -240,71 +182,105 @@ class CPU:
             log(self.a.value, self.x.value, self.y.value, self.sp.value, self.pc.value, p)
 
     def get_next_byte(self):
-        if (self.pc.value < self.rom_initial_pos) or (self.pc.value > (self.rom_initial_pos * self.prg_rom_size * 16*KB)):
-            return None
-        byte = self._get_address_int(self.pc.value)
+        byte = self.bus.cpuRead(self.pc.value)
         self.pc.value = self.pc.value + 1
+
         return format(byte.value, '02x').upper()
 
-    def _get_byte_from_code_position(self, pos, size=2):
-        end = pos + size
-        byte = self.program_code[pos:end].upper()
-        return byte
-
-    def _get_sprite(self, pos):
-        return self.chr[pos]
-
-    def _get_correct_address(self, address):
-        if address >= 0x0800 and address <= 0x1FFF:
-            return address % 0x0800
-
-        elif address < 0x4000:
-            return address % 0x2008 # return self.PPU.readRegister(0x2000 | (address & 0x7))
-    
-        elif address == 0x4014:
-            pass # return self.PPU.readRegister(address)
-        elif address == 0x4015:
-            pass # return self.APU.readRegister(address)
-        elif address == 0x4016:
-            pass # return self.window.readKeyboardFromPlayer1()
-        elif address == 0x4017:
-            pass # return self.window.readKeyboardFromPlayer2()
-        elif address < 0x6000:
-            pass # [TODO] I/O registers
-        elif address >= 0x6000:
-            # return self.console.Mapper.Read(address)
-            pass
-        return 0
-
     def _get_address_int(self, address, set_address=False):
-        value = self._get_correct_address(address)
+        return self.bus.cpuRead(address)
 
-        if set_address:
-            self.address = format(value, '04x')
-        
-        return self.memory.get_memory_at_position_int(value)
-
-    def _get_address_str(self, address):
-        return self._get_address_int(int(address, 16))
+    def _get_address_str(self, address, set_address=False):
+        return self._get_address_int(int(address, 16), set_address)
 
     def _set_address_int(self, address, data, set_address=False):
-        value = self._get_correct_address(address)
-        
-        if set_address:
-            self.address = format(value, '04x')
-        
-        return self.memory.set_memory_at_position_int(value, data)
+        return self.bus.cpuWrite(address, data)
 
     def _set_address_str(self, address, data, set_address=False):
         return self._set_address_int(int(address, 16), data, set_address)
 
     def reset(self):
-        # TODO: Implement reset
-        print("cpu reset")
+        self.sp = c_uint16(253) # SP starts at 0xfd
+        self.pc = c_uint16(0)
+        self.a = c_uint8(0)
+        self.x = c_uint8(0)
+        self.y = c_uint8(0)
+        self.flagController = FlagController()
+        self.stack = Stack()
+
+        self.address = None
+
+        self.cycles = 0
+
+        self.on_interrupt = False
+
+    def irq(self):
+        if self.flagController.geInterrupDisabledtFlag() == 0:
+            pc_l = format(self.pc.value, '04x')[2:4]
+            pc_h = format(self.pc.value, '04x')[0:2]
+
+            stackAddress = self.stack.getAddress() + (self.sp.value)
+            self._set_address_int(stackAddress, c_uint8(int(pc_h, 16)))
+            self.sp.value = self.sp.value - 1
+
+            stackAddress = self.stack.getAddress() + (self.sp.value)
+            self._set_address_int(stackAddress, c_uint8(int(pc_l, 16)))
+            self.sp.value = self.sp.value - 1
+            
+            self.flagController.setInterrupDisabledtFlag()
+            self.flagController.clearBreakFlag()
+            self.flagController.setUnusedFlag()
+            self.handleInstructionPHP()
+
+            low_byte = self.bus.cpuRead(0xFFFE)
+            high_byte = self.bus.cpuRead(0xFFFF)
+
+            self.pc.value = (high_byte.value << 8) | low_byte.value
+
+            self.cycles += 7
+
+    def nmi(self):
+            pc_l = format(self.pc.value, '04x')[2:4]
+            pc_h = format(self.pc.value, '04x')[0:2]
+
+            stackAddress = self.stack.getAddress() + (self.sp.value)
+            self._set_address_int(stackAddress, c_uint8(int(pc_h, 16)))
+            self.sp.value = self.sp.value - 1
+
+            stackAddress = self.stack.getAddress() + (self.sp.value)
+            self._set_address_int(stackAddress, c_uint8(int(pc_l, 16)))
+            self.sp.value = self.sp.value - 1
+
+            self.flagController.setInterrupDisabledtFlag()
+            self.flagController.clearBreakFlag()
+            self.flagController.setUnusedFlag()
+            self.handleInstructionPHP()
+
+            low_byte = self.bus.cpuRead(0xFFFA)
+            high_byte = self.bus.cpuRead(0xFFFB)
+
+            self.pc.value = (high_byte.value << 8) | low_byte.value
+
+            self.cycles += 7
 
     def clock(self):
-        # TODO: Implement clock
-        print("cpu clock")
+
+        # function if op code doesn't exist
+        def noHandler():
+            pass
+
+        if (self.cycles == 0):
+            instruction = self.get_next_byte()
+
+            handler, c = self.handlers.get(instruction, (noHandler, 0))
+            handler()
+
+            self.cycles += c
+
+            self.log()
+            self.address = None
+
+        self.cycles -= 1
 
     ####################################################
     ##########      INSTRUCTION HANDLERS      ##########
@@ -1736,9 +1712,18 @@ class CPU:
         pToSet = P & 0xEF
         self.flagController.setFlagsStatusByte(pToSet)
         # PC
+        # get low byte
         self.sp.value = self.sp.value + 1
         stackAddress = self.stack.getAddress() + (self.sp.value)
-        self.pc = self._get_address_int(stackAddress, set_address=True)
+        low_byte = format(self._get_address_int(stackAddress).value, '02x')
+
+        # get high byte
+        self.sp.value = self.sp.value + 1
+        stackAddress = self.stack.getAddress() + (self.sp.value)
+        high_byte = format(self._get_address_int(stackAddress).value, '02x')
+
+        address = (high_byte + low_byte)
+        self.pc.value = int(address, 16)
 
     # Subroutine Instructions
     def handleInstructionJSR(self):
@@ -1747,51 +1732,61 @@ class CPU:
 
         address = (high_byte + low_byte)
 
-        pc_l = format(self.pc.value, '04x')[0:2]
-        pc_h = format(self.pc.value, '04x')[2:4]
+        valueToPush = self.pc.value - 1
+
+        pc_l = format(valueToPush, '04x')[2:4]
+        pc_h = format(valueToPush, '04x')[0:2]
 
         self.pc.value = int(address, 16)
 
-        # set high byte
         stackAddress = self.stack.getAddress() + (self.sp.value)
         self._set_address_int(stackAddress, c_uint8(int(pc_h, 16)))
         self.sp.value = self.sp.value - 1
 
-        # set low byte
         stackAddress = self.stack.getAddress() + (self.sp.value)
         self._set_address_int(stackAddress, c_uint8(int(pc_l, 16)))
         self.sp.value = self.sp.value - 1
 
     def handleInstructionRTS(self):
-        # get high byte
         self.sp.value = self.sp.value + 1
         stackAddress = self.stack.getAddress() + (self.sp.value)
         low_byte = format(self._get_address_int(stackAddress).value, '02x')
 
-        # get low byte
         self.sp.value = self.sp.value + 1
         stackAddress = self.stack.getAddress() + (self.sp.value)
         high_byte = format(self._get_address_int(stackAddress).value, '02x')
 
-        address = (low_byte + high_byte)
-        self.pc.value = int(address, 16)
+        address = (high_byte + low_byte)
+        self.pc.value = int(address, 16) + 1
 
     def handleInstructionNoOp(self):
         pass
 
-    def run(self, dt):
-        instruction = self.get_next_byte()
+    def handleInstructionBrk(self):
+        self.pc.value = self.pc.value + 1
 
-        while instruction:
-            # BRK ( TODO start nmi operation )
-            if instruction == '00':
-                self.cycles += 7
-                break
+        pc_l = format(self.pc.value, '04x')[2:4]
+        pc_h = format(self.pc.value, '04x')[0:2]
 
-            handler, c = self.handlers[instruction]
-            handler()
-            self.cycles += c
+        self.flagController.setInterrupDisabledtFlag()
 
-            self.log()
-            self.address = None
-            instruction = self.get_next_byte()
+        # push PC to stack
+        stackAddress = self.stack.getAddress() + (self.sp.value)
+        self._set_address_int(stackAddress, c_uint8(int(pc_h, 16)))
+        self.sp.value = self.sp.value - 1
+
+        stackAddress = self.stack.getAddress() + (self.sp.value)
+        self._set_address_int(stackAddress, c_uint8(int(pc_l, 16)))
+        self.sp.value = self.sp.value - 1
+
+        self.flagController.setBreakFlag()
+
+        self.handleInstructionPHP()
+        
+        self.flagController.clearBreakFlag()
+
+        # load IRQ pc value
+        low_byte = self.bus.cpuRead(0xFFFE)
+        high_byte = self.bus.cpuRead(0xFFFF)
+
+        self.pc.value = (high_byte.value << 8) | low_byte.value

@@ -10,7 +10,7 @@ class BUS:
        self.cpuRam = [c_uint8(0)]*2*KB
        self.clockCounter = 0
 
-    def cpuRead(self, address, readOnly):
+    def cpuRead(self, address, readOnly = True):
         data = c_uint8(0)
 
         cartridgeData = self.cartridge.cpuRead(address)
@@ -44,8 +44,11 @@ class BUS:
         self.ppu.clock()
         if self.clockCounter % 3 == 0:
             self.cpu.clock()
+        self.clockCounter += 1
 
     def setFrame(self, dt):
         while self.ppu.frameComplete == False:
             self.clock()
+
         self.ppu.frameComplete = False
+        self.cpu.nmi()
