@@ -124,49 +124,49 @@ class PPU:
 
     def cpuWrite(self, address, data):
         if address == 0x0000:       # Control
-            if data.value & 0b00000001:
+            if data.value & 0b10000000:
                 self.control.vertical_blank = 1
             else:
                 self.control.vertical_blank = 0
-            if data.value & 0b00000010:
+            if data.value & 0b10000000:
                 self.control.sprite_zero_hit = 1
             else:
                 self.control.sprite_zero_hit = 0
-            if data.value & 0b00000100:
+            if data.value & 0b10000000:
                 self.control.sprite_overflow = 1
             else:
                 self.control.sprite_overflow = 0
             print("cpuWrite: 0")
         elif address == 0x0001:     # Mask
-            if data.value & 0b00000001:
+            if data.value & 0b10000000:
                 self.mask.enhance_blue = 1
             else:
                 self.mask.enhance_blue = 0
-            if data.value & 0b00000010:
+            if data.value & 0b01000000:
                 self.mask.enhance_green = 1
             else:
                 self.mask.enhance_green = 0
-            if data.value & 0b00000100:
+            if data.value & 0b00100000:
                 self.mask.enhance_red = 1
             else:
                 self.mask.enhance_red = 0
-            if data.value & 0b00001000:
+            if data.value & 0b00010000:
                 self.mask.render_sprites = 1
             else:
                 self.mask.render_sprites = 0
-            if data.value & 0b00010000:
+            if data.value & 0b00001000:
                 self.mask.render_background = 1
             else:
                 self.mask.render_background = 0
-            if data.value & 0b00100000:
+            if data.value & 0b00000100:
                 self.mask.render_sprites_left = 1
             else:
                 self.mask.render_sprites_left = 0
-            if data.value & 0b01000000:
+            if data.value & 0b00000010:
                 self.mask.render_background_left = 1
             else:
                 self.mask.render_background_left = 0
-            if data.value & 0b10000000:
+            if data.value & 0b010000001:
                 self.mask.grayscale = 1
             else:
                 self.mask.grayscale = 0
@@ -197,83 +197,83 @@ class PPU:
         data = c_uint8(0)
 
         if address == 0x0000:       # Control
-            if data.value & 0b00000001:
+            if data.value & 0b10000000:
                 self.control.vertical_blank = 1
             else:
                 self.control.vertical_blank = 0
-            if data.value & 0b00000010:
+            if data.value & 0b0100000:
                 self.control.sprite_zero_hit = 1
             else:
                 self.control.sprite_zero_hit = 0
-            if data.value & 0b00000100:
+            if data.value & 0b00100000:
                 self.control.sprite_overflow = 1
             else:
                 self.control.sprite_overflow = 0
             print("cpuRead: 0")
         elif address == 0x0001:     # Mask
-            if data.value & 0b00000001:
+            if data.value & 0b10000000:
                 self.mask.enhance_blue = 1
             else:
                 self.mask.enhance_blue = 0
-            if data.value & 0b00000010:
+            if data.value & 0b01000000:
                 self.mask.enhance_green = 1
             else:
                 self.mask.enhance_green = 0
-            if data.value & 0b00000100:
+            if data.value & 0b00100000:
                 self.mask.enhance_red = 1
             else:
                 self.mask.enhance_red = 0
-            if data.value & 0b00001000:
+            if data.value & 0b00010000:
                 self.mask.render_sprites = 1
             else:
                 self.mask.render_sprites = 0
-            if data.value & 0b00010000:
+            if data.value & 0b00001000:
                 self.mask.render_background = 1
             else:
                 self.mask.render_background = 0
-            if data.value & 0b00100000:
+            if data.value & 0b00000100:
                 self.mask.render_sprites_left = 1
             else:
                 self.mask.render_sprites_left = 0
-            if data.value & 0b01000000:
+            if data.value & 0b00000010:
                 self.mask.render_background_left = 1
             else:
                 self.mask.render_background_left = 0
-            if data.value & 0b10000000:
+            if data.value & 0b010000001:
                 self.mask.grayscale = 1
             else:
                 self.mask.grayscale = 0
             print("cpuRead: 1")
         elif address == 0x0002:     # Status
-            if data.value & 0b00000001:
+            if data.value & 0b10000000:
                 self.status.enable_nmi = 1
             else:
                 self.status.enable_nmi = 0
-            if data.value & 0b00000010:
+            if data.value & 0b01000000:
                 self.status.slave_mode = 1
             else:
                 self.status.slave_mode = 0
-            if data.value & 0b00000100:
+            if data.value & 0b00100000:
                 self.status.sprite_size = 1
             else:
                 self.status.sprite_size = 0
-            if data.value & 0b00001000:
+            if data.value & 0b00010000:
                 self.status.pattern_background = 1
             else:
                 self.status.pattern_background = 0
-            if data.value & 0b00010000:
+            if data.value & 0b00001000:
                 self.status.pattern_sprite = 1
             else:
                 self.status.pattern_sprite = 0
-            if data.value & 0b00100000:
+            if data.value & 0b00000100:
                 self.status.increment_mode = 1
             else:
                 self.status.increment_mode = 0
-            if data.value & 0b01000000:
+            if data.value & 0b00000010:
                 self.status.nametable_y = 1
             else:
                 self.status.nametable_y = 0
-            if data.value & 0b10000000:
+            if data.value & 0b000000001:
                 self.status.nametable_x = 1
             else:
                 self.status.nametable_x = 0
