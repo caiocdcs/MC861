@@ -5,31 +5,40 @@ from ctypes import c_uint16, c_uint8
 
 @dataclass
 class status:
-    sprite_overflow: c_uint8 = 0
-    sprite_zero_hit: c_uint8 = 0
-    vertical_blank: c_uint8 = 0
+    sprite_overflow: c_uint8 = 1
+    sprite_zero_hit: c_uint8 = 1
+    vertical_blank: c_uint8 = 1
 
 @dataclass
 class mask:
-    grayscale: c_uint8 = 0
-    render_background_left: c_uint8 = 0
-    render_sprites_left: c_uint8 = 0
-    render_background: c_uint8 = 0
-    render_sprites: c_uint8 = 0
-    enhance_red: c_uint8 = 0
-    enhance_green: c_uint8 = 0
-    enhance_blue: c_uint8 = 0
+    grayscale: c_uint8 = 1
+    render_background_left: c_uint8 = 1
+    render_sprites_left: c_uint8 = 1
+    render_background: c_uint8 = 1
+    render_sprites: c_uint8 = 1
+    enhance_red: c_uint8 = 1
+    enhance_green: c_uint8 = 1
+    enhance_blue: c_uint8 = 1
 
 @dataclass
 class control:
-    nametable_x: c_uint8 = 0
-    nametable_y: c_uint8 = 0
-    increment_mode: c_uint8 = 0
-    pattern_sprite: c_uint8 = 0
-    pattern_background: c_uint8 = 0
-    sprite_size: c_uint8 = 0
-    slave_mode : c_uint8 = 0
-    enable_nmi: c_uint8 = 0
+    nametable_x: c_uint8 = 1
+    nametable_y: c_uint8 = 1
+    increment_mode: c_uint8 = 1
+    pattern_sprite: c_uint8 = 1
+    pattern_background: c_uint8 = 1
+    sprite_size: c_uint8 = 1
+    slave_mode : c_uint8 = 1
+    enable_nmi: c_uint8 = 1
+
+@dataclass
+class loopy:
+    coarse_x: c_uint16 = 5
+    coarse_y: c_uint16 = 5
+    nametable_x: c_uint16 = 1
+    nametable_y: c_uint16 = 1
+    fine_y: c_uint16 = 3
+    reg: c_uint16 = 0x0000
 
 class PPU:
 
@@ -43,14 +52,30 @@ class PPU:
         self.cycle = 0              # column
         self.frameComplete = False
         self.window = window
+
         # PPU flags
         self.status = status()
         self.mask = mask()
-        self.control = status()
+        self.control = control()
+
+        # Background
+        self.bg_next_tile_id = 0x00
+        self.bg_next_tile_attrib = 0x00
+        self.bg_next_tile_lsb = 0x00
+        self.bg_next_tile_msb = 0x00
+        self.bg_shifter_pattern_lo = 0x0000
+        self.bg_shifter_pattern_hi = 0x0000
+        self.bg_shifter_attrib_lo = 0x0000
+        self.bg_shifter_attrib_hi = 0x0000
+
+        self.vram_addr = loopy()
+        self.tram_addr = loopy()
+        self.fine_x = 0x00
+        self.nmi = False
 
         self.address_latch = 0x00
         self.ppu_data_buffer = 0x00
-        self.vram_addr = 0x0000
+        
         # Color mapping
         self.color = {
             0x00: (84, 84, 84),
@@ -124,19 +149,39 @@ class PPU:
 
     def cpuWrite(self, address, data):
         if address == 0x0000:       # Control
-            if data.value & 0b10000000:
-                self.control.vertical_blank = 1
-            else:
-                self.control.vertical_blank = 0
-            if data.value & 0b10000000:
-                self.control.sprite_zero_hit = 1
-            else:
-                self.control.sprite_zero_hit = 0
-            if data.value & 0b10000000:
-                self.control.sprite_overflow = 1
-            else:
-                self.control.sprite_overflow = 0
             print("cpuWrite: 0")
+            if data.value & 0b10000000:
+                self.control.enable_nmi = 1
+            else:
+                self.control.enable_nmi = 0
+            if data.value & 0b01000000:
+                self.control.slave_mode = 1
+            else:
+                self.control.slave_mode = 0
+            if data.value & 0b00100000:
+                self.control.sprite_size = 1
+            else:
+                self.control.sprite_size = 0
+            if data.value & 0b00010000:
+                self.control.pattern_background = 1
+            else:
+                self.control.pattern_background = 0
+            if data.value & 0b00001000:
+                self.control.pattern_sprite = 1
+            else:
+                self.control.pattern_sprite = 0
+            if data.value & 0b00000100:
+                self.control.increment_mode = 1
+            else:
+                self.control.increment_mode = 0
+            if data.value & 0b00000010:
+                self.control.nametable_y = 1
+            else:
+                self.control.nametable_y = 0
+            if data.value & 0b000000001:
+                self.control.nametable_x = 1
+            else:
+                self.control.nametable_x = 0
         elif address == 0x0001:     # Mask
             if data.value & 0b10000000:
                 self.mask.enhance_blue = 1
@@ -191,24 +236,44 @@ class PPU:
             print("cpuWrite: 6")
         elif address == 0x0007:     # PPU Data
             print("cpuWrite: 7")
-            self.ppuWrite(self.vram_addr, data)
+            self.ppuWrite(self.vram_addr.reg, data)
 
     def cpuRead(self, address, readOnly):
         data = c_uint8(0)
 
         if address == 0x0000:       # Control
             if data.value & 0b10000000:
-                self.control.vertical_blank = 1
+                self.control.enable_nmi = 1
             else:
-                self.control.vertical_blank = 0
-            if data.value & 0b0100000:
-                self.control.sprite_zero_hit = 1
+                self.control.enable_nmi = 0
+            if data.value & 0b01000000:
+                self.control.slave_mode = 1
             else:
-                self.control.sprite_zero_hit = 0
+                self.control.slave_mode = 0
             if data.value & 0b00100000:
-                self.control.sprite_overflow = 1
+                self.control.sprite_size = 1
             else:
-                self.control.sprite_overflow = 0
+                self.control.sprite_size = 0
+            if data.value & 0b00010000:
+                self.control.pattern_background = 1
+            else:
+                self.control.pattern_background = 0
+            if data.value & 0b00001000:
+                self.control.pattern_sprite = 1
+            else:
+                self.control.pattern_sprite = 0
+            if data.value & 0b00000100:
+                self.control.increment_mode = 1
+            else:
+                self.control.increment_mode = 0
+            if data.value & 0b00000010:
+                self.control.nametable_y = 1
+            else:
+                self.control.nametable_y = 0
+            if data.value & 0b000000001:
+                self.control.nametable_x = 1
+            else:
+                self.control.nametable_x = 0
             print("cpuRead: 0")
         elif address == 0x0001:     # Mask
             if data.value & 0b10000000:
@@ -246,37 +311,17 @@ class PPU:
             print("cpuRead: 1")
         elif address == 0x0002:     # Status
             if data.value & 0b10000000:
-                self.status.enable_nmi = 1
+                self.status.vertical_blank = 1
             else:
-                self.status.enable_nmi = 0
-            if data.value & 0b01000000:
-                self.status.slave_mode = 1
+                self.status.vertical_blank = 0
+            if data.value & 0b10000000:
+                self.status.sprite_zero_hit = 1
             else:
-                self.status.slave_mode = 0
-            if data.value & 0b00100000:
-                self.status.sprite_size = 1
+                self.status.sprite_zero_hit = 0
+            if data.value & 0b10000000:
+                self.status.sprite_overflow = 1
             else:
-                self.status.sprite_size = 0
-            if data.value & 0b00010000:
-                self.status.pattern_background = 1
-            else:
-                self.status.pattern_background = 0
-            if data.value & 0b00001000:
-                self.status.pattern_sprite = 1
-            else:
-                self.status.pattern_sprite = 0
-            if data.value & 0b00000100:
-                self.status.increment_mode = 1
-            else:
-                self.status.increment_mode = 0
-            if data.value & 0b00000010:
-                self.status.nametable_y = 1
-            else:
-                self.status.nametable_y = 0
-            if data.value & 0b000000001:
-                self.status.nametable_x = 1
-            else:
-                self.status.nametable_x = 0
+                self.status.sprite_overflow = 0
             self.status.vertical_blank = 0
             self.address_latch = 0
             print("cpuRead: 2")
@@ -291,10 +336,10 @@ class PPU:
         elif address == 0x0007:     # PPU Data
             print("cpuRead: 7")
             data = self.ppu_data_buffer
-            ppu_data_buffer = self.ppuRead(self.vram_addr)
-            if (self.vram_addr >= 0x3F00):
+            ppu_data_buffer = self.ppuRead(self.vram_addr.reg)
+            if (self.vram_addr.reg >= 0x3F00):
                 data = ppu_data_buffer
-            self.vram_addr += 32 if self.control.increment_mode else 1
+            self.vram_addr.reg += 32 if self.control.increment_mode else 1
 
         return data
 
@@ -325,33 +370,138 @@ class PPU:
     def insertCartridge(self, cartridge):
         self.cartridge = cartridge
 
-    def getColourFromPaletteRam(self, palette, pixel):
-        return self.color[self.ppuRead(0x3F00 + (palette << 2) + pixel) & 0x3F]
+    def getColor(self, palette, pixel):
+        return self.color[self.ppuRead(0x3F00 + (palette << 2) + pixel).value & 0x3F]
 
-    def getPatternTable(self, i, palette): # i and palette are c_uint8
-        for nTileY in range(16):
-            for nTileX in range(16):
-                nOffset = nTileY * 256 + nTileX * 16
-                for row in range(8):
-                    tile_lsb = self.ppuRead(i * 0x1000 + nOffset + row + 0x0000)
-                    tile_msb = self.ppuRead(i * 0x1000 + nOffset + row + 0x0008)
-                    for col in range(8):
-                        pixel = (tile_lsb & 0x01) + (tile_msb & 0x01)
-                        tile_lsb >>= 1
-                        tile_msb >>= 1
-                        pyglet.graphics.draw(1, pyglet.gl.GL_POINTS,('v2i', (nTileX * 8 + (7 - col), nTileY * 8 + row)), ('c3B', getColourFromPaletteRam(palette, pixel)))
-                        # TODO: set pixel
-                        # sprPatternTable[i].setPixel(
-                        #     nTileX * 8 + (7 - col),
-                        #     nTileY * 8 + row, 
-                        #     getColourFromPaletteRam(palette, pixel)
-                        # )
-
+    # def getPatternTable(self, i, palette): # i and palette are c_uint8
+    #     for nTileY in range(16):
+    #         for nTileX in range(16):
+    #             nOffset = nTileY * 256 + nTileX * 16
+    #             for row in range(8):
+    #                 tile_lsb = self.ppuRead(i * 0x1000 + nOffset + row + 0x0000)
+    #                 tile_msb = self.ppuRead(i * 0x1000 + nOffset + row + 0x0008)
+    #                 for col in range(8):
+    #                     pixel = (tile_lsb & 0x01) + (tile_msb & 0x01)
+    #                     tile_lsb >>= 1
+    #                     tile_msb >>= 1
 
     def clock(self):
 
         self.cycle += 1
-        
+
+        def IncrementScrollX():
+            if (self.mask.render_background | self.mask.render_sprites):
+                if (self.vram_addr.coarse_x == 31):
+                    self.vram_addr.coarse_x = 0
+                    self.vram_addr.nametable_x = ~self.vram_addr.nametable_x
+                else:
+                    self.vram_addr.coarse_x +- 1
+
+        def IncrementScrollY():
+            if (self.mask.render_background | self.mask.render_sprites):
+                if (self.vram_addr.fine_y < 7):
+                    self.vram_addr.fine_y += 1
+                else:
+                    self.vram_addr.fine_y = 0
+                    if (self.vram_addr.coarse_y == 29):
+                        self.vram_addr.coarse_y = 0
+                        self.vram_addr.nametable_y = ~self.vram_addr.nametable_y
+                    elif (self.vram_addr.coarse_y == 31):
+                        self.vram_addr.coarse_y = 0
+                    else:
+                        self.vram_addr.coarse_y += 1
+
+        def TransferAddressX():
+            if (self.mask.render_background | self.mask.render_sprites):
+                self.vram_addr.nametable_x = self.tram_addr.nametable_x
+                self.vram_addr.coarse_x    = self.tram_addr.coarse_x
+
+        def TransferAddressY():
+            if (self.mask.render_background | self.mask.render_sprites):
+                self.vram_addr.fine_y      = self.tram_addr.fine_y
+                self.vram_addr.nametable_y = self.tram_addr.nametable_y
+                self.vram_addr.coarse_y    = self.tram_addr.coarse_y
+
+        def LoadBackgroundShifters():
+            self.bg_shifter_pattern_lo = (self.bg_shifter_pattern_lo & 0xFF00) | self.bg_next_tile_lsb.value
+            self.bg_shifter_pattern_hi = (self.bg_shifter_pattern_hi & 0xFF00) | self.bg_next_tile_msb.value
+            self.bg_shifter_attrib_lo  = 0xFF if (self.bg_shifter_attrib_lo & 0xFF00) | (self.bg_next_tile_attrib & 0b01) else 0x00
+            self.bg_shifter_attrib_hi  = 0xFF if (self.bg_shifter_attrib_hi & 0xFF00) | (self.bg_next_tile_attrib & 0b10) else 0x00
+
+        def UpdateShifters():
+            if (self.mask.render_background):
+                self.bg_shifter_pattern_lo <<= 1
+                self.bg_shifter_pattern_hi <<= 1
+                self.bg_shifter_attrib_lo <<= 1
+                self.bg_shifter_attrib_hi <<= 1
+            # if (self.mask.render_sprites & self.cycle >= 1 & self.cycle < 258):
+            #     for i in range(self.sprite_count):
+            #         if (self.spriteScanline[i].x > 0):
+            #             spriteScanline[i].x -= 1
+            #         else:
+            #             sprite_shifter_pattern_lo[i] <<= 1
+            #             sprite_shifter_pattern_hi[i] <<= 1
+
+        # if (self.scanline >= -1 & self.scanline < 240):
+        #     if (self.scanline == 0 & self.cycle == 0):
+        #         self.cycle = 1
+
+        #     if (self.scanline == -1 & self.cycle == 1):
+        #         self.status.vertical_blank = 0
+        #         self.status.sprite_overflow = 0
+        #         self.status.sprite_zero_hit = 0
+        #         for i in range(8):
+        #             self.sprite_shifter_pattern_lo[i] = 0
+        #             self.sprite_shifter_pattern_hi[i] = 0
+
+        if ((self.cycle >= 2 & self.cycle < 258) | (self.cycle >= 321 & self.cycle < 338)):
+            UpdateShifters()
+            case = (self.cycle - 1) % 8
+            if (case == 0):
+                self.bg_next_tile_id = self.ppuRead(0x2000 | (self.vram_addr.reg & 0x0FFF))
+            elif (case == 2):
+                self.bg_next_tile_attrib = self.ppuRead(0x23C0 | (self.vram_addr.nametable_y << 11) 
+                                                    | (self.vram_addr.nametable_x << 10) 
+                                                    | ((self.vram_addr.coarse_y >> 2) << 3) 
+                                                    | (self.vram_addr.coarse_x >> 2))
+                if (self.vram_addr.coarse_y & 0x02):
+                    self.bg_next_tile_attrib >>= 4
+                if (self.vram_addr.coarse_x & 0x02):
+                    self.bg_next_tile_attrib >>= 2
+                self.bg_next_tile_attrib = self.bg_next_tile_attrib.value & 0x03
+            elif (case == 4):
+                self.bg_next_tile_lsb = self.ppuRead((self.control.pattern_background << 12) 
+                                        + (self.bg_next_tile_id.value << 4) 
+                                        + (self.vram_addr.fine_y) + 0)
+            elif (case == 6):
+                self.bg_next_tile_msb = self.ppuRead((self.control.pattern_background << 12)
+                                        + (self.bg_next_tile_id.value << 4)
+                                        + (self.vram_addr.fine_y) + 8)
+            else:
+                IncrementScrollX()
+                
+        if (self.cycle == 256):
+            IncrementScrollY()
+            
+        if (self.cycle == 257):
+            LoadBackgroundShifters()
+            TransferAddressX()
+            
+        if (self.cycle == 338 | self.cycle == 340):
+            self.bg_next_tile_id = self.ppuRead(0x2000 | (self.vram_addr.reg & 0x0FFF))
+            
+        if (self.scanline == -1 & self.cycle >= 280 & self.cycle < 305):
+            TransferAddressY()
+
+        # # TODO: Foreground Rendering
+        # # Some code here
+
+        if (self.scanline >= 241 & self.scanline < 261):
+            if (self.scanline == 241 & self.cycle == 1):
+                self.status.vertical_blank = 1
+                if (self.control.enable_nmi):
+                    self.nmi = True
+
         if self.cycle >= 341:
             self.cycle = 0
             self.scanline += 1
@@ -359,6 +509,83 @@ class PPU:
             if self.scanline >= 261:
                 self.scanline = -1
                 self.frameComplete = True
-                self.window.movePixelDown()
-                # print("Frame Complete")
+
+        # Background check
+
+        bg_pixel = 0x00
+        bg_palette = 0x00
+        if (self.mask.render_background):
+            bit_mux = 0x8000 >> self.fine_x
+
+            p0_pixel = (self.bg_shifter_pattern_lo & bit_mux) > 0
+            p1_pixel = (self.bg_shifter_pattern_hi & bit_mux) > 0
+
+            bg_pixel = (p1_pixel << 1) | p0_pixel
+
+            bg_pal0 = (self.bg_shifter_attrib_lo & bit_mux) > 0
+            bg_pal1 = (self.bg_shifter_attrib_hi & bit_mux) > 0
+            bg_palette = (bg_pal1 << 1) | bg_pal0
+
+        # TODO: Foreground check
+        fg_pixel = 0x00
+        fg_palette = 0x00
+        fg_priority = 0x00
+
+        # Pixel
+        pixel = 0x00
+        palette = 0x00
+
+        if (bg_pixel == 0 & fg_pixel == 0):
+            pixel = 0x00
+            palette = 0x00
+        elif (bg_pixel == 0 & fg_pixel > 0):
+            pixel = fg_pixel
+            palette = fg_palette
+        elif (bg_pixel > 0 & fg_pixel == 0):
+            pixel = bg_pixel
+            palette = bg_palette
+        elif (bg_pixel > 0 & fg_pixel > 0):
+            if (fg_priority):
+                pixel = fg_pixel
+                palette = fg_palette
+            else:
+                pixel = bg_pixel
+                palette = bg_palette
+
+            # if (bSpriteZeroHitPossible & bSpriteZeroBeingRendered):
+            #     if (mask.render_background & mask.render_sprites):
+            #         if (~(mask.render_background_left | mask.render_sprites_left)):
+            #             if (cycle >= 9 & cycle < 258):
+            #                 status.sprite_zero_hit = 1
+            #         else:
+            #             if (cycle >= 1 & cycle < 258):
+            #                 status.sprite_zero_hit = 1
+
+        if (bg_pixel == 0 & fg_pixel == 0):
+            pixel = 0x00
+            palette = 0x00
+        elif (bg_pixel == 0 & fg_pixel > 0):
+            pixel = fg_pixel
+            palette = fg_palette
+        elif (bg_pixel > 0 & fg_pixel == 0):
+            pixel = bg_pixel
+            palette = bg_palette
+        elif (bg_pixel > 0 & fg_pixel > 0):
+            if (fg_priority):
+                pixel = fg_pixel
+                palette = fg_palette
+            else:
+                pixel = bg_pixel
+                palette = bg_palette
+
+            # if (bSpriteZeroHitPossible & bSpriteZeroBeingRendered):
+            #     if (mask.render_background & mask.render_sprites):
+            #         if (~(mask.render_background_left | mask.render_sprites_left)):
+            #             if (cycle >= 9 & cycle < 258):
+            #                 status.sprite_zero_hit = 1
+            #         else:
+            #             if (cycle >= 1 & cycle < 258):
+            #                 status.sprite_zero_hit = 1
+
+        self.window.draw_pixel(self.cycle - 1, self.scanline, self.getColor(palette, pixel))
             

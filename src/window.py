@@ -136,10 +136,13 @@ class Window(pyglet.window.Window):
             self.player1.selectButtonPressed()
 
     def on_draw(self):
-        self.clear()
-        # pyglet.graphics.draw(4, pyglet.gl.GL_QUADS, ('v2i', [self.x, self.y, self.x - self.dx, self.y, self.x - self.dx, self.y - self.dy, self.x, self.y - self.dy]))
-        self.update_graphics()
+        # self.clear()
+        pyglet.graphics.draw(4, pyglet.gl.GL_QUADS, ('v2i', [self.x, self.y, self.x - self.dx, self.y, self.x - self.dx, self.y - self.dy, self.x, self.y - self.dy]))
 
+    def draw_pixel(self, x, y, rgb):
+        pyglet.graphics.draw(1, pyglet.gl.GL_POINTS,('v2i', (x, y)), ('c3B', rgb))
+
+    # Unused
     def update_graphics(self):
         # TODO: get 4 byte sprite where (Y, tile, junk, X)
         # TODO: get TILE for drawing from .chr sprites file (at most 255/6 or 0xFE/F offset)
@@ -154,6 +157,7 @@ class Window(pyglet.window.Window):
         b = [0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
         self.draw_sprite(10, 10, b)
     
+    # Unused
     def draw_sprite(self, x, y, byteArray):
         # byteArray must be a value of 16 bytes, which represents the sprite
         # for each bit, the color is decided by n and n+8 bit, which means de first 8 bytes are the LSB and the following 8 the MSB
