@@ -4,7 +4,7 @@ from bus import BUS
 from cpu import CPU
 from ppu import PPU
 from window import Window
-from cartridge import Cartridge 
+from Cartridge import Cartridge 
 
 def main():
 
@@ -14,7 +14,8 @@ def main():
 		return
 	
 	window = Window()
-	window.set_size(1024, 960)
+	window.set_size(256, 240)
+	# window.set_size(768, 720)
 	cpu = CPU()
 	ppu = PPU(window)
 	bus = BUS(cpu, ppu)
