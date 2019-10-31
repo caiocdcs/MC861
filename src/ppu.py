@@ -5,31 +5,31 @@ from ctypes import c_uint16, c_uint8
 
 @dataclass
 class status:
-    sprite_overflow: c_uint8 = 1
-    sprite_zero_hit: c_uint8 = 1
-    vertical_blank: c_uint8 = 1
+    sprite_overflow: c_uint8 = 0
+    sprite_zero_hit: c_uint8 = 0
+    vertical_blank: c_uint8 = 0
 
 @dataclass
 class mask:
-    grayscale: c_uint8 = 1
-    render_background_left: c_uint8 = 1
-    render_sprites_left: c_uint8 = 1
-    render_background: c_uint8 = 1
-    render_sprites: c_uint8 = 1
-    enhance_red: c_uint8 = 1
-    enhance_green: c_uint8 = 1
-    enhance_blue: c_uint8 = 1
+    grayscale: c_uint8 = 0
+    render_background_left: c_uint8 = 0
+    render_sprites_left: c_uint8 = 0
+    render_background: c_uint8 = 0
+    render_sprites: c_uint8 = 0
+    enhance_red: c_uint8 = 0
+    enhance_green: c_uint8 = 0
+    enhance_blue: c_uint8 = 0
 
 @dataclass
 class control:
-    nametable_x: c_uint8 = 1
-    nametable_y: c_uint8 = 1
-    increment_mode: c_uint8 = 1
-    pattern_sprite: c_uint8 = 1
-    pattern_background: c_uint8 = 1
-    sprite_size: c_uint8 = 1
-    slave_mode : c_uint8 = 1
-    enable_nmi: c_uint8 = 1
+    nametable_x: c_uint8 = 0
+    nametable_y: c_uint8 = 0
+    increment_mode: c_uint8 = 0
+    pattern_sprite: c_uint8 = 0
+    pattern_background: c_uint8 = 0
+    sprite_size: c_uint8 = 0
+    slave_mode : c_uint8 = 0
+    enable_nmi: c_uint8 = 0
 
 class PPU:
 
@@ -44,6 +44,10 @@ class PPU:
         self.status = status()
         self.mask = mask()
         self.control = status()
+
+        self.address_latch = 0x00
+        self.ppu_data_buffer = 0x00
+        self.vram_addr = 0x0000
         # Color mapping
         self.color = {
             0x00: (84, 84, 84),
@@ -165,6 +169,78 @@ class PPU:
                 self.mask.grayscale = 0
             print("1")
         elif address == 0x0002:     # Status
+            print("2")
+        elif address == 0x0003:     # OAM Address
+            print("3")
+        elif address == 0x0004:     # OAM Data
+            print("4")
+        elif address == 0x0005:     # Scroll
+            if self.address_latch == 0:
+                self.address_latch = 1
+            else:
+                self.address_latch = 0
+            print("5")
+        elif address == 0x0006:     # PPU Address
+            if self.address_latch == 0:
+                self.address_latch = 1
+            else:
+                self.address_latch = 0
+            print("6")
+        elif address == 0x0007:     # PPU Data
+            print("7")
+
+    def cpuRead(self, address, readOnly):
+        data = c_uint8(0)
+
+        if address == 0x0000:       # Control
+            if data & 0b00000001:
+                self.control.vertical_blank = 1
+            else:
+                self.control.vertical_blank = 0
+            if data & 0b00000010:
+                self.control.sprite_zero_hit = 1
+            else:
+                self.control.sprite_zero_hit = 0
+            if data & 0b00000100:
+                self.control.sprite_overflow = 1
+            else:
+                self.control.sprite_overflow = 0
+            print("0")
+        elif address == 0x0001:     # Mask
+            if data & 0b00000001:
+                self.mask.enhance_blue = 1
+            else:
+                self.mask.enhance_blue = 0
+            if data & 0b00000010:
+                self.mask.enhance_green = 1
+            else:
+                self.mask.enhance_green = 0
+            if data & 0b00000100:
+                self.mask.enhance_red = 1
+            else:
+                self.mask.enhance_red = 0
+            if data & 0b00001000:
+                self.mask.render_sprites = 1
+            else:
+                self.mask.render_sprites = 0
+            if data & 0b00010000:
+                self.mask.render_background = 1
+            else:
+                self.mask.render_background = 0
+            if data & 0b00100000:
+                self.mask.render_sprites_left = 1
+            else:
+                self.mask.render_sprites_left = 0
+            if data & 0b01000000:
+                self.mask.render_background_left = 1
+            else:
+                self.mask.render_background_left = 0
+            if data & 0b10000000:
+                self.mask.grayscale = 1
+            else:
+                self.mask.grayscale = 0
+            print("1")
+        elif address == 0x0002:     # Status
             if data & 0b00000001:
                 self.status.enable_nmi = 1
             else:
@@ -197,6 +273,8 @@ class PPU:
                 self.status.nametable_x = 1
             else:
                 self.status.nametable_x = 0
+            self.status.vertical_blank = 0
+            self.address_latch = 0
             print("2")
         elif address == 0x0003:     # OAM Address
             print("3")
@@ -207,26 +285,11 @@ class PPU:
         elif address == 0x0006:     # PPU Address
             print("6")
         elif address == 0x0007:     # PPU Data
-            print("7")
-
-    def cpuRead(self, address, readOnly):
-        data = c_uint8(0)
-
-        if address == 0x0000:       # Control
-            print("0")
-        elif address == 0x0001:     # Mask
-            print("1")
-        elif address == 0x0002:     # Status
-            print("2")
-        elif address == 0x0003:     # OAM Address
-            print("3")
-        elif address == 0x0004:     # OAM Data
-            print("4")
-        elif address == 0x0005:     # Scroll
-            print("5")
-        elif address == 0x0006:     # PPU Address
-            print("6")
-        elif address == 0x0007:     # PPU Data
+            data = self.ppu_data_buffer
+            ppu_data_buffer = ppuRead(self.vram_addr)
+            if (vram_addr >= 0x3F00):
+                data = ppu_data_buffer
+            vram_addr += 32 if self.control.increment_mode else 1
             print("7")
 
         return data
@@ -234,7 +297,7 @@ class PPU:
     def ppuWrite(self, address, data):
         address = address & 0x3FFF
 
-    def ppuRead(self, address, readOnly):
+    def ppuRead(self, address, readOnly=False):
         data = c_uint8(0)
         address = address & 0x3FFF
 
