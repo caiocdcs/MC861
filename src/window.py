@@ -173,7 +173,13 @@ class Window(pyglet.window.Window):
                 if (byteArray[j * 8 + i]) == 0:
                     rgb = self.color[0x0D]
                     # color_pairs = rgb * int(len(square_cords)/2)
-                else:
+                elif (byteArray[j * 8 + i]) == 1:
+                    rgb = self.color[0x09]
+                    # color_pairs = rgb * int(len(square_cords)/2)
+                elif (byteArray[j * 8 + i]) == 2:
+                    rgb = self.color[0x13]
+                    # color_pairs = rgb * int(len(square_cords)/2)
+                else: # Color 3
                     rgb = self.color[0x20]
                     # color_pairs = rgb * int(len(square_cords)/2)
                 # # print(color_pairs)
