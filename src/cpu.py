@@ -4,8 +4,6 @@ from memory import Memory
 from flagController import FlagController
 from stack import Stack
 import time
-from window import Window
-import pyglet
 
 KB = 1024
 
@@ -191,11 +189,6 @@ class CPU:
                '40': (self.handleInstructionRTI,1),
                'EA': (self.handleInstructionNoOp,2)
             }
-        self.window = Window()
-        self.window.set_size(1024, 960)
-        #pyglet.clock.schedule_interval(self.run, 0.1)
-        pyglet.clock.schedule_interval(self.window.executeControllers, 0.1)
-        pyglet.app.run()
 
     def _read_header(self):
         self.prg_rom_size = int(self._get_byte_from_code_position(8))
@@ -273,7 +266,7 @@ class CPU:
         elif address == 0x4015:
             pass # return self.APU.readRegister(address)
         elif address == 0x4016:
-            return self.window.readKeyboardFromPlayer1()
+            pass # return self.window.readKeyboardFromPlayer1()
         elif address == 0x4017:
             pass # return self.window.readKeyboardFromPlayer2()
         elif address < 0x6000:
@@ -304,6 +297,15 @@ class CPU:
 
     def _set_address_str(self, address, data, set_address=False):
         return self._set_address_int(int(address, 16), data, set_address)
+
+    def reset(self):
+        # TODO: Implement reset
+        print("cpu reset")
+
+    def clock(self):
+        # TODO: Implement clock
+        # print("cpu clock")
+        return False # TODO: remove this line
 
     ####################################################
     ##########      INSTRUCTION HANDLERS      ##########
