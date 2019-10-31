@@ -1,4 +1,4 @@
-from mapper0 import Mapper0 
+from mapper import Mapper 
 from ctypes import c_uint8
 import struct
 
@@ -15,31 +15,31 @@ class Cartridge:
         self.mapperId = 0
         self.prgBanks = 0
         self.chrBanks = 0
-        self.mapper0 = Mapper0(self.prgBanks, self.chrBanks)
+        self.mapper = Mapper(self.prgBanks, self.chrBanks)
 
     def cpuRead(self, address):
-        mappedAddress = self.mapper0.cpuMapRead(address)
+        mappedAddress = self.mapper.cpuMapRead(address)
         if mappedAddress != None :
             data = self.prgMemory[mappedAddress] 
             return data
         return None
 
     def cpuWrite(self, address, data):
-        mappedAddress = self.mapper0.cpuMapWrite(address)
+        mappedAddress = self.mapper.cpuMapWrite(address)
         if mappedAddress != None :
             self.prgMemory[mappedAddress] = data
             return True
         return False
 
     def ppuRead(self, address):
-        mappedAddress = self.mapper0.ppuMapRead(address)
+        mappedAddress = self.mapper.ppuMapRead(address)
         if mappedAddress != None :
             data = self.chrMemory[mappedAddress] 
             return data
         return None
 
     def ppuWrite(self, address, data):
-        mappedAddress = self.mapper0.ppuMapWrite(address)
+        mappedAddress = self.mapper.ppuMapWrite(address)
         if mappedAddress != None :
             self.chrMemory[mappedAddress] = data
             return True

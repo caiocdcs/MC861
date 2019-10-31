@@ -1,4 +1,4 @@
-class Mapper0:
+class Mapper:
 
     def __init__(self, prgBanks, chrBanks):
         self.prgBanks = prgBanks

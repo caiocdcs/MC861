@@ -124,18 +124,7 @@ class PPU:
 
     def cpuWrite(self, address, data):
         if address == 0x0000:       # Control
-            if data.value & 0b10000000:
-                self.control.vertical_blank = 1
-            else:
-                self.control.vertical_blank = 0
-            if data.value & 0b10000000:
-                self.control.sprite_zero_hit = 1
-            else:
-                self.control.sprite_zero_hit = 0
-            if data.value & 0b10000000:
-                self.control.sprite_overflow = 1
-            else:
-                self.control.sprite_overflow = 0
+            self.readControl(data)
             print("cpuWrite: 0")
         elif address == 0x0001:     # Mask
             if data.value & 0b10000000:
@@ -166,7 +155,7 @@ class PPU:
                 self.mask.render_background_left = 1
             else:
                 self.mask.render_background_left = 0
-            if data.value & 0b010000001:
+            if data.value & 0b000000001:
                 self.mask.grayscale = 1
             else:
                 self.mask.grayscale = 0
@@ -192,6 +181,41 @@ class PPU:
         elif address == 0x0007:     # PPU Data
             print("cpuWrite: 7")
             self.ppuWrite(self.vram_addr, data)
+
+    def readControl(self, data):
+        if data.value & 0b10000000:
+            self.control.enable_nmi = 1
+        else:
+            self.control.enable_nmi = 0
+        if data.value & 0b01000000:
+            self.control.slave_mode = 1
+        else:
+            self.control.slave_mode = 0
+        if data.value & 0b00100000:
+            self.control.sprite_overflow = 1
+        else:
+            self.control.sprite_overflow = 0
+        if data.value & 0b00010000:
+            self.control.pattern_background = 1
+        else:
+            self.control.pattern_background = 0
+        if data.value & 0b00001000:
+            self.control.pattern_sprite = 1
+        else:
+            self.control.pattern_sprite = 0
+        if data.value & 0b00000100:
+            self.control.increment_mode = 1
+        else:
+            self.control.increment_mode = 0
+        if data.value & 0b00000010:
+            self.control.nametable_y = 1
+        else:
+            self.control.nametable_y = 0
+        if data.value & 0b000000001:
+            self.control.nametable_x = 1
+        else:
+            self.control.nametable_x = 0
+            
 
     def cpuRead(self, address, readOnly):
         data = c_uint8(0)
@@ -301,24 +325,48 @@ class PPU:
     def ppuWrite(self, address, data):
         print("ppuWrite")
         address = address & 0x3FFF
-        if (address >= 0x0000 & address <= 0x1FFF):
+
+        if (self.cartridge.ppuWrite(address, data)):
+            pass
+        elif (address >= 0x0000 & address <= 0x1FFF):
             offset = 4096 if (address & 0x1000) >> 12 else 0
             self.tablePattern[offset + address & 0x0FFF] = data
-        if (address >= 0x3F00 & address <= 0x3FFF):
+        elif (address >= 0x2000 & address <= 0x3EFF):
+            pass
+        elif (address >= 0x3F00 & address <= 0x3FFF):
             address &= 0x001F
             if (address == 0x0010):
                 address = 0x0000
-            if (address == 0x0014):
+            elif (address == 0x0014):
                 address = 0x0004
-            if (address == 0x0018):
+            elif (address == 0x0018):
                 address = 0x0008
-            if (address == 0x001C):
+            elif (address == 0x001C):
                 address = 0x000C
             self.tablePalette[address] = data
 
     def ppuRead(self, address, readOnly=False):
         data = c_uint8(0)
         address = address & 0x3FFF
+
+        if (self.cartridge.ppuRead(address) != None):
+            pass
+        elif (address >= 0x0000 & address <= 0x1FFF):
+            offset = 4096 if (address & 0x1000) >> 12 else 0
+            data = self.tablePattern[offset + address & 0x0FFF] = data
+        elif (address >= 0x2000 & address <= 0x3EFF):
+            pass
+        elif (address >= 0x3F00 & address <= 0x3FFF):
+            address == address & 0x001F
+            if address == 0x0010:
+                address = 0x0000;
+            elif address == 0x0014:
+                address = 0x0004;
+            elif address == 0x0018:
+                address = 0x0008;
+            elif address == 0x001C:
+                address = 0x000C;
+            data = self.tablePalette[address]
 
         return data
 
