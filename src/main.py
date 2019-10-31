@@ -16,11 +16,13 @@ def main():
 	window = Window()
 	window.set_size(256, 240)
 	# window.set_size(768, 720)
-	cpu = CPU(sys.argv[1])
+	cpu = CPU()
 	ppu = PPU(window)
 	bus = BUS(cpu, ppu)
 	cart = Cartridge(sys.argv[1])
 	bus.insertCartridge(cart)
+	
+	cpu.connectBus(bus)
 
 	# Do all init (load pallettes, background, set flags...) before running pyglet loop
 	

@@ -121,49 +121,49 @@ class PPU:
 
     def cpuWrite(self, address, data):
         if address == 0x0000:       # Control
-            if data & 0b00000001:
+            if data.value & 0b00000001:
                 self.control.vertical_blank = 1
             else:
                 self.control.vertical_blank = 0
-            if data & 0b00000010:
+            if data.value & 0b00000010:
                 self.control.sprite_zero_hit = 1
             else:
                 self.control.sprite_zero_hit = 0
-            if data & 0b00000100:
+            if data.value & 0b00000100:
                 self.control.sprite_overflow = 1
             else:
                 self.control.sprite_overflow = 0
             print("0")
         elif address == 0x0001:     # Mask
-            if data & 0b00000001:
+            if data.value & 0b00000001:
                 self.mask.enhance_blue = 1
             else:
                 self.mask.enhance_blue = 0
-            if data & 0b00000010:
+            if data.value & 0b00000010:
                 self.mask.enhance_green = 1
             else:
                 self.mask.enhance_green = 0
-            if data & 0b00000100:
+            if data.value & 0b00000100:
                 self.mask.enhance_red = 1
             else:
                 self.mask.enhance_red = 0
-            if data & 0b00001000:
+            if data.value & 0b00001000:
                 self.mask.render_sprites = 1
             else:
                 self.mask.render_sprites = 0
-            if data & 0b00010000:
+            if data.value & 0b00010000:
                 self.mask.render_background = 1
             else:
                 self.mask.render_background = 0
-            if data & 0b00100000:
+            if data.value & 0b00100000:
                 self.mask.render_sprites_left = 1
             else:
                 self.mask.render_sprites_left = 0
-            if data & 0b01000000:
+            if data.value & 0b01000000:
                 self.mask.render_background_left = 1
             else:
                 self.mask.render_background_left = 0
-            if data & 0b10000000:
+            if data.value & 0b10000000:
                 self.mask.grayscale = 1
             else:
                 self.mask.grayscale = 0
@@ -193,83 +193,83 @@ class PPU:
         data = c_uint8(0)
 
         if address == 0x0000:       # Control
-            if data & 0b00000001:
+            if data.value & 0b00000001:
                 self.control.vertical_blank = 1
             else:
                 self.control.vertical_blank = 0
-            if data & 0b00000010:
+            if data.value & 0b00000010:
                 self.control.sprite_zero_hit = 1
             else:
                 self.control.sprite_zero_hit = 0
-            if data & 0b00000100:
+            if data.value & 0b00000100:
                 self.control.sprite_overflow = 1
             else:
                 self.control.sprite_overflow = 0
             print("0")
         elif address == 0x0001:     # Mask
-            if data & 0b00000001:
+            if data.value & 0b00000001:
                 self.mask.enhance_blue = 1
             else:
                 self.mask.enhance_blue = 0
-            if data & 0b00000010:
+            if data.value & 0b00000010:
                 self.mask.enhance_green = 1
             else:
                 self.mask.enhance_green = 0
-            if data & 0b00000100:
+            if data.value & 0b00000100:
                 self.mask.enhance_red = 1
             else:
                 self.mask.enhance_red = 0
-            if data & 0b00001000:
+            if data.value & 0b00001000:
                 self.mask.render_sprites = 1
             else:
                 self.mask.render_sprites = 0
-            if data & 0b00010000:
+            if data.value & 0b00010000:
                 self.mask.render_background = 1
             else:
                 self.mask.render_background = 0
-            if data & 0b00100000:
+            if data.value & 0b00100000:
                 self.mask.render_sprites_left = 1
             else:
                 self.mask.render_sprites_left = 0
-            if data & 0b01000000:
+            if data.value & 0b01000000:
                 self.mask.render_background_left = 1
             else:
                 self.mask.render_background_left = 0
-            if data & 0b10000000:
+            if data.value & 0b10000000:
                 self.mask.grayscale = 1
             else:
                 self.mask.grayscale = 0
             print("1")
         elif address == 0x0002:     # Status
-            if data & 0b00000001:
+            if data.value & 0b00000001:
                 self.status.enable_nmi = 1
             else:
                 self.status.enable_nmi = 0
-            if data & 0b00000010:
+            if data.value & 0b00000010:
                 self.status.slave_mode = 1
             else:
                 self.status.slave_mode = 0
-            if data & 0b00000100:
+            if data.value & 0b00000100:
                 self.status.sprite_size = 1
             else:
                 self.status.sprite_size = 0
-            if data & 0b00001000:
+            if data.value & 0b00001000:
                 self.status.pattern_background = 1
             else:
                 self.status.pattern_background = 0
-            if data & 0b00010000:
+            if data.value & 0b00010000:
                 self.status.pattern_sprite = 1
             else:
                 self.status.pattern_sprite = 0
-            if data & 0b00100000:
+            if data.value & 0b00100000:
                 self.status.increment_mode = 1
             else:
                 self.status.increment_mode = 0
-            if data & 0b01000000:
+            if data.value & 0b01000000:
                 self.status.nametable_y = 1
             else:
                 self.status.nametable_y = 0
-            if data & 0b10000000:
+            if data.value & 0b10000000:
                 self.status.nametable_x = 1
             else:
                 self.status.nametable_x = 0
@@ -286,10 +286,10 @@ class PPU:
             print("6")
         elif address == 0x0007:     # PPU Data
             data = self.ppu_data_buffer
-            ppu_data_buffer = ppuRead(self.vram_addr)
-            if (vram_addr >= 0x3F00):
+            ppu_data_buffer = self.ppuRead(self.vram_addr)
+            if (self.vram_addr >= 0x3F00):
                 data = ppu_data_buffer
-            vram_addr += 32 if self.control.increment_mode else 1
+            self.vram_addr += 32 if self.control.increment_mode else 1
             print("7")
 
         return data
@@ -307,15 +307,15 @@ class PPU:
         self.cartridge = cartridge
 
     def getColourFromPaletteRam(self, palette, pixel):
-        return self.color[ppuRead(0x3F00 + (palette << 2) + pixel) & 0x3F]
+        return self.color[self.ppuRead(0x3F00 + (palette << 2) + pixel) & 0x3F]
 
     def getPatternTable(self, i, palette): # i and palette are c_uint8
         for nTileY in range(16):
             for nTileX in range(16):
                 nOffset = nTileY * 256 + nTileX * 16
                 for row in range(8):
-                    tile_lsb = ppuRead(i * 0x1000 + nOffset + row + 0x0000)
-                    tile_msb = ppuRead(i * 0x1000 + nOffset + row + 0x0008)
+                    tile_lsb = self.ppuRead(i * 0x1000 + nOffset + row + 0x0000)
+                    tile_msb = self.ppuRead(i * 0x1000 + nOffset + row + 0x0008)
                     for col in range(8):
                         pixel = (tile_lsb & 0x01) + (tile_msb & 0x01)
                         tile_lsb >>= 1

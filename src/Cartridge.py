@@ -1,5 +1,8 @@
 from mapper0 import Mapper0 
+from ctypes import c_uint8
 import struct
+
+KB = 1024
 
 uint8 = int
 ordc = lambda c:c if type(c) ==int else ord(c)
@@ -71,8 +74,8 @@ class Cartridge:
         if control1 & uint8(4) == uint8(4):
             file.read(512)
 
-        self.prgMemory = fromstring(file.read(16384 * numPRG), uint8)
-        self.chrMemory = fromstring(file.read(8192 * numCHR), uint8)
+        self.prgMemory = fromstring(file.read(16*KB * numPRG), c_uint8)
+        self.chrMemory = fromstring(file.read(8*KB * numCHR), c_uint8)
 
         if numCHR == 0:
             self.chrMemory = [0 for _ in range(8192)]
