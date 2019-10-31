@@ -136,7 +136,7 @@ class PPU:
                 self.control.sprite_overflow = 1
             else:
                 self.control.sprite_overflow = 0
-            print("0")
+            print("cpuWrite: 0")
         elif address == 0x0001:     # Mask
             if data.value & 0b00000001:
                 self.mask.enhance_blue = 1
@@ -170,27 +170,28 @@ class PPU:
                 self.mask.grayscale = 1
             else:
                 self.mask.grayscale = 0
-            print("1")
+            print("cpuWrite: 1")
         elif address == 0x0002:     # Status
-            print("2")
+            print("cpuWrite: 2")
         elif address == 0x0003:     # OAM Address
-            print("3")
+            print("cpuWrite: 3")
         elif address == 0x0004:     # OAM Data
-            print("4")
+            print("cpuWrite: 4")
         elif address == 0x0005:     # Scroll
+            print("cpuWrite: 5")
             if self.address_latch == 0:
                 self.address_latch = 1
             else:
                 self.address_latch = 0
-            print("5")
         elif address == 0x0006:     # PPU Address
             if self.address_latch == 0:
                 self.address_latch = 1
             else:
                 self.address_latch = 0
-            print("6")
+            print("cpuWrite: 6")
         elif address == 0x0007:     # PPU Data
-            print("7")
+            print("cpuWrite: 7")
+            self.ppuWrite(self.vram_addr, data)
 
     def cpuRead(self, address, readOnly):
         data = c_uint8(0)
@@ -208,7 +209,7 @@ class PPU:
                 self.control.sprite_overflow = 1
             else:
                 self.control.sprite_overflow = 0
-            print("0")
+            print("cpuRead: 0")
         elif address == 0x0001:     # Mask
             if data.value & 0b00000001:
                 self.mask.enhance_blue = 1
@@ -242,7 +243,7 @@ class PPU:
                 self.mask.grayscale = 1
             else:
                 self.mask.grayscale = 0
-            print("1")
+            print("cpuRead: 1")
         elif address == 0x0002:     # Status
             if data.value & 0b00000001:
                 self.status.enable_nmi = 1
@@ -278,27 +279,42 @@ class PPU:
                 self.status.nametable_x = 0
             self.status.vertical_blank = 0
             self.address_latch = 0
-            print("2")
+            print("cpuRead: 2")
         elif address == 0x0003:     # OAM Address
-            print("3")
+            print("cpuRead: 3")
         elif address == 0x0004:     # OAM Data
-            print("4")
+            print("cpuRead: 4")
         elif address == 0x0005:     # Scroll
-            print("5")
+            print("cpuRead: 5")
         elif address == 0x0006:     # PPU Address
-            print("6")
+            print("cpuRead: 6")
         elif address == 0x0007:     # PPU Data
+            print("cpuRead: 7")
             data = self.ppu_data_buffer
             ppu_data_buffer = self.ppuRead(self.vram_addr)
             if (self.vram_addr >= 0x3F00):
                 data = ppu_data_buffer
             self.vram_addr += 32 if self.control.increment_mode else 1
-            print("7")
 
         return data
 
     def ppuWrite(self, address, data):
+        print("ppuWrite")
         address = address & 0x3FFF
+        if (address >= 0x0000 & address <= 0x1FFF):
+            offset = 4096 if (address & 0x1000) >> 12 else 0
+            self.tablePattern[offset + address & 0x0FFF] = data
+        if (address >= 0x3F00 & address <= 0x3FFF):
+            address &= 0x001F
+            if (address == 0x0010):
+                address = 0x0000
+            if (address == 0x0014):
+                address = 0x0004
+            if (address == 0x0018):
+                address = 0x0008
+            if (address == 0x001C):
+                address = 0x000C
+            self.tablePalette[address] = data
 
     def ppuRead(self, address, readOnly=False):
         data = c_uint8(0)

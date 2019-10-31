@@ -274,7 +274,7 @@ class CPU:
 
             self.cycles += c
 
-            self.log()
+            # self.log() # TODO: Uncomment later!
             self.address = None
 
         self.cycles -= 1
