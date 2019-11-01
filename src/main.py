@@ -26,7 +26,7 @@ def main():
 
 	# Do all init (load pallettes, background, set flags...) before running pyglet loop
 	
-	pyglet.clock.schedule_interval(bus.setFrame, 1/60.0)
+	pyglet.clock.schedule_interval(bus.setFrame, 0)
 	pyglet.app.run()
 	
 

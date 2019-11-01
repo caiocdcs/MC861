@@ -153,12 +153,12 @@ LoadBackgroundTile1:
   inx
   cpx #$00
   bne LoadBackgroundTile1
-; LoadBackgroundTile2:
-;   lda bg2, x
-;   sta PPU_DATA
-;   inx
-;   cpx #$00
-;   bne LoadBackgroundTile2
+LoadBackgroundTile2:
+  lda bg2, x
+  sta PPU_DATA
+  inx
+  cpx #$00
+  bne LoadBackgroundTile2
 ; LoadBackgroundTile3:
 ;   lda bg3, x
 ;   sta PPU_DATA
