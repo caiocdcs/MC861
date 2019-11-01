@@ -270,12 +270,12 @@ class CPU:
         if (self.cycles == 0):
             instruction = self.get_next_byte()
 
-            handler, c = self.handlers.get(instruction, (noHandler, 0))
+            handler, c = self.handlers.get(instruction, (noHandler, 1))
             handler()
 
             self.cycles += c
 
-            # self.log() # TODO: Uncomment later!
+            #self.log() # TODO: Uncomment later!
             self.address = None
 
         self.cycles -= 1

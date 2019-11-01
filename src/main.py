@@ -11,9 +11,9 @@ from ctypes import c_uint16, c_uint8
 def main():
 
 	# Check if there's a parameter
-	if len(sys.argv) != 2:
-		print ("Provide a .nes file\n")
-		return
+	# if len(sys.argv) != 2:
+	# 	print ("Provide a .nes file\n")
+	# 	return
 	
 	player1 = Keyboard()
 	player2 = Keyboard()
@@ -23,7 +23,7 @@ def main():
 	cpu = CPU()
 	ppu = PPU(window)
 	bus = BUS(cpu, ppu, player1, player2)
-	cart = Cartridge(sys.argv[1])
+	cart = Cartridge("hangman/controllers.nes")
 	bus.insertCartridge(cart)
 	
 	cpu.connectBus(bus)

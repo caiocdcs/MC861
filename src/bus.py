@@ -15,6 +15,13 @@ class BUS:
        self.consoleState2 = 0b000000000
        self.testClock = 0
 
+       self.dma_page = 0x00
+       self.dma_addr = 0x00
+       self.dma_data = 0x00
+
+       self.dma_transfer = False
+       self.dma_even = True
+
     def cpuRead(self, address, readOnly = True):
         data = c_uint8(0)
 
@@ -43,13 +50,15 @@ class BUS:
             self.cpuRam[address & 0x07FF] = data
         elif address >= 0x2000 and address <= 0x3FFF:
             self.ppu.cpuWrite(address & 0x0007, data)
+        elif address == 0x4014:
+            self.dma_page = data
+            self.dma_addr = 0x00
+            self.dma_transfer = True
         elif address >= 0x4016:
             print("snapshot")
             self.consoleState1 = self.controller1.read()
         elif address <= 0x4017: # console 2
             pass
-            
-
 
     def insertCartridge(self, cartridge):
         self.cartridge = cartridge
@@ -62,12 +71,29 @@ class BUS:
     def clock(self):
         self.ppu.clock()
         if self.clockCounter % 3 == 0:
-            self.cpu.clock()
+            if self.dma_transfer:
+                if self.dma_even:
+                    if self.clockCounter % 2 == 1:
+                        self.dma_even = False
+                else:
+                    if self.clockCounter % 2 == 0:
+                        self.dma_data = self.cpuRead(self.dma_page.value << 8 | self.dma_addr).value
+                    else:
+                        # TODO Check if this is right
+                        if self.dma_addr == 0xff:
+                            self.dma_transfer = False
+                            self.dma_even = True
+                            self.dma_addr = 0x00
+                            
+                        self.ppu.oam[self.dma_addr] = self.dma_data
+                        self.dma_addr += 1
+            else: 
+                self.cpu.clock()
 
         if self.ppu.getNmi():
             self.ppu.setNmi(False)
             self.cpu.nmi()
-
+        
         self.clockCounter += 1
 
     def setFrame(self, dt):
@@ -76,6 +102,6 @@ class BUS:
 
         self.clockCounter = 0
         self.ppu.frameComplete = False
-        self.cpu.nmi()
-        self.cpu.on_interrupt = False
+        # self.cpu.nmi()
+        # self.cpu.on_interrupt = False
         self.controller1.resetState()
