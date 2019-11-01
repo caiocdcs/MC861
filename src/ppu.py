@@ -169,7 +169,7 @@ class PPU:
             self.tram_addr.nametable_y = self.control.nametable_y
             print("cpuWrite: 0")
         elif address == 0x0001:     # Mask
-            self.mask.reg = data
+            self.mask.reg = self.writeMask(data)
             print("cpuWrite: 1")
         elif address == 0x0002:     # Status
             print("cpuWrite: 2")
