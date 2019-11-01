@@ -31,11 +31,9 @@ class BUS:
         elif address >= 0x2000 and address <= 0x3FFF:
             self.ppu.cpuRead(address & 0x0007)
         elif address == 0x4016:
-            data = int8(self.consoleState1 & 0x80)
-            print("{0:b}".format(self.consoleState1))
-            # print(self.consoleState1 & 0x80)
-            self.consoleState1 = self.consoleState1 << 1
-            print("{0:b}".format(self.consoleState1))
+            data = int8(self.consoleState1 & 0x80) >> 7
+            # print("{0:b}".format(self.consoleState1))
+            self.consoleState1 = self.consoleState1 << 1 & 0xFF
         elif address == 0x4017: # console 2
             pass
 
@@ -53,6 +51,7 @@ class BUS:
             self.dma_addr = 0x00
             self.dma_transfer = True
         elif address >= 0x4016:
+            # print("snapshot")
             self.consoleState1 = self.controller1.read()
         elif address <= 0x4017: # console 2
             pass
@@ -104,7 +103,6 @@ class BUS:
             self.clock()
 
         self.ppu.frameComplete = False
-        self.controller1.resetState()
         # self.cpu.nmi()
         # self.cpu.on_interrupt = False
         # self.clockCounter = 0
