@@ -84,21 +84,21 @@ ClearAPULoop:
 ;   bit PPU_STATUS
 ;   bpl vBlankWait1
   
-; Clear Memory
-ClearLoop:
-  lda #$00
-  sta $0000, X
-  sta $0100, X
-  sta $0200, X
-  sta $0300, X
-  sta $0400, X
-  sta $0500, X
-  sta $0600, X
-  sta $0700, X
-  lda #$FE
-  sta $0200, x
-  inx
-  bne ClearLoop
+; ; Clear Memory
+; ClearLoop:
+;   lda #$00
+;   sta $0000, X
+;   sta $0100, X
+;   sta $0200, X
+;   sta $0300, X
+;   sta $0400, X
+;   sta $0500, X
+;   sta $0600, X
+;   sta $0700, X
+;   lda #$FE
+;   sta $0200, x
+;   inx
+;   bne ClearLoop
 
 ; Wait for PPU
 ; vBlankWait2:
@@ -109,19 +109,19 @@ ClearLoop:
 ; LOAD PALETTES
 ;----------------------------------------------------------------
 
-LoadPalettes:
-  lda PPU_STATUS    ; read PPU status to reset the high/low latch
-  lda #$3F
-  sta PPU_ADDR      ; write the high byte of $3F00 address
-  lda #$00
-  sta PPU_ADDR      ; write the low byte of $3F00 address
-  ldx #$00
-LoadPalette:
-  lda palette, x
-  sta PPU_DATA
-  inx
-  cpx #$20
-  bne LoadPalette
+; LoadPalettes:
+;   lda PPU_STATUS    ; read PPU status to reset the high/low latch
+;   lda #$3F
+;   sta PPU_ADDR      ; write the high byte of $3F00 address
+;   lda #$00
+;   sta PPU_ADDR      ; write the low byte of $3F00 address
+;   ldx #$00
+; LoadPalette:
+;   lda palette, x
+;   sta PPU_DATA
+;   inx
+;   cpx #$20
+;   bne LoadPalette
 
 ;----------------------------------------------------------------
 ; LOAD SPRITES

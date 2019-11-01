@@ -16,6 +16,7 @@ class Cartridge:
         self.prgBanks = 0
         self.chrBanks = 0
         self.mapper0 = Mapper0(self.prgBanks, self.chrBanks)
+        self.mirror = 0
 
     def cpuRead(self, address):
         mappedAddress = self.mapper0.cpuMapRead(address)

@@ -1,10 +1,11 @@
 from dataclasses import dataclass
-from ctypes import c_uint16, c_uint8
+from ctypes import c_uint16, c_uint8, Structure, Union
 
 # PPU Flags
 
 @dataclass
 class status:
+    unused: c_uint8 = 5
     sprite_overflow: c_uint8 = 1
     sprite_zero_hit: c_uint8 = 1
     vertical_blank: c_uint8 = 1
@@ -38,7 +39,22 @@ class loopy:
     nametable_x: c_uint16 = 1
     nametable_y: c_uint16 = 1
     fine_y: c_uint16 = 3
+    unused: c_uint16 = 1
     reg: c_uint16 = 0x0000
+
+# @dataclass
+# class loopy_vars(Structure):
+#     _fields_ = [("coarse_x", c_uint16),
+#                 ("coarse_y", c_uint16),
+#                 ("nametable_x", c_uint16),
+#                 ("nametable_y", c_uint16),
+#                 ("fine_y", c_uint16),
+#                 ("unused",c_uint16)]
+
+# @dataclass
+# class loopy(Union):
+#     _fields_ = [("", loopy_vars),
+#                 ("reg", c_uint16)]
 
 class PPU:
 
@@ -244,10 +260,10 @@ class PPU:
         elif address == 0x0007:     # PPU Data
             print("cpuWrite: 7")
             self.ppuWrite(self.vram_addr.reg, data)
+            self.vram_addr.reg += 32 if self.control.increment_mode else 1
 
     def cpuRead(self, address, readOnly):
         data = c_uint8(0)
-
         if address == 0x0000:       # Control
             if data.value & 0b10000000:
                 self.control.enable_nmi = 1
@@ -329,7 +345,7 @@ class PPU:
                 self.status.sprite_overflow = 1
             else:
                 self.status.sprite_overflow = 0
-            self.status.vertical_blank = 0
+            # self.status.vertical_blank = 0 TODO: undestand better hoe vertical blank is set
             self.address_latch = 0
             print("cpuRead: 2")
         elif address == 0x0003:     # OAM Address
@@ -347,11 +363,11 @@ class PPU:
             if (self.vram_addr.reg >= 0x3F00):
                 data = ppu_data_buffer
             self.vram_addr.reg += 32 if self.control.increment_mode else 1
+            print(self.vram_addr.reg)
 
         return data
 
     def ppuWrite(self, address, data):
-        print("ppuWrite")
         address = address & 0x3FFF
         if (address >= 0x0000 & address <= 0x1FFF):
             offset = 4096 if (address & 0x1000) >> 12 else 0
@@ -370,7 +386,42 @@ class PPU:
 
     def ppuRead(self, address, readOnly=False):
         data = c_uint8(0)
-        address = address & 0x3FFF
+        addr = address & 0x3FFF
+
+        if (addr >= 0x0000 & addr <= 0x1FFF):
+            offset = 4096 if (addr & 0x1000) >> 12 else 0
+            data = self.tablePattern[addr + offset & 0x0FFF]
+        elif (addr >= 0x2000 & addr <= 0x3EFF):
+            addr &= 0x0FFF
+            if (self.cartridge.mirror == 0):
+                if (addr >= 0x0000 & addr <= 0x03FF):
+                    data = self.tableName[addr & 0x03FF]
+                if (addr >= 0x0400 & addr <= 0x07FF):
+                    data = self.tableName[addr + 1024 & 0x03FF]
+                if (addr >= 0x0800 & addr <= 0x0BFF):
+                    data = self.tableName[addr & 0x03FF]
+                if (addr >= 0x0C00 & addr <= 0x0FFF):
+                    data = self.tableName[addr + 1024 & 0x03FF]
+            elif (self.cartridge.mirror == 1):
+                if (addr >= 0x0000 & addr <= 0x03FF):
+                    data = self.tableName[addr & 0x03FF]
+                if (addr >= 0x0400 & addr <= 0x07FF):
+                    data = self.tableName[addr & 0x03FF]
+                if (addr >= 0x0800 & addr <= 0x0BFF):
+                    data = self.tableName[addr + 1024 & 0x03FF]
+                if (addr >= 0x0C00 & addr <= 0x0FFF):
+                    data = self.tableName[addr + 1024 & 0x03FF]
+        elif (addr >= 0x3F00 & addr <= 0x3FFF):
+            addr &= 0x001F
+            if (addr == 0x0010):
+                addr = 0x0000
+            if (addr == 0x0014):
+                addr = 0x0004
+            if (addr == 0x0018):
+                addr = 0x0008
+            if (addr == 0x001C):
+                addr = 0x000C
+            data = self.tablePallete[addr] & (0x30 if self.mask.grayscale else 0x3F)
 
         return data
 
@@ -481,6 +532,7 @@ class PPU:
                 self.bg_next_tile_lsb = self.ppuRead((self.control.pattern_background << 12) 
                                         + (self.bg_next_tile_id.value << 4) 
                                         + (self.vram_addr.fine_y) + 0)
+                # print(self.bg_next_tile_id.value)
             elif (case == 6):
                 self.bg_next_tile_msb = self.ppuRead((self.control.pattern_background << 12)
                                         + (self.bg_next_tile_id.value << 4)
@@ -523,7 +575,7 @@ class PPU:
         bg_pixel = 0x00
         bg_palette = 0x00
         if (self.mask.render_background):
-            print(self.fine_x)
+            # print(self.fine_x)
             bit_mux = 0x8000 >> self.fine_x
 
             p0_pixel = (self.bg_shifter_pattern_lo & bit_mux) > 0
@@ -534,6 +586,7 @@ class PPU:
             bg_pal0 = (self.bg_shifter_attrib_lo & bit_mux) > 0
             bg_pal1 = (self.bg_shifter_attrib_hi & bit_mux) > 0
             bg_palette = (bg_pal1 << 1) | bg_pal0
+            # print(bg_palette)
 
         # TODO: Foreground check
         fg_pixel = 0x00
@@ -596,6 +649,5 @@ class PPU:
             #             if (cycle >= 1 & cycle < 258):
             #                 status.sprite_zero_hit = 1
 
-        # self.window.draw_pixel(self.cycle - 1, self.scanline, self.getColor(palette, pixel))
         self.window.draw_pixel(self.cycle - 1, self.scanline, self.getColor(palette, pixel))
             
