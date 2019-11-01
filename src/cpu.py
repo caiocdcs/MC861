@@ -238,6 +238,7 @@ class CPU:
             self.cycles += 7
 
     def nmi(self):
+        print("NMI")
         pc_l = format(self.pc.value, '04x')[2:4]
         pc_h = format(self.pc.value, '04x')[0:2]
 

@@ -46,11 +46,14 @@ class PPU:
         # PPU flags
         self.status = status()
         self.mask = mask()
-        self.control = status()
+        self.control = control()
 
+        self.nmi = False
+        self.ppu_address = 0x0000
         self.address_latch = 0x00
         self.ppu_data_buffer = 0x00
         self.vram_addr = 0x0000
+
         # Color mapping
         self.color = {
             0x00: (84, 84, 84),
@@ -143,13 +146,17 @@ class PPU:
                 self.address_latch = 0
         elif address == 0x0006:     # PPU Address
             if self.address_latch == 0:
+                self.ppu_address = (self.ppu_address & 0x00FF) | ((data & 0x3F) << 8)
                 self.address_latch = 1
             else:
+                self.ppu_address = (self.ppu_address & 0xFF00) | data
+                self.vram_addr = self.ppu_address
                 self.address_latch = 0
             print("cpuWrite: 6")
         elif address == 0x0007:     # PPU Data
             print("cpuWrite: 7")
             self.ppuWrite(self.vram_addr, data)
+            self.ppu_address += 32 if self.control.increment_mode else 1
 
     def writeControl(self, data):
         if data.value & 0b10000000:
@@ -259,7 +266,7 @@ class PPU:
         control = control | (self.control.increment_mode << 2)
         control = control | (self.control.pattern_sprite << 3)
         control = control | (self.control.pattern_background << 4)
-        # control = control | (self.control.sprite_size << 5)   # TODO: Uncomment this line
+        control = control | (self.control.sprite_size << 5)
         control = control | (self.control.slave_mode << 6)
         control = control | (self.control.enable_nmi << 7)
 
@@ -292,11 +299,32 @@ class PPU:
 
         if (self.cartridge.ppuWrite(address, data)):
             pass
+
         elif (address >= 0x0000 & address <= 0x1FFF):
             offset = 4096 if (address & 0x1000) >> 12 else 0
             self.tablePattern[offset + address & 0x0FFF] = data
+
         elif (address >= 0x2000 & address <= 0x3EFF):
-            pass
+            address = address & 0x0FFF
+            if self.cartridge.getMirror() == 0:
+                if address >= 0x0000 and address <= 0x03FF:
+                    self.tableName[address & 0x03FF] = data
+                elif address >= 0x0400 and address <= 0x07FF:
+                    self.tableName[address & 0x03FF] = data
+                elif address >= 0x0800 and address <= 0x0BFF:
+                    self.tableName[offset + address & 0x03FF] = data
+                elif address >= 0x0C00 and address <= 0x0FFF:
+                    self.tableName[offset + address & 0x03FF] = data
+            elif self.cartridge.getMirror() == 1:
+                if address >= 0x0000 and address <= 0x03FF:
+                    self.tableName[address & 0x03FF] = data
+                elif address >= 0x0400 and address <= 0x07FF:
+                    self.tableName[offset + address & 0x03FF] = data
+                elif address >= 0x0800 and address <= 0x0BFF:
+                    self.tableName[address & 0x03FF] = data
+                elif address >= 0x0C00 and address <= 0x0FFF:
+                    self.tableName[offset + address & 0x03FF] = data
+
         elif (address >= 0x3F00 & address <= 0x3FFF):
             address &= 0x001F
             if (address == 0x0010):
@@ -312,14 +340,35 @@ class PPU:
     def ppuRead(self, address, readOnly=False):
         data = c_uint8(0)
         address = address & 0x3FFF
+        offset = 4096 if (address & 0x1000) >> 12 else 0
 
         if (self.cartridge.ppuRead(address) != None):
             pass
+
         elif (address >= 0x0000 & address <= 0x1FFF):
-            offset = 4096 if (address & 0x1000) >> 12 else 0
             data = self.tablePattern[offset + address & 0x0FFF] = data
+
         elif (address >= 0x2000 & address <= 0x3EFF):
-            pass
+            address = address & 0x0FFF
+            if self.cartridge.getMirror() == 0:
+                if address >= 0x0000 and address <= 0x03FF:
+                    data = self.tableName[address & 0x03FF]
+                elif address >= 0x0400 and address <= 0x07FF:
+                    data = self.tableName[address & 0x03FF]
+                elif address >= 0x0800 and address <= 0x0BFF:
+                    data = self.tableName[offset + address & 0x03FF]
+                elif address >= 0x0C00 and address <= 0x0FFF:
+                    data = self.tableName[offset + address & 0x03FF]
+            elif self.cartridge.getMirror() == 1:
+                if address >= 0x0000 and address <= 0x03FF:
+                    data = self.tableName[address & 0x03FF]
+                elif address >= 0x0400 and address <= 0x07FF:
+                    data = self.tableName[offset + address & 0x03FF]
+                elif address >= 0x0800 and address <= 0x0BFF:
+                    data = self.tableName[address & 0x03FF]
+                elif address >= 0x0C00 and address <= 0x0FFF:
+                    data = self.tableName[offset + address & 0x03FF]
+
         elif (address >= 0x3F00 & address <= 0x3FFF):
             address == address & 0x001F
             if address == 0x0010:
@@ -362,6 +411,14 @@ class PPU:
 
     def clock(self):
 
+        if self.scanline == -1 and self.cycle == 1:
+            self.status.vertical_blank = 0
+
+        if (self.scanline == 241 and self.cycle == 1):
+            self.status.vertical_blank = 1
+            if self.control.enable_nmi:
+                self.nmi = True
+
         self.cycle += 1
         
         if self.cycle >= 341:
@@ -373,4 +430,10 @@ class PPU:
                 self.frameComplete = True
                 self.window.movePixelDown()
                 # print("Frame Complete")
+
+    def getNmi(self):
+        return self.nmi
+
+    def setNmi(self, nmi):
+        self.nmi = nmi
             

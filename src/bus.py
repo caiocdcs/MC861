@@ -44,6 +44,11 @@ class BUS:
         self.ppu.clock()
         if self.clockCounter % 3 == 0:
             self.cpu.clock()
+
+        if self.ppu.getNmi():
+            self.ppu.setNmi(False)
+            self.cpu.nmi()
+
         self.clockCounter += 1
 
     def setFrame(self, dt):

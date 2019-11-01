@@ -19,21 +19,18 @@ def main():
 	# window.set_size(768, 720)
 	cpu = CPU()
 	ppu = PPU(window)
-
-	value = c_uint8(4)
-	ppu.cpuWrite(0x0000, value)
-	read = ppu.cpuRead(0x0000, False)
-	print (read)
-	# bus = BUS(cpu, ppu)
-	# cart = Cartridge(sys.argv[1])
-	# bus.insertCartridge(cart)
+	bus = BUS(cpu, ppu)
+	cart = Cartridge(sys.argv[1])
+	bus.insertCartridge(cart)
 	
-	# cpu.connectBus(bus)
+	cpu.connectBus(bus)
 
-	# # Do all init (load pallettes, background, set flags...) before running pyglet loop
+	bus.reset()
+
+	# Do all init (load pallettes, background, set flags...) before running pyglet loop
 	
-	# pyglet.clock.schedule_interval(bus.setFrame, 1/60.0)
-	# pyglet.app.run()
+	pyglet.clock.schedule_interval(bus.setFrame, 1/60.0)
+	pyglet.app.run()
 	
 
 if __name__ == "__main__":
