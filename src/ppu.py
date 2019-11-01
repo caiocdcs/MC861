@@ -35,6 +35,7 @@ class control:
     enable_nmi: int8 = 1
     reg: int8 = 0x0000
 
+# Loopy https://wiki.nesdev.com/w/index.php/PPU_scrolling
 @dataclass
 class loopy:
     coarse_x: int8 = 5
@@ -474,53 +475,69 @@ class PPU:
         
     def clock(self):
 
+        # Based on Frame timing of PPU
+        # https://wiki.nesdev.com/w/images/4/4f/Ppu.svg
+
         global bSpriteZeroHitPossible
 
+        # Increment background tile horizontally by 1 tile
         def IncrementScrollX():
             if self.mask.render_background or self.mask.render_sprites:
+                # Name table is 32x30 tiles, so if it reaches 31, go back to 0
                 if self.vram_addr.coarse_x == 31:
                     self.vram_addr.coarse_x = 0
                     self.vram_addr.nametable_x = ~self.vram_addr.nametable_x          # TODO: Check if this ~ works
                 else:
                     self.vram_addr.coarse_x = self.vram_addr.coarse_x+ 1
 
+        # Increment background tile vertically by 1 scanline
         def IncrementScrollY():
             if self.mask.render_background or self.mask.render_sprites:
+                # fine_y ranges from 0 to 7 and bottom two rows should be ignored
                 if self.vram_addr.fine_y < 7:
                     self.vram_addr.fine_y += 1
                 else:
                     self.vram_addr.fine_y = 0
+                    # Name table is 32x30 tiles, so if it reaches 29, go back to 0
                     if self.vram_addr.coarse_y == 29:
                         self.vram_addr.coarse_y = 0
+                        # Read from second parte of tableName
                         self.vram_addr.nametable_y = ~self.vram_addr.nametable_y
                     elif self.vram_addr.coarse_y == 31:
                         self.vram_addr.coarse_y = 0
                     else:
                         self.vram_addr.coarse_y += 1
 
+        # Retrieve temporally stored x related vars
         def TransferAddressX():
             if self.mask.render_background or self.mask.render_sprites:
                 self.vram_addr.nametable_x = self.tram_addr.nametable_x
                 self.vram_addr.coarse_x = self.tram_addr.coarse_x
 
+        # Retrieve temporally stored y related vars
         def TransferAddressY():
             if self.mask.render_background or self.mask.render_sprites:
                 self.vram_addr.fine_y      = self.tram_addr.fine_y
                 self.vram_addr.nametable_y = self.tram_addr.nametable_y
                 self.vram_addr.coarse_y    = self.tram_addr.coarse_y
 
+        # Loads the current BG pattern and attributes into shifters
         def LoadBackgroundShifters():
+            # shifter_pattern is the current tile, next_tile, the next
             self.bg_shifter_pattern_lo = (self.bg_shifter_pattern_lo & 0xFF00) | self.bg_next_tile_lsb
             self.bg_shifter_pattern_hi = (self.bg_shifter_pattern_hi & 0xFF00) | self.bg_next_tile_msb
+            # Extract palette for current 8 pixels
             self.bg_shifter_attrib_lo  = 0xFF if (self.bg_shifter_attrib_lo & 0xFF00) | (self.bg_next_tile_attrib & 0b01) else 0x00
             self.bg_shifter_attrib_hi  = 0xFF if (self.bg_shifter_attrib_hi & 0xFF00) | (self.bg_next_tile_attrib & 0b10) else 0x00
 
         def UpdateShifters():
             if self.mask.render_background:
+                # shift bg pattern and attributes by 1 bit
                 self.bg_shifter_pattern_lo <<= 1
                 self.bg_shifter_pattern_hi <<= 1
                 self.bg_shifter_attrib_lo <<= 1
                 self.bg_shifter_attrib_hi <<= 1
+            # shift sprite pattern when pixel is visible
             if self.mask.render_sprites and 1 <= self.cycle < 258:
                 j = 0
                 for i in range(self.spriteCount, 4):
@@ -531,11 +548,13 @@ class PPU:
                         self.sprite_shifter_pattern_hi[j] <<= 1
                     j+=1
 
+        # if scanline is visible to the user...
         if -1 <= self.scanline < 240:
             if self.scanline == 0 and self.cycle == 0:
-                self.cycle = 1
+                self.cycle = 1 # skip cycle
 
             if self.scanline == -1 and self.cycle == 1:
+                # starting new frame, clear flags and shifters
                 self.status.vertical_blank = 0
                 self.status.sprite_overflow = 0
                 self.status.sprite_zero_hit = 0
@@ -543,114 +562,128 @@ class PPU:
                     self.sprite_shifter_pattern_lo[i] = 0
                     self.sprite_shifter_pattern_hi[i] = 0
 
-        if (2 <= self.cycle < 258) or (321 <= self.cycle < 338):
-            UpdateShifters()
-            case = (self.cycle - 1) % 8
-            if case == 0:
-                LoadBackgroundShifters()
-                self.bg_next_tile_id = self.ppuRead(0x2000 | (self.vram_addr.reg & 0x0FFF))
-            elif case == 2:
-                self.bg_next_tile_attrib = self.ppuRead(0x23C0 | (self.vram_addr.nametable_y << 11)
-                                                    | (self.vram_addr.nametable_x << 10)
-                                                    | ((self.vram_addr.coarse_y >> 2) << 3)
-                                                    | (self.vram_addr.coarse_x >> 2))
-                if self.vram_addr.coarse_y & 0x02:
-                    self.bg_next_tile_attrib >>= 4
-                if self.vram_addr.coarse_x & 0x02:
-                    self.bg_next_tile_attrib >>= 2
-                self.bg_next_tile_attrib = self.bg_next_tile_attrib & 0x03
-            elif case == 4:
-                self.bg_next_tile_lsb = self.ppuRead((self.control.pattern_background << 12)
-                                                           + (self.bg_next_tile_id << 4)
-                                                           + self.vram_addr.fine_y + 0)
-            elif case == 6:
-                self.bg_next_tile_msb = self.ppuRead((self.control.pattern_background << 12)
-                                                           + (self.bg_next_tile_id << 4)
-                                                           + self.vram_addr.fine_y + 8)
-            else:
-                IncrementScrollX()
-                
-        if self.cycle == 256:
-            IncrementScrollY()
-            
-        if self.cycle == 257:
-            LoadBackgroundShifters()
-            TransferAddressX()
-            
-        if self.cycle == 338 or self.cycle == 340:
-            self.bg_next_tile_id = self.ppuRead(0x2000 | (self.vram_addr.reg & 0x0FFF))
-            
-        if self.scanline == -1 and 280 <= self.cycle < 305:
-            TransferAddressY()
-
-        # # TODO: Foreground Rendering
-        # # Some code here
-        if self.cycle == 257 and self.scanline >= 0:
-            self.spriteScanline = [0]*32
-            self.spriteCount = 0
-
-            for i in range(8):
-                self.sprite_shifter_pattern_hi[i] = 0
-                self.sprite_shifter_pattern_lo[i] = 0
-
-            bSpriteZeroHitPossible = False
-
-            entry = 0
-            while entry < 256 and self.spriteCount < 33:
-                diff = self.scanline - self.oam[entry]
-                if 0 <= diff < 16 if control.sprite_size else 8:
-                    if self.spriteCount < 32:
-                        if entry == 0:
-                            bSpriteZeroHitPossible = True
-
-                        self.spriteScanline[self.spriteCount] = self.oam[entry]
-                        self.spriteScanline[self.spriteCount + 1] = self.oam[entry + 1]
-                        self.spriteScanline[self.spriteCount + 2] = self.oam[entry + 2]
-                        self.spriteScanline[self.spriteCount + 3] = self.oam[entry + 3]
-
-                        self.spriteCount += 4
-                entry += 4
-            self.status.sprite_overflow = self.spriteCount > 8
-        
-        if self.cycle == 340:
-            j = 0
-            for i in range(0, self.spriteCount, 4):
-                if not self.control.sprite_size:
-                    # 8x8 Sprite Mode
-                    if not (self.spriteScanline[i + 2] & 0x80): #Sprite is NOT flipped vertically, i.e. normal
-                        sprite_pattern_addr_lo = (self.control.pattern_sprite << 12) | (self.spriteScanline[i+1] << 4) | (self.scanline - self.spriteScanline[i])
-                    else:   # shifted vertically
-                        sprite_pattern_addr_lo = (self.control.pattern_sprite << 12) | (self.spriteScanline[i+1] << 4) | (7 - (self.scanline - self.spriteScanline[i]))
+            if (2 <= self.cycle < 258) or (321 <= self.cycle < 338):
+                UpdateShifters()
+                case = (self.cycle - 1) % 8 # Background rendering is every two cycles
+                if case == 0:
+                    LoadBackgroundShifters()
+                    # Get next bg tile id, masking to 12 lsb and shifting to PPU memory
+                    # The array has 4096 possible locations, which the 12 lsb bits represent (2ˆ12)
+                    self.bg_next_tile_id = self.ppuRead(0x2000 | (self.vram_addr.reg & 0x0FFF))
+                elif case == 2:
+                    # Get next bg tile attribute (2 rows of 32 bits)
+                    # Attributes begin at 0x23C0, so its the base plus offset from loopy
+                    self.bg_next_tile_attrib = self.ppuRead(0x23C0 | (self.vram_addr.nametable_y << 11)
+                                                        | (self.vram_addr.nametable_x << 10)
+                                                        | ((self.vram_addr.coarse_y >> 2) << 3)
+                                                        | (self.vram_addr.coarse_x >> 2))
+                    # use 2 lsbs of coarse y and coarse x    
+                    if self.vram_addr.coarse_y & 0x02:
+                        self.bg_next_tile_attrib >>= 4
+                    if self.vram_addr.coarse_x & 0x02:
+                        self.bg_next_tile_attrib >>= 2
+                    self.bg_next_tile_attrib = self.bg_next_tile_attrib & 0x03
+                elif case == 4:
+                    # get next background lsb
+                    self.bg_next_tile_lsb = self.ppuRead((self.control.pattern_background << 12)
+                                                            + (self.bg_next_tile_id << 4)
+                                                            + self.vram_addr.fine_y + 0)
+                elif case == 6:
+                    # get next background msb
+                    self.bg_next_tile_msb = self.ppuRead((self.control.pattern_background << 12)
+                                                            + (self.bg_next_tile_id << 4)
+                                                            + self.vram_addr.fine_y + 8)
+                # lsb and msb bits combined will give a number from 0-3 representing the color given a palette    
                 else:
-                    if not (self.spriteScanline[i + 2] & 0x80): # normal sprite, not shifted vertically
-                        if self.scanline - self.spriteScanline[i] < 8:
-                            sprite_pattern_addr_lo = ((self.spriteScanline[i+1] & 0x01) << 12) | ((self.spriteScanline[i+1] & 0xFE) << 4) | ((self.scanline - self.spriteScanline[i]) & 0x07)
-                        else:
-                            sprite_pattern_addr_lo = ((self.spriteScanline[i+1] & 0x01) << 12) | (((self.spriteScanline[i+1] & 0xFE) +1) << 4) | ((self.scanline - self.spriteScanline[i]) & 0x07)
-                    else:  
-                        if self.scanline - self.spriteScanline[i] < 8:
-                            sprite_pattern_addr_lo = ((self.spriteScanline[i+1] & 0x01) << 12) | (((self.spriteScanline[i+1] & 0xFE)+1) << 4) | (7 - (self.scanline - self.spriteScanline[i]) & 0x07)
-                        else:
-                            sprite_pattern_addr_lo = ((self.spriteScanline[i+1] & 0x01) << 12) | ((self.spriteScanline[i+1] & 0xFE) << 4) | (7 - (self.scanline - self.spriteScanline[i]) & 0x07)
+                    IncrementScrollX() # increment bg tile horizontally
+                    
+                if self.cycle == 256:
+                    IncrementScrollY() # increment bg tile vertically (End of visible scanline)
+                    
+                # reset the x position
+                if self.cycle == 257:
+                    LoadBackgroundShifters()
+                    TransferAddressX()
+                    
+                # read bg next tile id at the end of scanline
+                if self.cycle == 338 or self.cycle == 340:
+                    self.bg_next_tile_id = self.ppuRead(0x2000 | (self.vram_addr.reg & 0x0FFF))
+                    
+                # reset the y position
+                if self.scanline == -1 and 280 <= self.cycle < 305:
+                    TransferAddressY()
 
-                sprite_pattern_addr_hi = sprite_pattern_addr_lo + 8
-                sprite_pattern_bits_lo = self.ppuRead(sprite_pattern_addr_lo)
-                sprite_pattern_bits_hi = self.ppuRead(sprite_pattern_addr_hi)
+                # Foreground Rendering
 
-                def flipbyte(b):
-                    b = (b & 0xF0) >> 4 | (b & 0x0F) << 4
-                    b = (b & 0xCC) >> 2 | (b & 0x33) << 2
-                    b = (b & 0xAA) >> 1 | (b & 0x55) << 1
-                    return b
-				
-                if self.spriteScanline[i+2] & 0x40:
-                    sprite_pattern_bits_lo = flipbyte(sprite_pattern_bits_lo)
-                    sprite_pattern_bits_hi = flipbyte(sprite_pattern_bits_hi)
+                # Buffer sprites for next scanline
+                if self.cycle == 257 and self.scanline >= 0:
+                    self.spriteScanline = [0]*32
+                    self.spriteCount = 0
+                    # clear sprite shifter information (since it will be a new scanline)
+                    for i in range(8):
+                        self.sprite_shifter_pattern_hi[i] = 0
+                        self.sprite_shifter_pattern_lo[i] = 0
 
-                self.sprite_shifter_pattern_lo[j] = sprite_pattern_bits_lo
-                self.sprite_shifter_pattern_hi[j] = sprite_pattern_bits_hi
-            j += 1
+                    bSpriteZeroHitPossible = False
 
+                    entry = 0
+                    while entry < 256 and self.spriteCount < 33:
+                        diff = self.scanline - self.oam[entry]
+                        if 0 <= diff < 16 if control.sprite_size else 8:
+                            if self.spriteCount < 32:
+                                if entry == 0:
+                                    bSpriteZeroHitPossible = True
+
+                                self.spriteScanline[self.spriteCount] = self.oam[entry]
+                                self.spriteScanline[self.spriteCount + 1] = self.oam[entry + 1]
+                                self.spriteScanline[self.spriteCount + 2] = self.oam[entry + 2]
+                                self.spriteScanline[self.spriteCount + 3] = self.oam[entry + 3]
+
+                                self.spriteCount += 4
+                        entry += 4
+                    self.status.sprite_overflow = self.spriteCount > 8
+        
+            # End of scanline
+            if self.cycle == 340:
+                j = 0
+                for i in range(0, self.spriteCount, 4):
+                    if not self.control.sprite_size:
+                        # 8x8 Sprite Mode
+                        if not (self.spriteScanline[i + 2] & 0x80): #Sprite is NOT flipped vertically, i.e. normal
+                            sprite_pattern_addr_lo = (self.control.pattern_sprite << 12) | (self.spriteScanline[i+1] << 4) | (self.scanline - self.spriteScanline[i])
+                        else:   # shifted vertically
+                            sprite_pattern_addr_lo = (self.control.pattern_sprite << 12) | (self.spriteScanline[i+1] << 4) | (7 - (self.scanline - self.spriteScanline[i]))
+                    else:
+                        if not (self.spriteScanline[i + 2] & 0x80): # normal sprite, not shifted vertically
+                            if self.scanline - self.spriteScanline[i] < 8:
+                                sprite_pattern_addr_lo = ((self.spriteScanline[i+1] & 0x01) << 12) | ((self.spriteScanline[i+1] & 0xFE) << 4) | ((self.scanline - self.spriteScanline[i]) & 0x07)
+                            else:
+                                sprite_pattern_addr_lo = ((self.spriteScanline[i+1] & 0x01) << 12) | (((self.spriteScanline[i+1] & 0xFE) +1) << 4) | ((self.scanline - self.spriteScanline[i]) & 0x07)
+                        else:  
+                            if self.scanline - self.spriteScanline[i] < 8:
+                                sprite_pattern_addr_lo = ((self.spriteScanline[i+1] & 0x01) << 12) | (((self.spriteScanline[i+1] & 0xFE)+1) << 4) | (7 - (self.scanline - self.spriteScanline[i]) & 0x07)
+                            else:
+                                sprite_pattern_addr_lo = ((self.spriteScanline[i+1] & 0x01) << 12) | ((self.spriteScanline[i+1] & 0xFE) << 4) | (7 - (self.scanline - self.spriteScanline[i]) & 0x07)
+
+                    sprite_pattern_addr_hi = sprite_pattern_addr_lo + 8
+                    sprite_pattern_bits_lo = self.ppuRead(sprite_pattern_addr_lo)
+                    sprite_pattern_bits_hi = self.ppuRead(sprite_pattern_addr_hi)
+
+                    def flipbyte(b):
+                        b = (b & 0xF0) >> 4 | (b & 0x0F) << 4
+                        b = (b & 0xCC) >> 2 | (b & 0x33) << 2
+                        b = (b & 0xAA) >> 1 | (b & 0x55) << 1
+                        return b
+                    
+                    if self.spriteScanline[i+2] & 0x40:
+                        sprite_pattern_bits_lo = flipbyte(sprite_pattern_bits_lo)
+                        sprite_pattern_bits_hi = flipbyte(sprite_pattern_bits_hi)
+
+                    self.sprite_shifter_pattern_lo[j] = sprite_pattern_bits_lo
+                    self.sprite_shifter_pattern_hi[j] = sprite_pattern_bits_hi
+                j += 1
+
+        # end of frame
         if 241 <= self.scanline < 261:
             if self.scanline == 241 and self.cycle == 1:
                 self.status.vertical_blank = 1
@@ -662,18 +695,19 @@ class PPU:
         bg_pixel = 0x00
         bg_palette = 0x00
         if self.mask.render_background:
+            # offsets all BG by fine x (for horizontal scrolling)
             bit_mux = 0x8000 >> self.fine_x
-
+            # extract pixel parts
             p0_pixel = (self.bg_shifter_pattern_lo & bit_mux) > 0
             p1_pixel = (self.bg_shifter_pattern_hi & bit_mux) > 0
-
+            # and combine them to know the value (0-3)
             bg_pixel = (p1_pixel << 1) | p0_pixel
-
+            # get palette from attibute
             bg_pal0 = (self.bg_shifter_attrib_lo & bit_mux) > 0
             bg_pal1 = (self.bg_shifter_attrib_hi & bit_mux) > 0
             bg_palette = (bg_pal1 << 1) | bg_pal0
 
-        # TODO: Foreground check
+        # Foreground check
         fg_pixel = 0x00
         fg_palette = 0x00
         fg_priority = 0x00
@@ -702,22 +736,26 @@ class PPU:
         palette = fg_palette
 
         if bg_pixel == 0 and fg_pixel == 0:
+            # both BG and FG pixel are transparent
             pixel = 0x00
             palette = 0x00
         elif bg_pixel == 0 and fg_pixel > 0:
+            # visible FG pixel
             pixel = fg_pixel
             palette = fg_palette
         elif bg_pixel > 0 and fg_pixel == 0:
+            # visible BG pixel
             pixel = bg_pixel
             palette = bg_palette
         elif bg_pixel > 0 and fg_pixel > 0:
+            # if both visible, FG priority may override the BG, else draw BG
             if fg_priority:
                 pixel = fg_pixel
                 palette = fg_palette
             else:
                 pixel = bg_pixel
                 palette = bg_palette
-
+            # Checks for collition among BG anf FG
             if bSpriteZeroHitPossible and bSpriteZeroBeingRendered:
                 if self.mask.render_background & self.mask.render_sprites:
                     if ~(self.mask.render_background_left | self.mask.render_sprites_left):
@@ -727,6 +765,7 @@ class PPU:
                         if 1 <= self.cycle < 258:
                             status.sprite_zero_hit = 1
 
+        # and finally draws the pixel
         self.window.draw_pixel(self.cycle - 1, self.scanline,  self.getColor(palette, pixel))
 
         self.cycle += 1
@@ -737,8 +776,6 @@ class PPU:
             if self.scanline >= 261:
                 self.scanline = -1
                 self.frameComplete = True
-                # self.window.movePixelDown()
-                # print("Frame Complete")
 
     def getNmi(self):
         return self.nmi
