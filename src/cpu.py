@@ -1340,7 +1340,7 @@ class CPU:
         self.flagController.setZeroFlagIfNeeded(self.a) # set zero flag
 
     def handleInstructionLDXImmediate(self):
-        # print("LDX")
+        print("Chegooooou")
         byte = self.get_next_byte()
         immediate = int(byte, 16)
         self.x = immediate

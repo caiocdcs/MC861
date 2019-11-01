@@ -11,7 +11,7 @@ class Window:
         pygame.display.update()
 
     def setPixel(self, i, j, color):
-        self.surface.fill(pygame.Color(255,0,0))
+        # self.surface.fill(pygame.Color(255,0,0))
         pygame.draw.rect(self.surface, color, pygame.Rect(i*SCALE, j*SCALE, SCALE, SCALE))
 
     def flip(self):

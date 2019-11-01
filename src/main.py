@@ -48,7 +48,7 @@ def main():
 					player1.pressRightButton()
 				if event.key == pygame.K_DOWN:
 					player1.pressDownButton()
-		pygame.draw.rect(screen, (0, 128, 255), pygame.Rect(30, 30, 60, 60))
+		# pygame.draw.rect(screen, (0, 128, 255), pygame.Rect(30, 30, 60, 60))
 		pygame.display.flip()
 		clock.tick(60)
 		bus.setFrame()
