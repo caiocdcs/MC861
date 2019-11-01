@@ -1,4 +1,4 @@
-from ctypes import c_uint8
+int8 = int
 
 class FlagController:
     def __init__(self):
@@ -11,7 +11,7 @@ class FlagController:
         self.overflowFlag = 0
         self.negativeFlag = 0
 
-    def getFlagsStatusByte(self) -> c_uint8:
+    def getFlagsStatusByte(self) -> int8:
         flagsByte = 0
         flagsByte = flagsByte | (self.carryFlag << 0)
         flagsByte = flagsByte | (self.zeroFlag << 1)

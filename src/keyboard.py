@@ -19,7 +19,6 @@ class Keyboard:
         self.downButtonPressed = 0
         self.leftButtonPressed = 0
         self.rightButtonPressed = 0
-        print("Reset")
 
     def pressAButton(self):
         self.aButtonPressed = 1

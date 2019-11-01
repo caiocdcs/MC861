@@ -1,4 +1,4 @@
-from ctypes import c_uint16, c_uint8
+int8 = int
 
 KB = 1024
 
@@ -7,15 +7,21 @@ class BUS:
     def __init__(self, cpu, ppu, controller1, controller2):
        self.cpu = cpu
        self.ppu = ppu
-       self.cpuRam = [c_uint8(0)]*2*KB
+       self.cpuRam = [int8(0)]*2*KB
        self.clockCounter = 0
        self.controller1 = controller1
        self.controller2 = controller2
        self.consoleState1 = 0b000000000
        self.consoleState2 = 0b000000000
 
-    def cpuRead(self, address):
-        data = c_uint8(0)
+       self.dma_page = 0x00
+       self.dma_addr = 0x00
+       self.dma_transfer = False
+       self.dma_data = 0x00
+       self.dma_even = True
+
+    def cpuRead(self, address, readOnly = True):
+        data = int8(0)
 
         cartridgeData = self.cartridge.cpuRead(address)
         if cartridgeData != None:
@@ -25,7 +31,7 @@ class BUS:
         elif address >= 0x2000 and address <= 0x3FFF:
             self.ppu.cpuRead(address & 0x0007)
         elif address == 0x4016:
-            data = c_uint8(self.consoleState1 & 0x80)
+            data = int8(self.consoleState1 & 0x80)
             print("{0:b}".format(self.consoleState1))
             # print(self.consoleState1 & 0x80)
             self.consoleState1 = self.consoleState1 << 1
@@ -38,16 +44,15 @@ class BUS:
     def cpuWrite(self, address, data):
         if self.cartridge.cpuWrite(address, data):
             pass
-        elif address >= 0x0000 and address <= 0x1FFF:
+        elif 0x0000 <= address <= 0x1FFF:
             self.cpuRam[address & 0x07FF] = data
-        elif address >= 0x2000 and address <= 0x3FFF:
+        elif 0x2000 <= address <= 0x3FFF:
             self.ppu.cpuWrite(address & 0x0007, data)
         elif address == 0x4014:
             self.dma_page = data
             self.dma_addr = 0x00
             self.dma_transfer = True
         elif address >= 0x4016:
-            print("snapshot")
             self.consoleState1 = self.controller1.read()
         elif address <= 0x4017: # console 2
             pass
@@ -75,7 +80,7 @@ class BUS:
                         self.dma_even = False
                 else:
                     if self.clockCounter % 2 == 0:
-                        self.dma_data = self.cpuRead(self.dma_page.value << 8 | self.dma_addr).value
+                        self.dma_data = self.cpuRead(self.dma_page << 8 | self.dma_addr)
                     else:
                         # TODO Check if this is right
                         if self.dma_addr == 0xff:

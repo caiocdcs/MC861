@@ -1,8 +1,9 @@
-from mapper import Mapper 
-from ctypes import c_uint8, c_uint32
+from mapper import Mapper
 import struct
 
 KB = 1024
+
+int8 = int
 
 uint8 = int
 ordc = lambda c:c if type(c) ==int else ord(c)
@@ -18,7 +19,7 @@ class Cartridge:
         self.loadFile(fileName)
 
     def cpuRead(self, address):
-        mappedAddress = c_uint32(0)
+        mappedAddress = 0
         mappedAddress = self.mapper.cpuMapRead(address)
         if mappedAddress != None :
             data = self.prgMemory[mappedAddress] 
@@ -26,7 +27,7 @@ class Cartridge:
         return None
 
     def cpuWrite(self, address, data):
-        mappedAddress = c_uint32(0)
+        mappedAddress = 0
         mappedAddress = self.mapper.cpuMapWrite(address)
         if mappedAddress != None :
             self.prgMemory[mappedAddress] = data
@@ -34,7 +35,7 @@ class Cartridge:
         return False
 
     def ppuRead(self, address):
-        mappedAddress = c_uint32(0)
+        mappedAddress = 0
         mappedAddress = self.mapper.ppuMapRead(address)
         if mappedAddress != None :
             data = self.chrMemory[mappedAddress] 
@@ -42,7 +43,7 @@ class Cartridge:
         return None
 
     def ppuWrite(self, address, data):
-        mappedAddress = c_uint32(0)
+        mappedAddress = 0
         mappedAddress = self.mapper.ppuMapWrite(address)
         if mappedAddress != None :
             self.chrMemory[mappedAddress] = data
@@ -81,12 +82,12 @@ class Cartridge:
         if control1 & uint8(4) == uint8(4):
             file.read(512)
 
-        self.prgMemory = fromstring(file.read(16*KB * numPRG), c_uint8)
+        self.prgMemory = fromstring(file.read(16*KB * numPRG), uint8)
         
         if numCHR == 0:
-            self.chrMemory = fromstring(file.read(8*KB), c_uint8)
+            self.chrMemory = fromstring(file.read(8*KB), uint8)
         else:
-            self.chrMemory = fromstring(file.read(8*KB * numCHR), c_uint8)
+            self.chrMemory = fromstring(file.read(8*KB * numCHR), uint8)
 
         self.mapper.connect(numPRG, numCHR)
 

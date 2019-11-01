@@ -6,14 +6,15 @@ from ppu import PPU
 from window import Window
 from keyboard import Keyboard
 from Cartridge import Cartridge 
-from ctypes import c_uint16, c_uint8
+
+int8 = int
 
 def main():
 
 	# Check if there's a parameter
-	# if len(sys.argv) != 2:
-	# 	print ("Provide a .nes file\n")
-	# 	return
+	if len(sys.argv) != 2:
+		print ("Provide a .nes file\n")
+		return
 	
 	player1 = Keyboard()
 	player2 = Keyboard()
@@ -23,7 +24,7 @@ def main():
 	cpu = CPU()
 	ppu = PPU(window)
 	bus = BUS(cpu, ppu, player1, player2)
-	cart = Cartridge("hangman/mario.nes")
+	cart = Cartridge(sys.argv[1])
 	bus.insertCartridge(cart)
 	
 	cpu.connectBus(bus)
