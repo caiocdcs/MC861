@@ -15,12 +15,7 @@ class BUS:
        self.consoleState2 = 0b000000000
        self.testClock = 0
 
-       self.dma_page = 0x00
-       self.dma_addr = 0x00
-       self.dma_data = 0x00
-
-       self.dma_transfer = False
-       self.dma_even = True
+       
 
     def cpuRead(self, address, readOnly = True):
         data = c_uint8(0)
@@ -66,7 +61,13 @@ class BUS:
 
     def reset(self):
         self.cpu.reset()
+        self.ppu.reset()
         self.clockCounter = 0
+        self.dma_page = 0x00
+        self.dma_addr = 0x00
+        self.dma_data = 0x00
+        self.dma_transfer = False
+        self.dma_even = True
 
     def clock(self):
         self.ppu.clock()
@@ -100,8 +101,8 @@ class BUS:
         while self.ppu.frameComplete == False:
             self.clock()
 
-        self.clockCounter = 0
         self.ppu.frameComplete = False
+        self.controller1.resetState()
         # self.cpu.nmi()
         # self.cpu.on_interrupt = False
-        self.controller1.resetState()
+        # self.clockCounter = 0

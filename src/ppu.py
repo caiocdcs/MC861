@@ -48,34 +48,11 @@ class PPU:
         self.tablePalette = [c_uint8(0)]*32
         self.tablePattern = [c_uint8(0)]*4096*2
 
-        self.scanline = 0           # row
-        self.cycle = 0              # column
         self.frameComplete = False
         self.window = window
 
-        # PPU flags
-        self.status = status()
-        self.mask = mask()
-        self.control = control()
-
-        # Background
-        self.bg_next_tile_id = 0x00
-        self.bg_next_tile_attrib = 0x00
-        self.bg_next_tile_lsb = 0x00
-        self.bg_next_tile_msb = 0x00
-        self.bg_shifter_pattern_lo = 0x0000
-        self.bg_shifter_pattern_hi = 0x0000
-        self.bg_shifter_attrib_lo = 0x0000
-        self.bg_shifter_attrib_hi = 0x0000
-
-        self.vram_addr = loopy()
-        self.tram_addr = loopy()
-        self.fine_x = 0x00
-
         self.nmi = False
         self.ppu_address = 0x0000
-        self.address_latch = 0x00
-        self.ppu_data_buffer = 0x00
 
         self.oam = [0]*256
         self.oam_address = 0x00
@@ -84,6 +61,8 @@ class PPU:
         self.spriteCount = 0
         self.sprite_shifter_pattern_hi = [0]*8
         self.sprite_shifter_pattern_lo = [0]*8
+
+        self.reset()
         
         # Color mapping
         self.color = {
@@ -434,28 +413,45 @@ class PPU:
     #                     tile_lsb >>= 1
     #                     tile_msb >>= 1
 
+    def reset(self):
+        self.fine_x = 0x00
+        self.address_latch = 0x00
+        self.ppu_data_buffer = 0x00
+        self.scanline = 0           # row
+        self.cycle = 0              # column
+
+        self.vram_addr = loopy()
+        self.tram_addr = loopy()
+
+        # PPU flags
+        self.status = status()
+        self.mask = mask()
+        self.control = control()
+
+        # Background
+        self.bg_next_tile_id = 0x00
+        self.bg_next_tile_attrib = 0x00
+        self.bg_next_tile_lsb = 0x00
+        self.bg_next_tile_msb = 0x00
+        self.bg_shifter_pattern_lo = 0x0000
+        self.bg_shifter_pattern_hi = 0x0000
+        self.bg_shifter_attrib_lo = 0x0000
+        self.bg_shifter_attrib_hi = 0x0000
+        
     def clock(self):
-
-        if self.scanline == -1 and self.cycle == 1:
-            self.status.vertical_blank = 0
-
-        if (self.scanline == 241 and self.cycle == 1):
-            self.status.vertical_blank = 1
-            if self.control.enable_nmi:
-                self.nmi = True
 
         self.cycle += 1
 
         def IncrementScrollX():
-            if (self.maskf.render_background | self.mask.render_sprites):
+            if (self.mask.render_background or self.mask.render_sprites):
                 if (self.vram_addr.coarse_x == 31):
                     self.vram_addr.coarse_x = 0
-                    self.vram_addr.nametable_x = ~self.vram_addr.nametable_x
+                    self.vram_addr.nametable_x = ~self.vram_addr.nametable_x          # TODO: Check if this ~ works
                 else:
-                    self.vram_addr.coarse_x +- 1
+                    self.vram_addr.coarse_x += 1
 
         def IncrementScrollY():
-            if (self.mask.render_background | self.mask.render_sprites):
+            if (self.mask.render_background or self.mask.render_sprites):
                 if (self.vram_addr.fine_y < 7):
                     self.vram_addr.fine_y += 1
                 else:
@@ -469,12 +465,12 @@ class PPU:
                         self.vram_addr.coarse_y += 1
 
         def TransferAddressX():
-            if (self.mask.render_background | self.mask.render_sprites):
+            if (self.mask.render_background or self.mask.render_sprites):
                 self.vram_addr.nametable_x = self.tram_addr.nametable_x
                 self.vram_addr.coarse_x    = self.tram_addr.coarse_x
 
         def TransferAddressY():
-            if (self.mask.render_background | self.mask.render_sprites):
+            if (self.mask.render_background or self.mask.render_sprites):
                 self.vram_addr.fine_y      = self.tram_addr.fine_y
                 self.vram_addr.nametable_y = self.tram_addr.nametable_y
                 self.vram_addr.coarse_y    = self.tram_addr.coarse_y
@@ -513,10 +509,11 @@ class PPU:
                     self.sprite_shifter_pattern_lo[i] = 0
                     self.sprite_shifter_pattern_hi[i] = 0
 
-        if ((self.cycle >= 2 and self.cycle < 258) | (self.cycle >= 321 and self.cycle < 338)):
+        if ((self.cycle >= 2 and self.cycle < 258) or (self.cycle >= 321 and self.cycle < 338)):
             UpdateShifters()
             case = (self.cycle - 1) % 8
             if (case == 0):
+                LoadBackgroundShifters()
                 self.bg_next_tile_id = self.ppuRead(0x2000 | (self.vram_addr.reg & 0x0FFF)).value
             elif (case == 2):
                 self.bg_next_tile_attrib = self.ppuRead(0x23C0 | (self.vram_addr.nametable_y << 11) 
@@ -557,6 +554,10 @@ class PPU:
         if self.cycle == 257 and self.scanline >= 0:
             self.spriteScanline = [0]*32
             self.spriteCount = 0
+
+            for i in range(8):
+                self.sprite_shifter_pattern_hi[i] = 0
+                self.sprite_shifter_pattern_lo[i] = 0
 
             bSpriteZeroHitPossible = False
 
