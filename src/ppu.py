@@ -201,6 +201,9 @@ class PPU:
                 self.control.nametable_x = 1
             else:
                 self.control.nametable_x = 0
+            self.control.reg = data
+            self.tram_addr.nametable_x = self.control.nametable_x
+            self.tram_addr.nametable_y = self.control.nametable_y
         elif address == 0x0001:     # Mask
             if data.value & 0b10000000:
                 self.mask.enhance_blue = 1
@@ -234,6 +237,7 @@ class PPU:
                 self.mask.grayscale = 1
             else:
                 self.mask.grayscale = 0
+            self.mask.reg = data
             print("cpuWrite: 1")
         elif address == 0x0002:     # Status
             print("cpuWrite: 2")
@@ -375,8 +379,28 @@ class PPU:
         address = address & 0x3FFF
         if (address >= 0x0000 & address <= 0x1FFF):
             offset = 4096 if (address & 0x1000) >> 12 else 0
-            self.tablePattern[offset + address & 0x0FFF] = data
-        if (address >= 0x3F00 & address <= 0x3FFF):
+            self.tablePattern[address & 0x0FFF + offset] = data
+        elif (address >= 0x2000 & address <= 0x3EFF):
+            address &= 0x0FFF
+            if (self.cartridge.mirror == 0):
+                if (address >= 0x0000 & address <= 0x03FF):
+                    self.tableName[address & 0x03FF + 1024] = data
+                if (address >= 0x0400 & address <= 0x07FF):
+                    self.tableName[address & 0x03FF] = data
+                if (address >= 0x0800 & address <= 0x0BFF):
+                    self.tableName[address & 0x03FF + 1024] = data
+                if (address >= 0x0C00 & address <= 0x0FFF):
+                    self.tableName[address & 0x03FF] = data
+            elif (self.cartridge.mirror == 1):
+                if (address >= 0x0000 & address <= 0x03FF):
+                    self.tableName[address & 0x03FF] = data
+                if (address >= 0x0400 & address <= 0x07FF):
+                    self.tableName[address & 0x03FF] = data
+                if (address >= 0x0800 & address <= 0x0BFF):
+                    self.tableName[address & 0x03FF + 1024] = data
+                if (address >= 0x0C00 & address <= 0x0FFF):
+                    self.tableName[address & 0x03FF + 1024] = data
+        elif (address >= 0x3F00 & address <= 0x3FFF):
             address &= 0x001F
             if (address == 0x0010):
                 address = 0x0000
@@ -390,42 +414,42 @@ class PPU:
 
     def ppuRead(self, address):
         data = c_uint8(0)
-        addr = address & 0x3FFF
+        address = address & 0x3FFF
 
-        if (addr >= 0x0000 & addr <= 0x1FFF):
-            offset = 4096 if (addr & 0x1000) >> 12 else 0
-            data = self.tablePattern[addr + offset & 0x0FFF]
-        elif (addr >= 0x2000 & addr <= 0x3EFF):
-            addr &= 0x0FFF
+        if (address >= 0x0000 & address <= 0x1FFF):
+            offset = 4096 if (address & 0x1000) >> 12 else 0
+            data = self.tablePattern[address & 0x0FFF + offset]
+        elif (address >= 0x2000 & address <= 0x3EFF):
+            address &= 0x0FFF
             if (self.cartridge.mirror == 0):
-                if (addr >= 0x0000 & addr <= 0x03FF):
-                    data = self.tableName[addr & 0x03FF]
-                if (addr >= 0x0400 & addr <= 0x07FF):
-                    data = self.tableName[addr + 1024 & 0x03FF]
-                if (addr >= 0x0800 & addr <= 0x0BFF):
-                    data = self.tableName[addr & 0x03FF]
-                if (addr >= 0x0C00 & addr <= 0x0FFF):
-                    data = self.tableName[addr + 1024 & 0x03FF]
+                if (address >= 0x0000 & address <= 0x03FF):
+                    data = self.tableName[address & 0x03FF]
+                if (address >= 0x0400 & address <= 0x07FF):
+                    data = self.tableName[address & 0x03FF + 1024]
+                if (address >= 0x0800 & address <= 0x0BFF):
+                    data = self.tableName[address & 0x03FF]
+                if (address >= 0x0C00 & address <= 0x0FFF):
+                    data = self.tableName[address & 0x03FF + 1024]
             elif (self.cartridge.mirror == 1):
-                if (addr >= 0x0000 & addr <= 0x03FF):
-                    data = self.tableName[addr & 0x03FF]
-                if (addr >= 0x0400 & addr <= 0x07FF):
-                    data = self.tableName[addr & 0x03FF]
-                if (addr >= 0x0800 & addr <= 0x0BFF):
-                    data = self.tableName[addr + 1024 & 0x03FF]
-                if (addr >= 0x0C00 & addr <= 0x0FFF):
-                    data = self.tableName[addr + 1024 & 0x03FF]
-        elif (addr >= 0x3F00 & addr <= 0x3FFF):
-            addr &= 0x001F
-            if (addr == 0x0010):
-                addr = 0x0000
-            if (addr == 0x0014):
-                addr = 0x0004
-            if (addr == 0x0018):
-                addr = 0x0008
-            if (addr == 0x001C):
-                addr = 0x000C
-            data = self.tablePallete[addr] & (0x30 if self.mask.grayscale else 0x3F)
+                if (address >= 0x0000 & address <= 0x03FF):
+                    data = self.tableName[address & 0x03FF]
+                if (address >= 0x0400 & address <= 0x07FF):
+                    data = self.tableName[address & 0x03FF]
+                if (address >= 0x0800 & address <= 0x0BFF):
+                    data = self.tableName[address & 0x03FF + 1024]
+                if (address >= 0x0C00 & address <= 0x0FFF):
+                    data = self.tableName[address & 0x03FF + 1024]
+        elif (address >= 0x3F00 & address <= 0x3FFF):
+            address &= 0x001F
+            if (address == 0x0010):
+                address = 0x0000
+            if (address == 0x0014):
+                address = 0x0004
+            if (address == 0x0018):
+                address = 0x0008
+            if (address == 0x001C):
+                address = 0x000C
+            data = self.tablePallete[address] & (0x30 if self.mask.grayscale else 0x3F)
 
         return data
 
@@ -448,9 +472,27 @@ class PPU:
     #                     tile_lsb >>= 1
     #                     tile_msb >>= 1
 
-    def clock(self):
+    def reset(self):
+        self.fine_x = 0x00
+        self.address_latch = 0x00
+        self.ppu_data_buffer = 0x00
+        self.scanline = 0
+        self.cycle = 0
+        self.bg_next_tile_id = 0x00
+        self.bg_next_tile_attrib = 0x00
+        self.bg_next_tile_lsb = 0x00
+        self.bg_next_tile_msb = 0x00
+        self.bg_shifter_pattern_lo = 0x0000
+        self.bg_shifter_pattern_hi = 0x0000
+        self.bg_shifter_attrib_lo = 0x0000
+        self.bg_shifter_attrib_hi = 0x0000
+        self.status.reg = 0x00
+        self.mask.reg = 0x00
+        self.control.reg = 0x00
+        self.vram_addr.reg = 0x0000
+        self.tram_addr.reg = 0x0000
 
-        self.cycle += 1
+    def clock(self):
 
         def IncrementScrollX():
             if (self.mask.render_background | self.mask.render_sprites):
@@ -566,14 +608,6 @@ class PPU:
                 if (self.control.enable_nmi):
                     self.nmi = True
 
-        if self.cycle >= 341:
-            self.cycle = 0
-            self.scanline += 1
-
-            if self.scanline >= 261:
-                self.scanline = -1
-                self.frameComplete = True
-
         # Background check
 
         bg_pixel = 0x00
@@ -654,4 +688,14 @@ class PPU:
             #                 status.sprite_zero_hit = 1
 
         self.window.draw_pixel(self.cycle - 1, self.scanline, self.getColor(palette, pixel))
-            
+
+        self.cycle += 1
+
+        if self.cycle >= 341:
+            self.cycle = 0
+            self.scanline += 1
+
+            if self.scanline >= 261:
+                self.scanline = -1
+                self.frameComplete = True
+                

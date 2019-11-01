@@ -109,19 +109,19 @@ ClearAPULoop:
 ; LOAD PALETTES
 ;----------------------------------------------------------------
 
-; LoadPalettes:
-;   lda PPU_STATUS    ; read PPU status to reset the high/low latch
-;   lda #$3F
-;   sta PPU_ADDR      ; write the high byte of $3F00 address
-;   lda #$00
-;   sta PPU_ADDR      ; write the low byte of $3F00 address
-;   ldx #$00
-; LoadPalette:
-;   lda palette, x
-;   sta PPU_DATA
-;   inx
-;   cpx #$20
-;   bne LoadPalette
+LoadPalettes:
+  lda PPU_STATUS    ; read PPU status to reset the high/low latch
+  lda #$3F
+  sta PPU_ADDR      ; write the high byte of $3F00 address
+  lda #$00
+  sta PPU_ADDR      ; write the low byte of $3F00 address
+  ldx #$00
+LoadPalette:
+  lda palette, x
+  sta PPU_DATA
+  inx
+  cpx #$20
+  bne LoadPalette
 
 ;----------------------------------------------------------------
 ; LOAD SPRITES

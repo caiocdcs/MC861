@@ -38,6 +38,7 @@ class BUS:
 
     def reset(self):
         self.cpu.reset()
+        self.ppu.reset()
         self.clockCounter = 0
 
     def clock(self):
