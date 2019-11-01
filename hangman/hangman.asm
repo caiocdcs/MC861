@@ -66,44 +66,44 @@ RESET:
 ; ENABLE SOUNDS
 ;----------------------------------------------------------------
 
-ClearAPU:
-  lda #$00
-  ldy #$00
-ClearAPULoop:
-  sta $4000, y
-  iny
-  cpy $18
-  bne ClearAPULoop
+;ClearAPU:
+;  lda #$00
+;  ldy #$00
+;ClearAPULoop:
+;  sta $4000, y
+;  iny
+;  cpy $18
+;  bne ClearAPULoop
 
 ;----------------------------------------------------------------
 ; WAIT PPU AND CLEAR MEMORY
 ;----------------------------------------------------------------
 
 ; Wait for PPU
-vBlankWait1:
-  bit PPU_STATUS
-  bpl vBlankWait1
+;vBlankWait1:
+;  bit PPU_STATUS
+;  bpl vBlankWait1
   
 ; Clear Memory
-ClearLoop:
-  lda #$00
-  sta $0000, X
-  sta $0100, X
-  sta $0200, X
-  sta $0300, X
-  sta $0400, X
-  sta $0500, X
-  sta $0600, X
-  sta $0700, X
-  lda #$FE
-  sta $0200, x
-  inx
-  bne ClearLoop
+;ClearLoop:
+;  lda #$00
+;  sta $0000, X
+;  sta $0100, X
+;  sta $0200, X
+;  sta $0300, X
+;  sta $0400, X
+;  sta $0500, X
+;  sta $0600, X
+;  sta $0700, X
+;  lda #$FE
+;  sta $0200, x
+;  inx
+;  bne ClearLoop
 
 ; Wait for PPU
-vBlankWait2:
-  bit PPU_STATUS
-  bpl vBlankWait2
+;vBlankWait2:
+;  bit PPU_STATUS
+;  bpl vBlankWait2
 
 ;----------------------------------------------------------------
 ; LOAD PALETTES
@@ -718,21 +718,21 @@ CheckWin:
   lda $0502
   cmp #06
   beq GameOver
-  
-  jmp Forever
+  jmp Fim
 
 Win:
   jsr DrawWin
   lda #1
   sta $0311
-  brk
+  jmp Fim
 
 GameOver:
   jsr DrawGameOver
   lda #1
   sta $0311
-  brk
 
+Fim:
+    rti
 
 ;----------------------------------------------------------------
 ; IRQ

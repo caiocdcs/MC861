@@ -6,7 +6,8 @@ from ppu import PPU
 from window import Window
 from keyboard import Keyboard
 from Cartridge import Cartridge 
-from ctypes import c_uint16, c_uint8
+
+int8 = int
 
 def main():
 
@@ -23,7 +24,7 @@ def main():
 	cpu = CPU()
 	ppu = PPU(window)
 	bus = BUS(cpu, ppu, player1, player2)
-	cart = Cartridge("hangman/hangman.nes")
+	cart = Cartridge(sys.argv[1])
 	bus.insertCartridge(cart)
 	
 	cpu.connectBus(bus)
