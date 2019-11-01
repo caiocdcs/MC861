@@ -23,7 +23,7 @@ def main():
 	cpu = CPU()
 	ppu = PPU(window)
 	bus = BUS(cpu, ppu, player1, player2)
-	cart = Cartridge("hangman/hangman.nes")
+	cart = Cartridge("hangman/mario.nes")
 	bus.insertCartridge(cart)
 	
 	cpu.connectBus(bus)

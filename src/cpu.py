@@ -9,7 +9,17 @@ KB = 1024
 class CPU:
 
     def __init__(self):
-        self.reset()
+        self.sp = c_uint16(253) # SP starts at 0xfd
+        self.pc = c_uint16(0)
+        self.a = c_uint8(0)
+        self.x = c_uint8(0)
+        self.y = c_uint8(0)
+        self.flagController = FlagController()
+        self.stack = Stack()
+
+        self.address = None
+
+        self.cycles = 0
 
         self.handlers = {
                 '0A': (self.handleInstructionASLAccumulator, 2),
@@ -167,11 +177,6 @@ class CPU:
 
     def connectBus(self, bus):
         self.bus = bus
-
-        low_byte = self.bus.cpuRead(0xFFFC)
-        high_byte = self.bus.cpuRead(0xFFFD)
-
-        self.pc.value = (high_byte.value << 8) | low_byte.value
             
     def log(self):
         p = self.flagController.getFlagsStatusByte()
@@ -200,8 +205,12 @@ class CPU:
         return self._set_address_int(int(address, 16), data, set_address)
 
     def reset(self):
+        low_byte = self.bus.cpuRead(0xFFFC)
+        high_byte = self.bus.cpuRead(0xFFFD)
+
+        self.pc.value = (high_byte.value << 8) | low_byte.value
+
         self.sp = c_uint16(253) # SP starts at 0xfd
-        self.pc = c_uint16(0)
         self.a = c_uint8(0)
         self.x = c_uint8(0)
         self.y = c_uint8(0)
@@ -210,7 +219,7 @@ class CPU:
 
         self.address = None
 
-        self.cycles = 0
+        self.cycles = 8
 
     def irq(self):
         if self.flagController.geInterrupDisabledtFlag() == 0:
@@ -235,7 +244,7 @@ class CPU:
 
             self.pc.value = (high_byte.value << 8) | low_byte.value
 
-            self.cycles += 7
+            self.cycles = 7
 
     def nmi(self):
         print("NMI")
@@ -259,7 +268,7 @@ class CPU:
         high_byte = self.bus.cpuRead(0xFFFB)
         self.pc.value = (high_byte.value << 8) | low_byte.value
 
-        self.cycles += 7
+        self.cycles = 8
 
     def clock(self):
 

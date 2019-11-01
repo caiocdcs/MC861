@@ -62,7 +62,29 @@ class PPU:
         self.sprite_shifter_pattern_hi = [0]*8
         self.sprite_shifter_pattern_lo = [0]*8
 
-        self.reset()
+        self.fine_x = 0x00
+        self.address_latch = 0x00
+        self.ppu_data_buffer = 0x00
+        self.scanline = 0           # row
+        self.cycle = 0              # column
+
+        self.vram_addr = loopy()
+        self.tram_addr = loopy()
+
+        # PPU flags
+        self.status = status()
+        self.mask = mask()
+        self.control = control()
+
+        # Background
+        self.bg_next_tile_id = 0x00
+        self.bg_next_tile_attrib = 0x00
+        self.bg_next_tile_lsb = 0x00
+        self.bg_next_tile_msb = 0x00
+        self.bg_shifter_pattern_lo = 0x0000
+        self.bg_shifter_pattern_hi = 0x0000
+        self.bg_shifter_attrib_lo = 0x0000
+        self.bg_shifter_attrib_hi = 0x0000
         
         # Color mapping
         self.color = {
@@ -138,6 +160,8 @@ class PPU:
     def cpuWrite(self, address, data):
         if address == 0x0000:       # Control
             self.writeControl(data)
+            self.tram_addr.nametable_x = self.control.nametable_x
+            self.tram_addr.nametable_y = self.control.nametable_y
             print("cpuWrite: 0")
         elif address == 0x0001:     # Mask
             self.writeMask(data)
@@ -242,13 +266,11 @@ class PPU:
         else:
             self.mask.grayscale = 0
 
-    def cpuRead(self, address, readOnly):
+    def cpuRead(self, address):
         data = c_uint8(0)
         if address == 0x0000:       # Control
-            data = self.readControl()
             print("cpuRead: 0")
         elif address == 0x0001:     # Mask
-            data = self.readMask()
             print("cpuRead: 1")
         elif address == 0x0002:     # Status
             data = (self.readStatus() | (self.ppu_data_buffer & 0x1F)) 
@@ -314,9 +336,8 @@ class PPU:
         print("ppuWrite")
         address = address & 0x3FFF
 
-        if (self.cartridge.ppuWrite(address, data)):
+        if self.cartridge.ppuWrite(address, data):
             pass
-
         elif (address >= 0x0000 & address <= 0x1FFF):
             offset = 4096 if (address & 0x1000) >> 12 else 0
             self.tablePattern[offset + address & 0x0FFF] = data
@@ -354,11 +375,14 @@ class PPU:
                 address = 0x000C
             self.tablePalette[address] = data
 
-    def ppuRead(self, address, readOnly=False):
+    def ppuRead(self, address):
         data = c_uint8(0)
         addr = address & 0x3FFF
 
-        if (addr >= 0x0000 and addr <= 0x1FFF):
+        cartridgeData = self.cartridge.ppuRead(address)
+        if cartridgeData != None:
+            data = cartridgeData
+        elif (addr >= 0x0000 and addr <= 0x1FFF):
             offset = 4096 if (addr & 0x1000) >> 12 else 0
             data = self.tablePattern[addr + offset & 0x0FFF]
         elif (addr >= 0x2000 and addr <= 0x3EFF):
@@ -424,9 +448,28 @@ class PPU:
         self.tram_addr = loopy()
 
         # PPU flags
-        self.status = status()
-        self.mask = mask()
-        self.control = control()
+        self.status.sprite_overflow: c_uint8 = 0
+        self.status.sprite_zero_hit: c_uint8 = 0
+        self.status.vertical_blank: c_uint8 = 0
+
+
+        self.mask.grayscale: c_uint8 = 0
+        self.mask.render_background_left: c_uint8 = 0
+        self.mask.render_sprites_left: c_uint8 = 0
+        self.mask.render_background: c_uint8 = 0
+        self.mask.render_sprites: c_uint8 = 0
+        self.mask.enhance_red: c_uint8 = 0
+        self.mask.enhance_green: c_uint8 = 0
+        self.mask.enhance_blue: c_uint8 = 0
+
+        self.control.nametable_x: c_uint8 = 0
+        self.control.nametable_y: c_uint8 = 0
+        self.control.increment_mode: c_uint8 = 0
+        self.control.pattern_sprite: c_uint8 = 0
+        self.control.pattern_background: c_uint8 = 0
+        self.control.sprite_size: c_uint8 = 0
+        self.control.slave_mode : c_uint8 = 0
+        self.control.enable_nmi: c_uint8 = 0
 
         # Background
         self.bg_next_tile_id = 0x00

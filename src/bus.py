@@ -13,20 +13,17 @@ class BUS:
        self.controller2 = controller2
        self.consoleState1 = 0b000000000
        self.consoleState2 = 0b000000000
-       self.testClock = 0
 
-       
-
-    def cpuRead(self, address, readOnly = True):
+    def cpuRead(self, address):
         data = c_uint8(0)
 
         cartridgeData = self.cartridge.cpuRead(address)
         if cartridgeData != None:
             data = cartridgeData
-        if address >= 0x0000 and address <= 0x1FFF:
+        elif address >= 0x0000 and address <= 0x1FFF:
             data = self.cpuRam[address & 0x07FF]
         elif address >= 0x2000 and address <= 0x3FFF:
-            self.ppu.cpuRead(address & 0x0007, readOnly)
+            self.ppu.cpuRead(address & 0x0007)
         elif address == 0x4016:
             data = c_uint8(self.consoleState1 & 0x80)
             print("{0:b}".format(self.consoleState1))

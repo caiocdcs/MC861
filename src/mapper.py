@@ -1,6 +1,10 @@
 class Mapper:
 
-    def __init__(self, prgBanks, chrBanks):
+    def __init__(self):
+        self.prgBanks = 0
+        self.chrBanks = 0
+
+    def connect(self, prgBanks, chrBanks):
         self.prgBanks = prgBanks
         self.chrBanks = chrBanks
 
@@ -23,4 +27,8 @@ class Mapper:
         return None
 
     def ppuMapWrite(self, address):
+        if address >= 0x000 and address <= 0x1FFF:
+            if self.chrBanks == 0:
+                mappedAddress = address
+                return mappedAddress
         return None
