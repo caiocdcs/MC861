@@ -73,6 +73,7 @@ class BUS:
 
     def clock(self):
         self.ppu.clock()
+        self.cpu.clock()
         if self.clockCounter % 3 == 0:
             if self.dma_transfer:
                 if self.dma_even:
@@ -90,8 +91,8 @@ class BUS:
                             
                         self.ppu.oam[self.dma_addr] = self.dma_data
                         self.dma_addr += 1
-            else: 
-                self.cpu.clock()
+            #else:
+            #    self.cpu.clock()
 
         if self.ppu.getNmi():
             self.ppu.setNmi(False)
