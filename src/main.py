@@ -1,5 +1,4 @@
 import sys
-import pyglet
 from bus import BUS
 from cpu import CPU
 from ppu import PPU
@@ -30,11 +29,30 @@ def main():
 
 	bus.reset()
 
+	done = False
+
 	pygame.init()
+	screen = pygame.display.set_mode((400, 300))
 	clock = pygame.time.Clock()
-	while 1:
+	while done == False:
+		for event in pygame.event.get():
+			if event.type == pygame.QUIT:
+				done = True
+
+			elif event.type == pygame.KEYDOWN:
+				if event.key == pygame.K_UP:
+					print("up")
+				if event.key == pygame.K_LEFT:
+					print("left")
+				if event.key == pygame.K_RIGHT:
+					print("right")
+				if event.key == pygame.K_DOWN:
+					print("down")
+		pygame.draw.rect(screen, (0, 128, 255), pygame.Rect(30, 30, 60, 60))
+		pygame.display.flip()
 		clock.tick(60)
-		bus.setFrame()
+		# bus.setFrame()
+		
 
 		# events = pygame.event.get()
 		# for event in events:

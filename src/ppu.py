@@ -478,13 +478,13 @@ class PPU:
         
     def clock(self):
 
-        # self.window.setPixel(10, 15, Color(70, 70, 70))
-        # self.window.setPixel(20, 15, self.color[0x20])
-        # self.window.setPixel(30, 15, self.color[0x20])
-        # self.window.setPixel(40, 15, self.color[0x20])
-        # self.window.setPixel(50, 15, self.color[0x20])
-        #
-        # self.window.flip()
+        self.window.setPixel(10, 15, Color(70, 70, 70))
+        self.window.setPixel(20, 15, self.color[0x20])
+        self.window.setPixel(30, 15, self.color[0x20])
+        self.window.setPixel(40, 15, self.color[0x20])
+        self.window.setPixel(50, 15, self.color[0x20])
+        
+        self.window.flip()
 
         global bSpriteZeroHitPossible
 
