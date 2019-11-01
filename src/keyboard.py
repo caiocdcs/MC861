@@ -34,19 +34,19 @@ class Keyboard:
 
     def pressUpButton(self):
         self.upButtonPressed = 1
-        print("Up XXxxxxxxxxxxxxxxxxxxxxxxxxXXxxxxxxxxxxxxxxxxxxxxxxxx")
+        print("Up")
 
     def pressDownButton(self):
         self.downButtonPressed = 1
-        print("Down XXxxxxxxxxxxxxxxxxxxxxxxxxXXxxxxxxxxxxxxxxxxxxxxxxxx")
+        print("Down")
 
     def pressLeftButton(self):
         self.leftButtonPressed = 1
-        print("Left XXxxxxxxxxxxxxxxxxxxxxxxxxXXxxxxxxxxxxxxxxxxxxxxxxxx")
+        print("Left")
 
     def pressRightButton(self):
         self.rightButtonPressed = 1
-        print("Right XXxxxxxxxxxxxxxxxxxxxxxxxxXXxxxxxxxxxxxxxxxxxxxxxxxx")
+        print("Right")
 
     def read(self):
         keyboard = 0
@@ -58,5 +58,6 @@ class Keyboard:
         keyboard = keyboard | (self.selectButtonPressed << 5)
         keyboard = keyboard | (self.bButtonPressed << 6)
         keyboard = keyboard | (self.aButtonPressed << 7)
-
+        
+        self.resetState()
         return keyboard

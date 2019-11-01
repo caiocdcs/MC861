@@ -49,31 +49,8 @@ PPU_DATA    =   $2007
 .org $C000
 
 RESET:
-  sei
-  cld
-; Disable APU frame IRQ
-  ldx #$40
-  stx $4017
-  ldx #$FF
-  txs
-  ldx #$00
-; Disable NMI and rendering
-  stx PPU_CTRL
-  stx PPU_MASK
-  stx $4010
-
-
-ConfigurePPU:
-  lda #%10010000   ; enable NMI, sprites from Pattern Table 0
-  sta PPU_CTRL
-  lda #%00011110   ; enable sprites and background
-  sta PPU_MASK
-  lda #$00         ; disable scroll
-  sta PPU_SCROLL
-  sta PPU_SCROLL
 
 NMI:
-  jmp EndNMI
 
 EndNMI:
 
@@ -87,8 +64,6 @@ EndNMI:
 
 LatchController:
   LDA #$01
-  STA $4016
-  LDA #$00
   STA $4016
 
 ; Pressed A
@@ -130,7 +105,7 @@ ReadUp:
   LDA $4016           ; player 1 - Up
   AND #%00000001      ; only look at bit 0
   BEQ ReadUpDone      ; branch to ReadUpDone if button is NOT pressed (0)
-
+  LDX #$01
 ReadUpDone:           ; handling this button is done
 
 ; Pressed Down
@@ -138,6 +113,7 @@ ReadDown:
   LDA $4016           ; player 1 - Down
   AND #%00000001      ; only look at bit 0
   BEQ ReadDownDone    ; branch to ReadDownDone if button is NOT pressed (0)
+  LDX #$01
 ReadDownDone:         ; handling this button is done
 
 ; Pressed Left
@@ -145,6 +121,7 @@ ReadLeft:
   LDA $4016           ; player 1 - Left
   AND #%00000001      ; only look at bit 0
   BEQ ReadLeftDone    ; branch to ReadLeftDone if button is NOT pressed (0)
+  LDX #$01
 ReadLeftDone:         ; handling this button is done
 
 ; Pressed Right
@@ -152,6 +129,7 @@ ReadRight:
   LDA $4016           ; player 1 - Right
   AND #%00000001      ; only look at bit 0
   BEQ ReadRightDone   ; branch to ReadRightDone if button is NOT pressed (0)
+  LDX #$01
 ReadRightDone:        ; handling this button is done
 
   jmp LatchController
