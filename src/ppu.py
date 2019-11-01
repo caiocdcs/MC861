@@ -225,13 +225,20 @@ class PPU:
         elif address == 0x0005:     # Scroll
             print("cpuWrite: 5")
             if self.address_latch == 0:
+                self.fine_x = data.value & 0x07
+                self.tram_addr.coarse_x = data.value >> 3
                 self.address_latch = 1
             else:
                 self.address_latch = 0
+                self.tram_addr.fine_y = data.value & 0x07
+                self.tram_addr.coarse_y = data.value >> 3
         elif address == 0x0006:     # PPU Address
             if self.address_latch == 0:
+                self.tram_addr.reg = ((data.value & 0x3F) << 8) | (self.tram_addr.reg & 0x00FF)
                 self.address_latch = 1
             else:
+                self.tram_addr.reg = (self.tram_addr.reg & 0xFF00) | data.value
+                self.vram_addr = self.tram_addr
                 self.address_latch = 0
             print("cpuWrite: 6")
         elif address == 0x0007:     # PPU Data
@@ -371,6 +378,7 @@ class PPU:
         self.cartridge = cartridge
 
     def getColor(self, palette, pixel):
+        # print(self.color[self.ppuRead(0x3F00 + (palette << 2) + pixel).value & 0x3F])
         return self.color[self.ppuRead(0x3F00 + (palette << 2) + pixel).value & 0x3F]
 
     # def getPatternTable(self, i, palette): # i and palette are c_uint8
@@ -465,9 +473,9 @@ class PPU:
                                                     | ((self.vram_addr.coarse_y >> 2) << 3) 
                                                     | (self.vram_addr.coarse_x >> 2))
                 if (self.vram_addr.coarse_y & 0x02):
-                    self.bg_next_tile_attrib >>= 4
+                    self.bg_next_tile_attrib.value >>= 4
                 if (self.vram_addr.coarse_x & 0x02):
-                    self.bg_next_tile_attrib >>= 2
+                    self.bg_next_tile_attrib.value >>= 2
                 self.bg_next_tile_attrib = self.bg_next_tile_attrib.value & 0x03
             elif (case == 4):
                 self.bg_next_tile_lsb = self.ppuRead((self.control.pattern_background << 12) 
@@ -515,6 +523,7 @@ class PPU:
         bg_pixel = 0x00
         bg_palette = 0x00
         if (self.mask.render_background):
+            print(self.fine_x)
             bit_mux = 0x8000 >> self.fine_x
 
             p0_pixel = (self.bg_shifter_pattern_lo & bit_mux) > 0
@@ -587,5 +596,6 @@ class PPU:
             #             if (cycle >= 1 & cycle < 258):
             #                 status.sprite_zero_hit = 1
 
+        # self.window.draw_pixel(self.cycle - 1, self.scanline, self.getColor(palette, pixel))
         self.window.draw_pixel(self.cycle - 1, self.scanline, self.getColor(palette, pixel))
             
