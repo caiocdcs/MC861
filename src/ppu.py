@@ -1,5 +1,9 @@
 from dataclasses import dataclass
 
+from window import Window
+
+from pygame import Color
+
 int8 = int
 
 # PPU Flags
@@ -46,14 +50,14 @@ class loopy:
 
 class PPU:
 
-    def __init__(self, window):
+    def __init__(self):
         # Tables
         self.tableName = [[int8(0) for _ in range(1024)]] * 2
         self.tablePalette = [int8(0)]*32
         self.tablePattern = [[int8(0) for _ in range(4096)]] * 2
 
         self.frameComplete = False
-        self.window = window
+        self.window = Window()
 
         self.nmi = False
         self.ppu_address = 0x0000
@@ -92,73 +96,73 @@ class PPU:
         
         # Color mapping
         self.color = {
-            0x00: (84, 84, 84),
-            0x01: (0, 30, 116),
-            0x02: (8, 16, 144),
-            0x03: (48, 0, 136),
-            0x04: (68, 0, 100),
-            0x05: (92, 0, 48),
-            0x06: (84, 4, 0),
-            0x07: (60, 24, 0),
-            0x08: (32, 42, 0),
-            0x09: (8, 58, 0),
-            0x0A: (0, 64, 0),
-            0x0B: (0, 60, 0),
-            0x0C: (0, 50, 60),
-            0x0D: (0, 0, 0),
-            0x0E: (0, 0, 0),
-            0x0F: (0, 0, 0),
+            0x00: Color(84, 84, 84),
+            0x01: Color(0, 30, 116),
+            0x02: Color(8, 16, 144),
+            0x03: Color(48, 0, 136),
+            0x04: Color(68, 0, 100),
+            0x05: Color(92, 0, 48),
+            0x06: Color(84, 4, 0),
+            0x07: Color(60, 24, 0),
+            0x08: Color(32, 42, 0),
+            0x09: Color(8, 58, 0),
+            0x0A: Color(0, 64, 0),
+            0x0B: Color(0, 60, 0),
+            0x0C: Color(0, 50, 60),
+            0x0D: Color(0, 0, 0),
+            0x0E: Color(0, 0, 0),
+            0x0F: Color(0, 0, 0),
 
-            0x10: (152, 150, 152),
-            0x11: (8, 76, 196),
-            0x12: (48, 50, 236),
-            0x13: (92, 30, 228),
-            0x14: (136, 20, 176),
-            0x15: (160, 20, 100),
-            0x16: (152, 34, 32),
-            0x17: (120, 60, 0),
-            0x18: (84, 90, 0),
-            0x19: (40, 114, 0),
-            0x1A: (8, 124, 0),
-            0x1B: (0, 118, 40),
-            0x1C: (0, 102, 120),
-            0x1D: (0, 0, 0),
-            0x1E: (0, 0, 0),
-            0x1F: (0, 0, 0),
+            0x10: Color(152, 150, 152),
+            0x11: Color(8, 76, 196),
+            0x12: Color(48, 50, 236),
+            0x13: Color(92, 30, 228),
+            0x14: Color(136, 20, 176),
+            0x15: Color(160, 20, 100),
+            0x16: Color(152, 34, 32),
+            0x17: Color(120, 60, 0),
+            0x18: Color(84, 90, 0),
+            0x19: Color(40, 114, 0),
+            0x1A: Color(8, 124, 0),
+            0x1B: Color(0, 118, 40),
+            0x1C: Color(0, 102, 120),
+            0x1D: Color(0, 0, 0),
+            0x1E: Color(0, 0, 0),
+            0x1F: Color(0, 0, 0),
 
-            0x20: (236, 238, 236),
-            0x21: (76, 154, 236),
-            0x22: (120, 124, 236),
-            0x23: (176, 98, 236),
-            0x24: (228, 84, 236),
-            0x25: (236, 88, 180),
-            0x26: (236, 106, 100),
-            0x27: (212, 136, 32),
-            0x28: (160, 170, 0),
-            0x29: (116, 196, 0),
-            0x2A: (76, 208, 32),
-            0x2B: (56, 204, 108),
-            0x2C: (56, 180, 204),
-            0x2D: (60, 60, 60),
-            0x2E: (0, 0, 0),
-            0x2F: (0, 0, 0),
+            0x20: Color(236, 238, 236),
+            0x21: Color(76, 154, 236),
+            0x22: Color(120, 124, 236),
+            0x23: Color(176, 98, 236),
+            0x24: Color(228, 84, 236),
+            0x25: Color(236, 88, 180),
+            0x26: Color(236, 106, 100),
+            0x27: Color(212, 136, 32),
+            0x28: Color(160, 170, 0),
+            0x29: Color(116, 196, 0),
+            0x2A: Color(76, 208, 32),
+            0x2B: Color(56, 204, 108),
+            0x2C: Color(56, 180, 204),
+            0x2D: Color(60, 60, 60),
+            0x2E: Color(0, 0, 0),
+            0x2F: Color(0, 0, 0),
 
-            0x30: (236, 238, 236),
-            0x31: (168, 204, 236),
-            0x32: (188, 188, 236),
-            0x33: (212, 178, 236),
-            0x34: (236, 174, 236),
-            0x35: (236, 174, 212),
-            0x36: (236, 180, 176),
-            0x37: (228, 196, 144),
-            0x38: (204, 210, 120),
-            0x39: (180, 222, 120),
-            0x3A: (168, 226, 144),
-            0x3B: (152, 226, 180),
-            0x3C: (160, 214, 228),
-            0x3D: (160, 162, 160),
-            0x3E: (0, 0, 0),
-            0x3F: (0, 0, 0)
+            0x30: Color(236, 238, 236),
+            0x31: Color(168, 204, 236),
+            0x32: Color(188, 188, 236),
+            0x33: Color(212, 178, 236),
+            0x34: Color(236, 174, 236),
+            0x35: Color(236, 174, 212),
+            0x36: Color(236, 180, 176),
+            0x37: Color(228, 196, 144),
+            0x38: Color(204, 210, 120),
+            0x39: Color(180, 222, 120),
+            0x3A: Color(168, 226, 144),
+            0x3B: Color(152, 226, 180),
+            0x3C: Color(160, 214, 228),
+            0x3D: Color(160, 162, 160),
+            0x3E: Color(0, 0, 0),
+            0x3F: Color(0, 0, 0)
         }
 
     def cpuWrite(self, address, data):
@@ -480,7 +484,7 @@ class PPU:
             if self.mask.render_background or self.mask.render_sprites:
                 if self.vram_addr.coarse_x == 31:
                     self.vram_addr.coarse_x = 0
-                    self.vram_addr.nametable_x = ~self.vram_addr.nametable_x          # TODO: Check if this ~ works
+                    self.vram_addr.nametable_x = ~self.vram_addr.nametable_x
                 else:
                     self.vram_addr.coarse_x = self.vram_addr.coarse_x+ 1
 
@@ -608,47 +612,49 @@ class PPU:
                         self.spriteScanline[self.spriteCount + 2] = self.oam[entry + 2]
                         self.spriteScanline[self.spriteCount + 3] = self.oam[entry + 3]
 
-                        self.spriteCount += 4
+                    self.spriteCount += 4
                 entry += 4
             self.status.sprite_overflow = self.spriteCount > 8
         
         if self.cycle == 340:
             j = 0
             for i in range(0, self.spriteCount, 4):
-                if not self.control.sprite_size:
-                    # 8x8 Sprite Mode
-                    if not (self.spriteScanline[i + 2] & 0x80): #Sprite is NOT flipped vertically, i.e. normal
-                        sprite_pattern_addr_lo = (self.control.pattern_sprite << 12) | (self.spriteScanline[i+1] << 4) | (self.scanline - self.spriteScanline[i])
-                    else:   # shifted vertically
-                        sprite_pattern_addr_lo = (self.control.pattern_sprite << 12) | (self.spriteScanline[i+1] << 4) | (7 - (self.scanline - self.spriteScanline[i]))
-                else:
-                    if not (self.spriteScanline[i + 2] & 0x80): # normal sprite, not shifted vertically
-                        if self.scanline - self.spriteScanline[i] < 8:
-                            sprite_pattern_addr_lo = ((self.spriteScanline[i+1] & 0x01) << 12) | ((self.spriteScanline[i+1] & 0xFE) << 4) | ((self.scanline - self.spriteScanline[i]) & 0x07)
-                        else:
-                            sprite_pattern_addr_lo = ((self.spriteScanline[i+1] & 0x01) << 12) | (((self.spriteScanline[i+1] & 0xFE) +1) << 4) | ((self.scanline - self.spriteScanline[i]) & 0x07)
-                    else:  
-                        if self.scanline - self.spriteScanline[i] < 8:
-                            sprite_pattern_addr_lo = ((self.spriteScanline[i+1] & 0x01) << 12) | (((self.spriteScanline[i+1] & 0xFE)+1) << 4) | (7 - (self.scanline - self.spriteScanline[i]) & 0x07)
-                        else:
-                            sprite_pattern_addr_lo = ((self.spriteScanline[i+1] & 0x01) << 12) | ((self.spriteScanline[i+1] & 0xFE) << 4) | (7 - (self.scanline - self.spriteScanline[i]) & 0x07)
+                # TODO review this line, added "self.status.sprite_overflow == False"
+                if i < 32:
+                    if not self.control.sprite_size:
+                        # 8x8 Sprite Mode
+                        if not (self.spriteScanline[i + 2] & 0x80): #Sprite is NOT flipped vertically, i.e. normal
+                            sprite_pattern_addr_lo = (self.control.pattern_sprite << 12) | (self.spriteScanline[i+1] << 4) | (self.scanline - self.spriteScanline[i])
+                        else:   # shifted vertically
+                            sprite_pattern_addr_lo = (self.control.pattern_sprite << 12) | (self.spriteScanline[i+1] << 4) | (7 - (self.scanline - self.spriteScanline[i]))
+                    else:
+                        if not (self.spriteScanline[i + 2] & 0x80): # normal sprite, not shifted vertically
+                            if self.scanline - self.spriteScanline[i] < 8:
+                                sprite_pattern_addr_lo = ((self.spriteScanline[i+1] & 0x01) << 12) | ((self.spriteScanline[i+1] & 0xFE) << 4) | ((self.scanline - self.spriteScanline[i]) & 0x07)
+                            else:
+                                sprite_pattern_addr_lo = ((self.spriteScanline[i+1] & 0x01) << 12) | (((self.spriteScanline[i+1] & 0xFE) +1) << 4) | ((self.scanline - self.spriteScanline[i]) & 0x07)
+                        else:  
+                            if self.scanline - self.spriteScanline[i] < 8:
+                                sprite_pattern_addr_lo = ((self.spriteScanline[i+1] & 0x01) << 12) | (((self.spriteScanline[i+1] & 0xFE)+1) << 4) | (7 - (self.scanline - self.spriteScanline[i]) & 0x07)
+                            else:
+                                sprite_pattern_addr_lo = ((self.spriteScanline[i+1] & 0x01) << 12) | ((self.spriteScanline[i+1] & 0xFE) << 4) | (7 - (self.scanline - self.spriteScanline[i]) & 0x07)
 
-                sprite_pattern_addr_hi = sprite_pattern_addr_lo + 8
-                sprite_pattern_bits_lo = self.ppuRead(sprite_pattern_addr_lo)
-                sprite_pattern_bits_hi = self.ppuRead(sprite_pattern_addr_hi)
+                    sprite_pattern_addr_hi = sprite_pattern_addr_lo + 8
+                    sprite_pattern_bits_lo = self.ppuRead(sprite_pattern_addr_lo)
+                    sprite_pattern_bits_hi = self.ppuRead(sprite_pattern_addr_hi)
 
-                def flipbyte(b):
-                    b = (b & 0xF0) >> 4 | (b & 0x0F) << 4
-                    b = (b & 0xCC) >> 2 | (b & 0x33) << 2
-                    b = (b & 0xAA) >> 1 | (b & 0x55) << 1
-                    return b
-				
-                if self.spriteScanline[i+2] & 0x40:
-                    sprite_pattern_bits_lo = flipbyte(sprite_pattern_bits_lo)
-                    sprite_pattern_bits_hi = flipbyte(sprite_pattern_bits_hi)
+                    def flipbyte(b):
+                        b = (b & 0xF0) >> 4 | (b & 0x0F) << 4
+                        b = (b & 0xCC) >> 2 | (b & 0x33) << 2
+                        b = (b & 0xAA) >> 1 | (b & 0x55) << 1
+                        return b
+                    
+                    if self.spriteScanline[i+2] & 0x40:
+                        sprite_pattern_bits_lo = flipbyte(sprite_pattern_bits_lo)
+                        sprite_pattern_bits_hi = flipbyte(sprite_pattern_bits_hi)
 
-                self.sprite_shifter_pattern_lo[j] = sprite_pattern_bits_lo
-                self.sprite_shifter_pattern_hi[j] = sprite_pattern_bits_hi
+                    self.sprite_shifter_pattern_lo[j] = sprite_pattern_bits_lo
+                    self.sprite_shifter_pattern_hi[j] = sprite_pattern_bits_hi
             j += 1
 
         if 241 <= self.scanline < 261:
@@ -673,7 +679,7 @@ class PPU:
             bg_pal1 = (self.bg_shifter_attrib_hi & bit_mux) > 0
             bg_palette = (bg_pal1 << 1) | bg_pal0
 
-        # TODO: Foreground check
+        # # TODO: Foreground check
         fg_pixel = 0x00
         fg_palette = 0x00
         fg_priority = 0x00
@@ -727,7 +733,7 @@ class PPU:
                         if 1 <= self.cycle < 258:
                             status.sprite_zero_hit = 1
 
-        self.window.draw_pixel(self.cycle - 1, self.scanline,  self.getColor(palette, pixel))
+        self.window.setPixel(self.cycle - 1, self.scanline, self.getColor(palette, pixel))
 
         self.cycle += 1
         if self.cycle >= 341:

@@ -1,11 +1,11 @@
 import sys
-import pyglet
 from bus import BUS
 from cpu import CPU
 from ppu import PPU
 from window import Window
 from keyboard import Keyboard
-from Cartridge import Cartridge 
+from Cartridge import Cartridge
+import pygame
 
 int8 = int
 
@@ -18,11 +18,9 @@ def main():
 	
 	player1 = Keyboard()
 	player2 = Keyboard()
-	window = Window(player1, player2)
-	window.set_size(256, 240)
-	# window.set_size(768, 720)
+
 	cpu = CPU()
-	ppu = PPU(window)
+	ppu = PPU()
 	bus = BUS(cpu, ppu, player1, player2)
 	cart = Cartridge(sys.argv[1])
 	bus.insertCartridge(cart)
@@ -31,10 +29,35 @@ def main():
 
 	bus.reset()
 
-	# Do all init (load pallettes, background, set flags...) before running pyglet loop
-	
-	pyglet.clock.schedule_interval(bus.setFrame, 1 / 60)
-	pyglet.app.run()
+	done = False
+
+	pygame.init()
+	screen = pygame.display.set_mode((400, 300))
+	clock = pygame.time.Clock()
+	while done == False:
+		for event in pygame.event.get():
+			if event.type == pygame.QUIT:
+				done = True
+
+			elif event.type == pygame.KEYDOWN:
+				if event.key == pygame.K_UP:
+					player1.pressUpButton()
+				if event.key == pygame.K_LEFT:
+					player1.pressLeftButton()
+				if event.key == pygame.K_RIGHT:
+					player1.pressRightButton()
+				if event.key == pygame.K_DOWN:
+					player1.pressDownButton()
+		# pygame.draw.rect(screen, (0, 128, 255), pygame.Rect(30, 30, 60, 60))
+		pygame.display.flip()
+		clock.tick(60)
+		bus.setFrame()
+		
+
+		# events = pygame.event.get()
+		# for event in events:
+		# 	if event.key == pygame.K_a:
+		# 		print("adsa")
 	
 
 if __name__ == "__main__":
