@@ -45,6 +45,9 @@ class Cartridge:
             return True
         return False
 
+    def getMirror(self):
+        return self.mirror
+
     def loadFile(self, fileName):
         file = open(fileName, "rb")
 

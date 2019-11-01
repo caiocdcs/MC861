@@ -6,6 +6,7 @@ from ppu import PPU
 from window import Window
 from keyboard import Keyboard
 from Cartridge import Cartridge 
+from ctypes import c_uint16, c_uint8
 
 def main():
 
@@ -26,6 +27,8 @@ def main():
 	bus.insertCartridge(cart)
 	
 	cpu.connectBus(bus)
+
+	bus.reset()
 
 	# Do all init (load pallettes, background, set flags...) before running pyglet loop
 	
