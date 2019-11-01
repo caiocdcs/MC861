@@ -11,8 +11,8 @@ class BUS:
        self.clockCounter = 0
        self.controller1 = controller1
        self.controller2 = controller2
-       self.consoleState1 = 0x0000
-       self.consoleState2 = 0x0000
+       self.consoleState1 = 0b000000000
+       self.consoleState2 = 0b000000000
        self.testClock = 0
 
     def cpuRead(self, address, readOnly = True):
@@ -28,9 +28,9 @@ class BUS:
         elif address == 0x4016:
             data = c_uint8(self.consoleState1 & 0x80)
             print("{0:b}".format(self.consoleState1))
-            print(self.consoleState1 & 0x80)
-            print(data.value)
-            self.consoleState1 <<= 1
+            # print(self.consoleState1 & 0x80)
+            self.consoleState1 = self.consoleState1 << 1
+            print("{0:b}".format(self.consoleState1))
         elif address == 0x4017: # console 2
             pass
 
@@ -46,7 +46,6 @@ class BUS:
         elif address >= 0x4016:
             print("snapshot")
             self.consoleState1 = self.controller1.read()
-            print(self.consoleState1)
         elif address <= 0x4017: # console 2
             pass
             
