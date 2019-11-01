@@ -136,8 +136,9 @@ class Window(pyglet.window.Window):
             self.player1.selectButtonPressed()
 
     def on_draw(self):
+        pass
         # self.clear()
-        pyglet.graphics.draw(4, pyglet.gl.GL_QUADS, ('v2i', [self.x, self.y, self.x - self.dx, self.y, self.x - self.dx, self.y - self.dy, self.x, self.y - self.dy]))
+        #pyglet.graphics.draw(4, pyglet.gl.GL_QUADS, ('v2i', [self.x, self.y, self.x - self.dx, self.y, self.x - self.dx, self.y - self.dy, self.x, self.y - self.dy]))
 
     def draw_pixel(self, x, y, rgb):
         pyglet.graphics.draw(1, pyglet.gl.GL_POINTS,('v2i', (x, y)), ('c3B', rgb))
