@@ -1,43 +1,63 @@
 class Keyboard:
 
     def __init__(self):
-        self.index = 0
-        self.keys = [False] * 8
+        self.aButtonPressed = 0
+        self.bButtonPressed = 0
+        self.selectButtonPressed = 0
+        self.startButtonPressed = 0
+        self.upButtonPressed = 0
+        self.downButtonPressed = 0
+        self.leftButtonPressed = 0
+        self.rightButtonPressed = 0
 
     def resetState(self):
-        self.keys = [False] * 8
+        self.aButtonPressed = 0
+        self.bButtonPressed = 0
+        self.selectButtonPressed = 0
+        self.startButtonPressed = 0
+        self.upButtonPressed = 0
+        self.downButtonPressed = 0
+        self.leftButtonPressed = 0
+        self.rightButtonPressed = 0
+        print("Reset")
 
-    def aButtonPressed(self):
-        self.keys[0] = True
+    def pressAButton(self):
+        self.aButtonPressed = 1
 
-    def bButtonPressed(self):
-        self.keys[1] = True
+    def pressBButton(self):
+        self.bButtonPressed = 1
 
-    def selectButtonPressed(self):
-        self.keys[2] = True
+    def pressSelectButton(self):
+        self.selectButtonPressed = 1
 
-    def startButtonPressed(self):
-        self.keys[3] = True
+    def pressStartButton(self):
+        self.startButtonPressed = 1
 
-    def upButtonPressed(self):
-        self.keys[4] = True
+    def pressUpButton(self):
+        self.upButtonPressed = 1
+        print("Up")
 
-    def downButtonPressed(self):
-        self.keys[5] = True
+    def pressDownButton(self):
+        self.downButtonPressed = 1
+        print("Down")
 
-    def leftButtonPressed(self):
-        self.keys[6] = True
+    def pressLeftButton(self):
+        self.leftButtonPressed = 1
+        print("Left")
 
-    def rightButtonPressed(self):
-        self.keys[7] = True
+    def pressRightButton(self):
+        self.rightButtonPressed = 1
+        print("Right")
 
     def read(self):
-        keyStatus = self.keys[self.index]
-        self.updateIndex()
-        return keyStatus
+        keyboard = 0
+        keyboard = keyboard | (self.rightButtonPressed << 0)
+        keyboard = keyboard | (self.leftButtonPressed << 1)
+        keyboard = keyboard | (self.downButtonPressed << 2)
+        keyboard = keyboard | (self.upButtonPressed << 3)
+        keyboard = keyboard | (self.startButtonPressed << 4)
+        keyboard = keyboard | (self.selectButtonPressed << 5)
+        keyboard = keyboard | (self.bButtonPressed << 6)
+        keyboard = keyboard | (self.aButtonPressed << 7)
 
-    def updateIndex(self):
-        self.index += 1
-        if self.index > 7:
-            self.index = 0
-            self.resetState()
+        return keyboard

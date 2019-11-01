@@ -4,14 +4,11 @@ from keyboard import Keyboard
 
 class Window(pyglet.window.Window):
 
-    def __init__(self):
+    def __init__(self, player1, player2):
         super(Window, self).__init__()
-        self.player1 = Keyboard()
-        self.player2 = Keyboard()
-        # self.x = 128*3
-        # self.y = 120*3
-        # self.dx = 1*3
-        # self.dy = 1*3
+        self.player1 = player1
+        self.player2 = player2
+
         self.x = 128
         self.y = 120
         self.dx = 1
@@ -92,48 +89,25 @@ class Window(pyglet.window.Window):
     def movePixelDown(self):
         self.y -= 1
 
-    # this function is only for test
-    def executeControllers(self, dt):
-        if self.player1.read():
-            print('The A key was pressed.')
-        if self.player1.read():
-            print('The B arrow key was pressed.')
-        if self.player1.read():
-            print('The space key was pressed.')
-        if self.player1.read():
-            print('The enter key was pressed.')
-        if self.player1.read():
-            print('The up arrow key was pressed.')
-            self.y += 1
-        if self.player1.read():
-            print('The down arrow key was pressed.')
-            self.y -= 1
-        if self.player1.read():
-            print('The left arrow key was pressed.')
-            self.x -= 1
-        if self.player1.read():
-            print('The right arrow key was pressed.')
-            self.x += 1
-
     # Enter is start
     # Space is select
     def on_key_press(self, symbol, modifiers):
         if symbol == key.A:
-            self.player1.aButtonPressed()
+            self.player1.pressAButton()
         elif symbol == key.B:
-            self.player1.bButtonPressed()
+            self.player1.pressBButton()
         elif symbol == key.LEFT:
-            self.player1.leftButtonPressed()
+            self.player1.pressLeftButton()
         elif symbol == key.RIGHT:
-            self.player1.rightButtonPressed()
+            self.player1.pressRightButton()
         elif symbol == key.UP:
-            self.player1.upButtonPressed()
+            self.player1.pressUpButton()
         elif symbol == key.DOWN:
-            self.player1.downButtonPressed()
+            self.player1.pressDownButton()
         elif symbol == key.ENTER:
-            self.player1.startButtonPressed()
+            self.player1.pressStartButton()
         elif symbol == key.SPACE:
-            self.player1.selectButtonPressed()
+            self.player1.pressSelectButton()
 
     def on_draw(self):
         self.clear()
