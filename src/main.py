@@ -41,17 +41,17 @@ def main():
 
 			elif event.type == pygame.KEYDOWN:
 				if event.key == pygame.K_UP:
-					print("up")
+					player1.pressUpButton()
 				if event.key == pygame.K_LEFT:
-					print("left")
+					player1.pressLeftButton()
 				if event.key == pygame.K_RIGHT:
-					print("right")
+					player1.pressRightButton()
 				if event.key == pygame.K_DOWN:
-					print("down")
+					player1.pressDownButton()
 		pygame.draw.rect(screen, (0, 128, 255), pygame.Rect(30, 30, 60, 60))
 		pygame.display.flip()
 		clock.tick(60)
-		# bus.setFrame()
+		bus.setFrame()
 		
 
 		# events = pygame.event.get()
