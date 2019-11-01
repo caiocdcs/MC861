@@ -60,13 +60,6 @@ class BUS:
         self.clockCounter = 0
 
     def clock(self):
-<<<<<<< HEAD
-        if self.testClock % 100 == 0:
-            self.ppu.clock()
-            if self.clockCounter % 3 == 0:
-                self.cpu.clock()
-            self.clockCounter += 1
-=======
         self.ppu.clock()
         if self.clockCounter % 3 == 0:
             self.cpu.clock()
@@ -76,7 +69,6 @@ class BUS:
             self.cpu.nmi()
 
         self.clockCounter += 1
->>>>>>> registers
 
     def setFrame(self, dt):
         while self.ppu.frameComplete == False:
