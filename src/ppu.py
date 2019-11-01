@@ -9,6 +9,7 @@ class status:
     sprite_overflow: c_uint8 = 1
     sprite_zero_hit: c_uint8 = 1
     vertical_blank: c_uint8 = 1
+    reg: c_uint8 = 0
 
 @dataclass
 class mask:
@@ -20,6 +21,7 @@ class mask:
     enhance_red: c_uint8 = 1
     enhance_green: c_uint8 = 1
     enhance_blue: c_uint8 = 1
+    reg: c_uint8 = 0
 
 @dataclass
 class control:
@@ -31,6 +33,7 @@ class control:
     sprite_size: c_uint8 = 1
     slave_mode : c_uint8 = 1
     enable_nmi: c_uint8 = 1
+    reg: c_uint8 = 0
 
 @dataclass
 class loopy:
@@ -262,90 +265,91 @@ class PPU:
             self.ppuWrite(self.vram_addr.reg, data)
             self.vram_addr.reg += 32 if self.control.increment_mode else 1
 
-    def cpuRead(self, address, readOnly):
+    def cpuRead(self, address):
         data = c_uint8(0)
         if address == 0x0000:       # Control
-            if data.value & 0b10000000:
-                self.control.enable_nmi = 1
-            else:
-                self.control.enable_nmi = 0
-            if data.value & 0b01000000:
-                self.control.slave_mode = 1
-            else:
-                self.control.slave_mode = 0
-            if data.value & 0b00100000:
-                self.control.sprite_size = 1
-            else:
-                self.control.sprite_size = 0
-            if data.value & 0b00010000:
-                self.control.pattern_background = 1
-            else:
-                self.control.pattern_background = 0
-            if data.value & 0b00001000:
-                self.control.pattern_sprite = 1
-            else:
-                self.control.pattern_sprite = 0
-            if data.value & 0b00000100:
-                self.control.increment_mode = 1
-            else:
-                self.control.increment_mode = 0
-            if data.value & 0b00000010:
-                self.control.nametable_y = 1
-            else:
-                self.control.nametable_y = 0
-            if data.value & 0b000000001:
-                self.control.nametable_x = 1
-            else:
-                self.control.nametable_x = 0
+            # if data.value & 0b10000000:
+            #     self.control.enable_nmi = 1
+            # else:
+            #     self.control.enable_nmi = 0
+            # if data.value & 0b01000000:
+            #     self.control.slave_mode = 1
+            # else:
+            #     self.control.slave_mode = 0
+            # if data.value & 0b00100000:
+            #     self.control.sprite_size = 1
+            # else:
+            #     self.control.sprite_size = 0
+            # if data.value & 0b00010000:
+            #     self.control.pattern_background = 1
+            # else:
+            #     self.control.pattern_background = 0
+            # if data.value & 0b00001000:
+            #     self.control.pattern_sprite = 1
+            # else:
+            #     self.control.pattern_sprite = 0
+            # if data.value & 0b00000100:
+            #     self.control.increment_mode = 1
+            # else:
+            #     self.control.increment_mode = 0
+            # if data.value & 0b00000010:
+            #     self.control.nametable_y = 1
+            # else:
+            #     self.control.nametable_y = 0
+            # if data.value & 0b000000001:
+            #     self.control.nametable_x = 1
+            # else:
+            #     self.control.nametable_x = 0
             print("cpuRead: 0")
         elif address == 0x0001:     # Mask
-            if data.value & 0b10000000:
-                self.mask.enhance_blue = 1
-            else:
-                self.mask.enhance_blue = 0
-            if data.value & 0b01000000:
-                self.mask.enhance_green = 1
-            else:
-                self.mask.enhance_green = 0
-            if data.value & 0b00100000:
-                self.mask.enhance_red = 1
-            else:
-                self.mask.enhance_red = 0
-            if data.value & 0b00010000:
-                self.mask.render_sprites = 1
-            else:
-                self.mask.render_sprites = 0
-            if data.value & 0b00001000:
-                self.mask.render_background = 1
-            else:
-                self.mask.render_background = 0
-            if data.value & 0b00000100:
-                self.mask.render_sprites_left = 1
-            else:
-                self.mask.render_sprites_left = 0
-            if data.value & 0b00000010:
-                self.mask.render_background_left = 1
-            else:
-                self.mask.render_background_left = 0
-            if data.value & 0b010000001:
-                self.mask.grayscale = 1
-            else:
-                self.mask.grayscale = 0
+            # if data.value & 0b10000000:
+            #     self.mask.enhance_blue = 1
+            # else:
+            #     self.mask.enhance_blue = 0
+            # if data.value & 0b01000000:
+            #     self.mask.enhance_green = 1
+            # else:
+            #     self.mask.enhance_green = 0
+            # if data.value & 0b00100000:
+            #     self.mask.enhance_red = 1
+            # else:
+            #     self.mask.enhance_red = 0
+            # if data.value & 0b00010000:
+            #     self.mask.render_sprites = 1
+            # else:
+            #     self.mask.render_sprites = 0
+            # if data.value & 0b00001000:
+            #     self.mask.render_background = 1
+            # else:
+            #     self.mask.render_background = 0
+            # if data.value & 0b00000100:
+            #     self.mask.render_sprites_left = 1
+            # else:
+            #     self.mask.render_sprites_left = 0
+            # if data.value & 0b00000010:
+            #     self.mask.render_background_left = 1
+            # else:
+            #     self.mask.render_background_left = 0
+            # if data.value & 0b010000001:
+            #     self.mask.grayscale = 1
+            # else:
+            #     self.mask.grayscale = 0
             print("cpuRead: 1")
         elif address == 0x0002:     # Status
-            if data.value & 0b10000000:
-                self.status.vertical_blank = 1
-            else:
-                self.status.vertical_blank = 0
-            if data.value & 0b10000000:
-                self.status.sprite_zero_hit = 1
-            else:
-                self.status.sprite_zero_hit = 0
-            if data.value & 0b10000000:
-                self.status.sprite_overflow = 1
-            else:
-                self.status.sprite_overflow = 0
-            # self.status.vertical_blank = 0 TODO: undestand better hoe vertical blank is set
+            # if data.value & 0b10000000:
+            #     self.status.vertical_blank = 1
+            # else:
+            #     self.status.vertical_blank = 0
+            # if data.value & 0b10000000:
+            #     self.status.sprite_zero_hit = 1
+            # else:
+            #     self.status.sprite_zero_hit = 0
+            # if data.value & 0b10000000:
+            #     self.status.sprite_overflow = 1
+            # else:
+            #     self.status.sprite_overflow = 0
+            data = (self.status.reg & 0xE0) | (self.ppu_data_buffer & 0x1F)
+            self.status.vertical_blank = 0
             self.address_latch = 0
             print("cpuRead: 2")
         elif address == 0x0003:     # OAM Address
@@ -384,7 +388,7 @@ class PPU:
                 address = 0x000C
             self.tablePalette[address] = data
 
-    def ppuRead(self, address, readOnly=False):
+    def ppuRead(self, address):
         data = c_uint8(0)
         addr = address & 0x3FFF
 

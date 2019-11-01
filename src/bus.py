@@ -10,7 +10,7 @@ class BUS:
        self.cpuRam = [c_uint8(0)]*2*KB
        self.clockCounter = 0
 
-    def cpuRead(self, address, readOnly = True):
+    def cpuRead(self, address):
         data = c_uint8(0)
 
         cartridgeData = self.cartridge.cpuRead(address)
@@ -19,7 +19,7 @@ class BUS:
         if address >= 0x0000 and address <= 0x1FFF:
             data = self.cpuRam[address & 0x07FF]
         elif address >= 0x2000 and address <= 0x3FFF:
-            self.ppu.cpuRead(address & 0x0007, readOnly)
+            self.ppu.cpuRead(address & 0x0007)
 
         return data  
 
