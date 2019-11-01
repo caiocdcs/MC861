@@ -1336,7 +1336,6 @@ class CPU:
 
         self.a = self._get_address_int(final_address)
 
-        self._set_address_int(final_address, self.a, set_address=True)
         self.flagController.setNegativeIfNeeded(self.a) # set negative flag
         self.flagController.setZeroFlagIfNeeded(self.a) # set zero flag
 

@@ -343,10 +343,10 @@ class PPU:
         if self.cartridge.ppuWrite(address, data):
             pass
 
-        elif address >= 0x0000 & address <= 0x1FFF:
+        elif address >= 0x0000 and address <= 0x1FFF:
             self.tablePattern[(address & 0x1000) >> 12][address & 0x0FFF] = data
 
-        elif address >= 0x2000 & address <= 0x3EFF:
+        elif address >= 0x2000 and address <= 0x3EFF:
             address = address & 0x0FFF
             if self.cartridge.getMirror() == 0:
                 if 0x0000 <= address <= 0x03FF:
@@ -367,7 +367,7 @@ class PPU:
                 elif 0x0C00 <= address <= 0x0FFF:
                     self.tableName[1][address & 0x03FF] = data
 
-        elif address >= 0x3F00 & address <= 0x3FFF:
+        elif 0x3F00 <= address <= 0x3FFF:
             address &= 0x001F
             if address == 0x0010:
                 address = 0x0000
@@ -379,12 +379,12 @@ class PPU:
                 address = 0x000C
             self.tablePalette[address] = data
 
-    def ppuRead(self, address, readOnly=False):
+    def ppuRead(self, address):
         data = int8(0)
         addr = address & 0x3FFF
 
         cartridgeData = self.cartridge.ppuRead(address)
-        if cartridgeData != None:
+        if cartridgeData is not None:
             data = cartridgeData
         elif 0x0000 <= addr <= 0x1FFF:
             data = self.tablePattern[(addr & 0x1000) >> 12][addr & 0x0FFF]
