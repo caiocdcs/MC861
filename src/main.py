@@ -1,5 +1,5 @@
 import sys
-import pyglet
+# import pyglet
 from bus import BUS
 from cpu import CPU
 from ppu import PPU

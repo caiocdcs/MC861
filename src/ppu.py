@@ -595,8 +595,8 @@ class PPU:
         if self.scanline == -1 and 280 <= self.cycle < 305:
             TransferAddressY()
 
-        # # TODO: Foreground Rendering
-        # # Some code here
+        # # # TODO: Foreground Rendering
+        # # # Some code here
         if self.cycle == 257 and self.scanline >= 0:
             self.spriteScanline = [0]*32
             self.spriteCount = 0
@@ -685,7 +685,7 @@ class PPU:
             bg_pal1 = (self.bg_shifter_attrib_hi & bit_mux) > 0
             bg_palette = (bg_pal1 << 1) | bg_pal0
 
-        # TODO: Foreground check
+        # # TODO: Foreground check
         fg_pixel = 0x00
         fg_palette = 0x00
         fg_priority = 0x00
@@ -739,7 +739,7 @@ class PPU:
                         if 1 <= self.cycle < 258:
                             status.sprite_zero_hit = 1
 
-        #self.window.setPixel(self.cycle - 1, self.scanline, self.getColor(palette, pixel))
+        self.window.setPixel(self.cycle - 1, self.scanline, self.getColor(palette, pixel))
 
         self.cycle += 1
         if self.cycle >= 341:
@@ -748,7 +748,7 @@ class PPU:
 
             if self.scanline >= 261:
                 self.scanline = -1
-                self.frameComplete = True
+                # self.frameComplete = True
                 # self.window.movePixelDown()
                 # print("Frame Complete")
 
