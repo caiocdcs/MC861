@@ -28,9 +28,11 @@ class Keyboard:
     def pressBButton(self):
         self.bButtonPressed = 1
 
+    # space
     def pressSelectButton(self):
         self.selectButtonPressed = 1
 
+    # enter
     def pressStartButton(self):
         self.startButtonPressed = 1
 

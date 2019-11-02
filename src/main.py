@@ -12,9 +12,9 @@ int8 = int
 def main():
 
 	# Check if there's a parameter
-	if len(sys.argv) != 2:
-		print ("Provide a .nes file\n")
-		return
+	# if len(sys.argv) != 2:
+	# 	print ("Provide a .nes file\n")
+	# 	return
 	
 	player1 = Keyboard()
 	player2 = Keyboard()
@@ -22,7 +22,7 @@ def main():
 	cpu = CPU()
 	ppu = PPU()
 	bus = BUS(cpu, ppu, player1, player2)
-	cart = Cartridge(sys.argv[1])
+	cart = Cartridge("hangman/controllers.nes")
 	bus.insertCartridge(cart)
 	
 	cpu.connectBus(bus)
@@ -40,6 +40,14 @@ def main():
 				done = True
 
 			elif event.type == pygame.KEYDOWN:
+				if event.key == pygame.K_a:
+					player1.pressAButton()
+				if event.key == pygame.K_b:
+					player1.pressBButton()
+				if event.key == pygame.K_SPACE:
+					player1.pressSelectButton()
+				if event.key == pygame.K_RETURN:
+					player1.pressStartButton()
 				if event.key == pygame.K_UP:
 					player1.pressUpButton()
 				if event.key == pygame.K_LEFT:
