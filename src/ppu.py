@@ -4,50 +4,12 @@ from window import Window
 
 from pygame import Color
 
+from status import Status
+from mask import Mask
+from control import Control
+from loopy import Loopy
+
 int8 = int
-
-# PPU Flags
-
-@dataclass
-class status:
-    sprite_overflow: int8 = 1
-    sprite_zero_hit: int8 = 1
-    vertical_blank: int8 = 1
-    reg: int8 = 0x0000
-
-@dataclass
-class mask:
-    grayscale: int8 = 1
-    render_background_left: int8 = 1
-    render_sprites_left: int8 = 1
-    render_background: int8 = 1
-    render_sprites: int8 = 1
-    enhance_red: int8 = 1
-    enhance_green: int8 = 1
-    enhance_blue: int8 = 1
-    reg: int8 = 0x0000
-
-@dataclass
-class control:
-    nametable_x: int8 = 1
-    nametable_y: int8 = 1
-    increment_mode: int8 = 1
-    pattern_sprite: int8 = 1
-    pattern_background: int8 = 1
-    sprite_size: int8 = 1
-    slave_mode : int8 = 1
-    enable_nmi: int8 = 1
-    reg: int8 = 0x0000
-
-# Loopy https://wiki.nesdev.com/w/index.php/PPU_scrolling
-@dataclass
-class loopy:
-    coarse_x: int8 = 5
-    coarse_y: int8 = 5
-    nametable_x: int8 = 1
-    nametable_y: int8 = 1
-    fine_y: int8 = 3
-    reg: int8 = 0x0000
 
 class PPU:
 
@@ -77,13 +39,13 @@ class PPU:
         self.scanline = 0           # row
         self.cycle = 0              # column
 
-        self.vram_addr = loopy()
-        self.tram_addr = loopy()
+        self.vram_addr = Loopy()
+        self.tram_addr = Loopy()
 
         # PPU flags
-        self.status = status()
-        self.mask = mask()
-        self.control = control()
+        self.status = Status()
+        self.mask = Mask()
+        self.control = Control()
 
         # Background
         self.bg_next_tile_id = 0x00
@@ -173,7 +135,7 @@ class PPU:
             self.tram_addr.nametable_y = self.control.nametable_y
             print("cpuWrite: 0")
         elif address == 0x0001:     # Mask
-            self.mask.reg = self.writeMask(data)
+            self.mask.writeMask(data)
             print("cpuWrite: 1")
         elif address == 0x0002:     # Status
             print("cpuWrite: 2")
@@ -195,17 +157,17 @@ class PPU:
                 self.tram_addr.coarse_y = data >> 3
         elif address == 0x0006:     # PPU Address
             if self.address_latch == 0:
-                self.tram_addr.reg = ((data & 0x3F) << 8) | (self.tram_addr.reg & 0x00FF)
+                self.tram_addr.writeLoopy(((data & 0x3F) << 8) | (self.tram_addr.readLoopy() & 0x00FF))
                 self.address_latch = 1
             else:
-                self.tram_addr.reg = (self.tram_addr.reg & 0xFF00) | data
+                self.tram_addr.writeLoopy((self.tram_addr.readLoopy() & 0xFF00) | data)
                 self.vram_addr = self.tram_addr
                 self.address_latch = 0
             print("cpuWrite: 6")
         elif address == 0x0007:     # PPU Data
             print("cpuWrite: 7")
-            self.ppuWrite(self.vram_addr.reg, data)
-            self.vram_addr.reg += 32 if self.control.increment_mode else 1
+            self.ppuWrite(self.vram_addr.readLoopy(), data)
+            self.vram_addr.writeLoopy(self.vram_addr.readLoopy() + 32 if self.control.increment_mode else 1) 
 
     def writeControl(self, data):
         if data & 0b10000000:
@@ -299,11 +261,10 @@ class PPU:
         elif address == 0x0007:     # PPU Data
             print("cpuRead: 7")
             data = self.ppu_data_buffer
-            self.ppu_data_buffer = self.ppuRead(self.vram_addr.reg)
-            if self.vram_addr.reg >= 0x3F00:
+            self.ppu_data_buffer = self.ppuRead(self.vram_addr.readLoopy())
+            if self.vram_addr.readLoopy() >= 0x3F00:
                 data = self.ppu_data_buffer
-            self.vram_addr.reg += 32 if self.control.increment_mode else 1
-            print(self.vram_addr.reg)
+            self.vram_addr.writeLoopy(self.vram_addr.readLoopy() + 32 if self.control.increment_mode else 1) 
 
         return data
 
@@ -440,8 +401,8 @@ class PPU:
         self.scanline = 0           # row
         self.cycle = 0              # column
 
-        self.vram_addr = loopy()
-        self.tram_addr = loopy()
+        self.vram_addr = Loopy()
+        self.tram_addr = Loopy()
 
         # PPU flags
         self.status.sprite_overflow: int8 = 0
@@ -568,7 +529,7 @@ class PPU:
             case = (self.cycle - 1) % 8
             if case == 0:
                 LoadBackgroundShifters()
-                self.bg_next_tile_id = self.ppuRead(0x2000 | (self.vram_addr.reg & 0x0FFF))
+                self.bg_next_tile_id = self.ppuRead(0x2000 | (self.vram_addr.readLoopy() & 0x0FFF))
             elif case == 2:
                 self.bg_next_tile_attrib = self.ppuRead(0x23C0 | (self.vram_addr.nametable_y << 11)
                                                     | (self.vram_addr.nametable_x << 10)
@@ -598,7 +559,7 @@ class PPU:
             TransferAddressX()
             
         if self.cycle == 338 or self.cycle == 340:
-            self.bg_next_tile_id = self.ppuRead(0x2000 | (self.vram_addr.reg & 0x0FFF))
+            self.bg_next_tile_id = self.ppuRead(0x2000 | (self.vram_addr.readLoopy() & 0x0FFF))
             
         if self.scanline == -1 and 280 <= self.cycle < 305:
             TransferAddressY()
@@ -618,7 +579,7 @@ class PPU:
             entry = 0
             while entry < 256 and self.spriteCount < 33:
                 diff = self.scanline - self.oam[entry]
-                if 0 <= diff < 16 if control.sprite_size else 8:
+                if 0 <= diff < 16 if self.control.sprite_size else 8:
                     if self.spriteCount < 32:
                         if entry == 0:
                             bSpriteZeroHitPossible = True
@@ -702,24 +663,24 @@ class PPU:
         fg_palette = 0x00
         fg_priority = 0x00
 
-        if self.mask.render_sprites:
-            bSpriteZeroBeingRendered = False
+        # if self.mask.render_sprites:
+        #     bSpriteZeroBeingRendered = False
 
-            j = 0
-            for i in range(0, self.spriteCount, 4):
-                if self.spriteScanline[i + 3] == 0:
-                    fg_pixel_lo = (self.sprite_shifter_pattern_lo[j] & 0x80) > 0
-                    fg_pixel_hi = (self.sprite_shifter_pattern_hi[j] & 0x80) > 0
-                    fg_pixel = (fg_pixel_hi << 1) | fg_pixel_lo
+        #     j = 0
+        #     for i in range(0, self.spriteCount, 4):
+        #         if self.spriteScanline[i + 3] == 0:
+        #             fg_pixel_lo = (self.sprite_shifter_pattern_lo[j] & 0x80) > 0
+        #             fg_pixel_hi = (self.sprite_shifter_pattern_hi[j] & 0x80) > 0
+        #             fg_pixel = (fg_pixel_hi << 1) | fg_pixel_lo
 
-                    fg_palette = (self.spriteScanline[i+2] & 0x03) + 0x04
-                    fg_priority = (self.spriteScanline[i+2] & 0x20) == 0
+        #             fg_palette = (self.spriteScanline[i+2] & 0x03) + 0x04
+        #             fg_priority = (self.spriteScanline[i+2] & 0x20) == 0
 
-                    if fg_pixel != 0:
-                        if i == 0:
-                            bSpriteZeroBeingRendered = True
-                        break
-                j += 1
+        #             if fg_pixel != 0:
+        #                 if i == 0:
+        #                     bSpriteZeroBeingRendered = True
+        #                 break
+        #         j += 1
 
         # Pixel
         pixel = fg_pixel
@@ -750,10 +711,10 @@ class PPU:
                 if self.mask.render_background & self.mask.render_sprites:
                     if ~(self.mask.render_background_left | self.mask.render_sprites_left):
                         if 9 <= self.cycle < 258:
-                            status.sprite_zero_hit = 1
+                            self.status.sprite_zero_hit = 1
                     else:
                         if 1 <= self.cycle < 258:
-                            status.sprite_zero_hit = 1
+                            self.status.sprite_zero_hit = 1
 
         # and finally draws the pixel
         self.window.setPixel(self.cycle - 1, self.scanline,  self.getColor(palette, pixel))

@@ -23,7 +23,7 @@ def main():
 	ppu = PPU()
 	bus = BUS(cpu, ppu, player1, player2)
 	#cart = Cartridge(sys.argv[1])
-	cart = Cartridge("hangman/hangman.nes")
+	cart = Cartridge("hangman/hanging.nes")
 	bus.insertCartridge(cart)
 	
 	cpu.connectBus(bus)
