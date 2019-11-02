@@ -39,6 +39,7 @@ class control:
     enable_nmi: int8 = 1
     reg: int8 = 0x0000
 
+# Loopy https://wiki.nesdev.com/w/index.php/PPU_scrolling
 @dataclass
 class loopy:
     coarse_x: int8 = 5
@@ -172,7 +173,7 @@ class PPU:
             self.tram_addr.nametable_y = self.control.nametable_y
             print("cpuWrite: 0")
         elif address == 0x0001:     # Mask
-            self.mask.reg = data
+            self.mask.reg = self.writeMask(data)
             print("cpuWrite: 1")
         elif address == 0x0002:     # Status
             print("cpuWrite: 2")
@@ -480,51 +481,64 @@ class PPU:
 
         global bSpriteZeroHitPossible
 
+        # Increment background tile horizontally by 1 tile
         def IncrementScrollX():
             if self.mask.render_background or self.mask.render_sprites:
+                # Name table is 32x30 tiles, so if it reaches 31, go back to 0
                 if self.vram_addr.coarse_x == 31:
                     self.vram_addr.coarse_x = 0
                     self.vram_addr.nametable_x = ~self.vram_addr.nametable_x
                 else:
                     self.vram_addr.coarse_x = self.vram_addr.coarse_x+ 1
 
+        # Increment background tile vertically by 1 scanline
         def IncrementScrollY():
             if self.mask.render_background or self.mask.render_sprites:
+                # fine_y ranges from 0 to 7 and bottom two rows should be ignored
                 if self.vram_addr.fine_y < 7:
                     self.vram_addr.fine_y += 1
                 else:
                     self.vram_addr.fine_y = 0
+                    # Name table is 32x30 tiles, so if it reaches 29, go back to 0
                     if self.vram_addr.coarse_y == 29:
                         self.vram_addr.coarse_y = 0
+                        # Read from second parte of tableName
                         self.vram_addr.nametable_y = ~self.vram_addr.nametable_y
                     elif self.vram_addr.coarse_y == 31:
                         self.vram_addr.coarse_y = 0
                     else:
                         self.vram_addr.coarse_y += 1
 
+        # Retrieve temporally stored x related vars
         def TransferAddressX():
             if self.mask.render_background or self.mask.render_sprites:
                 self.vram_addr.nametable_x = self.tram_addr.nametable_x
                 self.vram_addr.coarse_x = self.tram_addr.coarse_x
 
+        # Retrieve temporally stored y related vars
         def TransferAddressY():
             if self.mask.render_background or self.mask.render_sprites:
                 self.vram_addr.fine_y      = self.tram_addr.fine_y
                 self.vram_addr.nametable_y = self.tram_addr.nametable_y
                 self.vram_addr.coarse_y    = self.tram_addr.coarse_y
 
+        # Loads the current BG pattern and attributes into shifters
         def LoadBackgroundShifters():
+            # shifter_pattern is the current tile, next_tile, the next
             self.bg_shifter_pattern_lo = (self.bg_shifter_pattern_lo & 0xFF00) | self.bg_next_tile_lsb
             self.bg_shifter_pattern_hi = (self.bg_shifter_pattern_hi & 0xFF00) | self.bg_next_tile_msb
+            # Extract palette for current 8 pixels
             self.bg_shifter_attrib_lo  = 0xFF if (self.bg_shifter_attrib_lo & 0xFF00) | (self.bg_next_tile_attrib & 0b01) else 0x00
             self.bg_shifter_attrib_hi  = 0xFF if (self.bg_shifter_attrib_hi & 0xFF00) | (self.bg_next_tile_attrib & 0b10) else 0x00
 
         def UpdateShifters():
             if self.mask.render_background:
+                # shift bg pattern and attributes by 1 bit
                 self.bg_shifter_pattern_lo <<= 1
                 self.bg_shifter_pattern_hi <<= 1
                 self.bg_shifter_attrib_lo <<= 1
                 self.bg_shifter_attrib_hi <<= 1
+            # shift sprite pattern when pixel is visible
             if self.mask.render_sprites and 1 <= self.cycle < 258:
                 j = 0
                 for i in range(self.spriteCount, 4):
@@ -535,11 +549,13 @@ class PPU:
                         self.sprite_shifter_pattern_hi[j] <<= 1
                     j+=1
 
+        # if scanline is visible to the user...
         if -1 <= self.scanline < 240:
             if self.scanline == 0 and self.cycle == 0:
-                self.cycle = 1
+                self.cycle = 1 # skip cycle
 
             if self.scanline == -1 and self.cycle == 1:
+                # starting new frame, clear flags and shifters
                 self.status.vertical_blank = 0
                 self.status.sprite_overflow = 0
                 self.status.sprite_zero_hit = 0
@@ -587,7 +603,7 @@ class PPU:
         if self.scanline == -1 and 280 <= self.cycle < 305:
             TransferAddressY()
 
-        # # TODO: Foreground Rendering
+        # # Foreground Rendering
         # # Some code here
         if self.cycle == 257 and self.scanline >= 0:
             self.spriteScanline = [0]*32
@@ -657,6 +673,7 @@ class PPU:
                     self.sprite_shifter_pattern_hi[j] = sprite_pattern_bits_hi
             j += 1
 
+        # end of frame
         if 241 <= self.scanline < 261:
             if self.scanline == 241 and self.cycle == 1:
                 self.status.vertical_blank = 1
@@ -668,18 +685,19 @@ class PPU:
         bg_pixel = 0x00
         bg_palette = 0x00
         if self.mask.render_background:
+            # offsets all BG by fine x (for horizontal scrolling)
             bit_mux = 0x8000 >> self.fine_x
-
+            # extract pixel parts
             p0_pixel = (self.bg_shifter_pattern_lo & bit_mux) > 0
             p1_pixel = (self.bg_shifter_pattern_hi & bit_mux) > 0
-
+            # and combine them to know the value (0-3)
             bg_pixel = (p1_pixel << 1) | p0_pixel
-
+            # get palette from attibute
             bg_pal0 = (self.bg_shifter_attrib_lo & bit_mux) > 0
             bg_pal1 = (self.bg_shifter_attrib_hi & bit_mux) > 0
             bg_palette = (bg_pal1 << 1) | bg_pal0
 
-        # # TODO: Foreground check
+        # Foreground check
         fg_pixel = 0x00
         fg_palette = 0x00
         fg_priority = 0x00
@@ -708,22 +726,26 @@ class PPU:
         palette = fg_palette
 
         if bg_pixel == 0 and fg_pixel == 0:
+            # both BG and FG pixel are transparent
             pixel = 0x00
             palette = 0x00
         elif bg_pixel == 0 and fg_pixel > 0:
+            # visible FG pixel
             pixel = fg_pixel
             palette = fg_palette
         elif bg_pixel > 0 and fg_pixel == 0:
+            # visible BG pixel
             pixel = bg_pixel
             palette = bg_palette
         elif bg_pixel > 0 and fg_pixel > 0:
+            # if both visible, FG priority may override the BG, else draw BG
             if fg_priority:
                 pixel = fg_pixel
                 palette = fg_palette
             else:
                 pixel = bg_pixel
                 palette = bg_palette
-
+            # Checks for collitson among BG anf FG
             if bSpriteZeroHitPossible and bSpriteZeroBeingRendered:
                 if self.mask.render_background & self.mask.render_sprites:
                     if ~(self.mask.render_background_left | self.mask.render_sprites_left):
@@ -733,7 +755,8 @@ class PPU:
                         if 1 <= self.cycle < 258:
                             status.sprite_zero_hit = 1
 
-        self.window.setPixel(self.cycle - 1, self.scanline, self.getColor(palette, pixel))
+        # and finally draws the pixel
+        self.window.setPixel(self.cycle - 1, self.scanline,  self.getColor(palette, pixel))
 
         self.cycle += 1
         if self.cycle >= 341:
@@ -751,4 +774,3 @@ class PPU:
 
     def setNmi(self, nmi):
         self.nmi = nmi
-

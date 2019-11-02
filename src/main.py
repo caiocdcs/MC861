@@ -22,7 +22,8 @@ def main():
 	cpu = CPU()
 	ppu = PPU()
 	bus = BUS(cpu, ppu, player1, player2)
-	cart = Cartridge(sys.argv[1])
+	#cart = Cartridge(sys.argv[1])
+	cart = Cartridge("hangman/hangman.nes")
 	bus.insertCartridge(cart)
 	
 	cpu.connectBus(bus)
@@ -52,13 +53,6 @@ def main():
 		pygame.display.flip()
 		clock.tick(60)
 		bus.setFrame()
-		
-
-		# events = pygame.event.get()
-		# for event in events:
-		# 	if event.key == pygame.K_a:
-		# 		print("adsa")
-	
 
 if __name__ == "__main__":
 	main()
