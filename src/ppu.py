@@ -130,7 +130,7 @@ class PPU:
 
     def cpuWrite(self, address, data):
         if address == 0x0000:       # Control
-            self.writeControl(data)
+            self.control.writeControl(data)
             self.tram_addr.nametable_x = self.control.nametable_x
             self.tram_addr.nametable_y = self.control.nametable_y
             print("cpuWrite: 0")
@@ -167,75 +167,7 @@ class PPU:
         elif address == 0x0007:     # PPU Data
             print("cpuWrite: 7")
             self.ppuWrite(self.vram_addr.readLoopy(), data)
-            self.vram_addr.writeLoopy(self.vram_addr.readLoopy() + 32 if self.control.increment_mode else 1) 
-
-    def writeControl(self, data):
-        if data & 0b10000000:
-            self.control.enable_nmi = 1
-        else:
-            self.control.enable_nmi = 0
-        if data & 0b01000000:
-            self.control.slave_mode = 1
-        else:
-            self.control.slave_mode = 0
-        if data & 0b00100000:
-            self.control.sprite_overflow = 1
-        else:
-            self.control.sprite_overflow = 0
-        if data & 0b00010000:
-            self.control.pattern_background = 1
-        else:
-            self.control.pattern_background = 0
-        if data & 0b00001000:
-            self.control.pattern_sprite = 1
-        else:
-            self.control.pattern_sprite = 0
-        if data & 0b00000100:
-            self.control.increment_mode = 1
-        else:
-            self.control.increment_mode = 0
-        if data & 0b00000010:
-            self.control.nametable_y = 1
-        else:
-            self.control.nametable_y = 0
-        if data & 0b000000001:
-            self.control.nametable_x = 1
-        else:
-            self.control.nametable_x = 0
-
-    def writeMask(self, data):
-        if data & 0b10000000:
-            self.mask.enhance_blue = 1
-        else:
-            self.mask.enhance_blue = 0
-        if data & 0b01000000:
-            self.mask.enhance_green = 1
-        else:
-            self.mask.enhance_green = 0
-        if data & 0b00100000:
-            self.mask.enhance_red = 1
-        else:
-            self.mask.enhance_red = 0
-        if data & 0b00010000:
-            self.mask.render_sprites = 1
-        else:
-            self.mask.render_sprites = 0
-        if data & 0b00001000:
-            self.mask.render_background = 1
-        else:
-            self.mask.render_background = 0
-        if data & 0b00000100:
-            self.mask.render_sprites_left = 1
-        else:
-            self.mask.render_sprites_left = 0
-        if data & 0b00000010:
-            self.mask.render_background_left = 1
-        else:
-            self.mask.render_background_left = 0
-        if data & 0b000000001:
-            self.mask.grayscale = 1
-        else:
-            self.mask.grayscale = 0
+            self.vram_addr.writeLoopy(self.vram_addr.readLoopy() + 32 if self.control.increment_mode else 1)
 
     def cpuRead(self, address):
         data = int8(0)
@@ -244,7 +176,7 @@ class PPU:
         elif address == 0x0001:     # Mask
             print("cpuRead: 1")
         elif address == 0x0002:     # Status
-            data = (self.readStatus() | (self.ppu_data_buffer & 0x1F))
+            data = (self.status.readStatus() | (self.ppu_data_buffer & 0x1F))
             self.status.vertical_blank = 0
             self.address_latch = 0
             print("cpuRead: 2")
@@ -267,40 +199,6 @@ class PPU:
             self.vram_addr.writeLoopy(self.vram_addr.readLoopy() + 32 if self.control.increment_mode else 1) 
 
         return data
-
-    def readControl(self):
-        control = 0
-        control = control | (self.control.nametable_x << 0)
-        control = control | (self.control.nametable_y << 1)
-        control = control | (self.control.increment_mode << 2)
-        control = control | (self.control.pattern_sprite << 3)
-        control = control | (self.control.pattern_background << 4)
-        control = control | (self.control.sprite_size << 5)
-        control = control | (self.control.slave_mode << 6)
-        control = control | (self.control.enable_nmi << 7)
-
-        return control
-    
-    def readMask(self):
-        mask = 0
-        mask = mask | (self.mask.grayscale << 0)
-        mask = mask | (self.mask.render_background_left << 1)
-        mask = mask | (self.mask.render_sprites_left << 2)
-        mask = mask | (self.mask.render_background << 3)
-        mask = mask | (self.mask.render_sprites << 4)
-        mask = mask | (self.mask.enhance_red << 5)
-        mask = mask | (self.mask.enhance_green << 6)
-        mask = mask | (self.mask.enhance_blue << 7)
-
-        return mask
-
-    def readStatus(self):
-        status = 0
-        status = status | (self.status.vertical_blank << 5)
-        status = status | (self.status.sprite_zero_hit << 6)
-        status = status | (self.status.sprite_overflow << 7)
-
-        return status
 
     def ppuWrite(self, address, data):
         print("ppuWrite")
