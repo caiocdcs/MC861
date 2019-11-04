@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from utils import log_ppu
 
 from window import Window
 
@@ -616,6 +616,9 @@ class PPU:
 
         # and finally draws the pixel
         self.window.setPixel(self.cycle - 1, self.scanline,  self.getColor(palette, pixel))
+
+        # DEBUG
+        log_ppu(self.cycle, self.scanline, self.status, self.mask, self.control, self.vram_addr)
 
         self.cycle += 1
         if self.cycle >= 341:

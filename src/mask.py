@@ -43,3 +43,16 @@ class Mask:
             self.grayscale = 1
         else:
             self.grayscale = 0
+
+    def readMask(self):
+        mask = 0
+        mask = mask | (self.grayscale << 0)
+        mask = mask | (self.render_background_left << 1)
+        mask = mask | (self.render_sprites_left << 2)
+        mask = mask | (self.render_background << 3)
+        mask = mask | (self.render_sprites << 4)
+        mask = mask | (self.enhance_red << 5)
+        mask = mask | (self.enhance_green << 6)
+        mask = mask | (self.enhance_blue << 7)
+
+        return mask

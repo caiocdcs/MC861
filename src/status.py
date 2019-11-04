@@ -7,8 +7,8 @@ class Status:
 
     def readStatus(self):
         status = 0
-        status = status | (self.vertical_blank << 5)
+        status = status | (self.sprite_overflow << 5)
         status = status | (self.sprite_zero_hit << 6)
-        status = status | (self.sprite_overflow << 7)
+        status = status | (self.vertical_blank << 7)
 
         return status

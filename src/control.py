@@ -43,3 +43,16 @@ class Control:
             self.nametable_x = 1
         else:
             self.nametable_x = 0
+
+    def readControl(self):
+        control = 0
+        control = control | (self.nametable_x << 0)
+        control = control | (self.nametable_y << 1)
+        control = control | (self.increment_mode << 2)
+        control = control | (self.pattern_sprite << 3)
+        control = control | (self.pattern_background << 4)
+        control = control | (self.sprite_overflow << 5)
+        control = control | (self.slave_mode << 6)
+        control = control | (self.enable_nmi << 7)
+
+        return control
