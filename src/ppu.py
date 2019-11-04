@@ -130,11 +130,13 @@ class PPU:
 
     def cpuWrite(self, address, data):
         if address == 0x0000:       # Control
+            # print("CONTROL DATA", bin(data)) # DEBUG
             self.control.writeControl(data)
             self.tram_addr.nametable_x = self.control.nametable_x
             self.tram_addr.nametable_y = self.control.nametable_y
             print("cpuWrite: 0")
         elif address == 0x0001:     # Mask
+            # print("MASK DATA", bin(data)) # DEBUG
             self.mask.writeMask(data)
             print("cpuWrite: 1")
         elif address == 0x0002:     # Status
@@ -618,7 +620,7 @@ class PPU:
         self.window.setPixel(self.cycle - 1, self.scanline,  self.getColor(palette, pixel))
 
         # DEBUG
-        log_ppu(self.cycle, self.scanline, self.status, self.mask, self.control, self.vram_addr)
+        # log_ppu(self.cycle, self.scanline, self.status, self.mask, self.control, self.vram_addr)
 
         self.cycle += 1
         if self.cycle >= 341:
