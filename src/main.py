@@ -2,12 +2,9 @@ import sys
 from bus import BUS
 from cpu import CPU
 from ppu import PPU
-from window import Window
 from keyboard import Keyboard
 from Cartridge import Cartridge
 import pygame
-
-int8 = int
 
 def main():
 

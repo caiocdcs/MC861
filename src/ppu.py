@@ -1,13 +1,13 @@
 from utils import log_ppu
-
 from window import Window
-
 from pygame import Color
 
 from status import Status
 from mask import Mask
 from control import Control
 from loopy import Loopy
+
+from numpy import uint16
 
 int8 = int
 
@@ -52,10 +52,10 @@ class PPU:
         self.bg_next_tile_attrib = 0x00
         self.bg_next_tile_lsb = 0x00
         self.bg_next_tile_msb = 0x00
-        self.bg_shifter_pattern_lo = 0x0000
-        self.bg_shifter_pattern_hi = 0x0000
-        self.bg_shifter_attrib_lo = 0x0000
-        self.bg_shifter_attrib_hi = 0x0000
+        self.bg_shifter_pattern_lo = uint16(0x0000)
+        self.bg_shifter_pattern_hi = uint16(0x0000)
+        self.bg_shifter_attrib_lo = uint16(0x0000)
+        self.bg_shifter_attrib_hi = uint16(0x0000)
         
         # Color mapping
         self.color = {
@@ -129,6 +129,7 @@ class PPU:
         }
 
     def cpuWrite(self, address, data):
+        data = uint16(data)
         if address == 0x0000:       # Control
             self.control.writeControl(data)
             self.tram_addr.nametable_x = self.control.nametable_x
@@ -170,7 +171,7 @@ class PPU:
             self.vram_addr.writeLoopy(self.vram_addr.readLoopy() + (32 if self.control.increment_mode else 1))
 
     def cpuRead(self, address):
-        data = int8(0)
+        data = uint16(0x0000)
         if address == 0x0000:       # Control
             print("cpuRead: 0")
         elif address == 0x0001:     # Mask
@@ -201,6 +202,7 @@ class PPU:
         return data
 
     def ppuWrite(self, address, data):
+        data = uint16(data)
         print("ppuWrite")
         address = address & 0x3FFF
 
@@ -244,7 +246,7 @@ class PPU:
             self.tablePalette[address] = data
 
     def ppuRead(self, address):
-        data = int8(0)
+        data = uint16(0x0000)
         addr = address & 0x3FFF
 
         cartridgeData = self.cartridge.ppuRead(address)
@@ -301,40 +303,15 @@ class PPU:
 
         self.vram_addr = Loopy()
         self.tram_addr = Loopy()
-
-        # PPU flags
-        self.status.sprite_overflow: int8 = 0
-        self.status.sprite_zero_hit: int8 = 0
-        self.status.vertical_blank: int8 = 0
-
-
-        self.mask.grayscale: int8 = 0
-        self.mask.render_background_left: int8 = 0
-        self.mask.render_sprites_left: int8 = 0
-        self.mask.render_background: int8 = 0
-        self.mask.render_sprites: int8 = 0
-        self.mask.enhance_red: int8 = 0
-        self.mask.enhance_green: int8 = 0
-        self.mask.enhance_blue: int8 = 0
-
-        self.control.nametable_x: int8 = 0
-        self.control.nametable_y: int8 = 0
-        self.control.increment_mode: int8 = 0
-        self.control.pattern_sprite: int8 = 0
-        self.control.pattern_background: int8 = 0
-        self.control.sprite_size: int8 = 0
-        self.control.slave_mode : int8 = 0
-        self.control.enable_nmi: int8 = 0
-
         # Background
         self.bg_next_tile_id = 0x00
         self.bg_next_tile_attrib = 0x00
         self.bg_next_tile_lsb = 0x00
         self.bg_next_tile_msb = 0x00
-        self.bg_shifter_pattern_lo = 0x0000
-        self.bg_shifter_pattern_hi = 0x0000
-        self.bg_shifter_attrib_lo = 0x0000
-        self.bg_shifter_attrib_hi = 0x0000
+        self.bg_shifter_pattern_lo = uint16(0x000)
+        self.bg_shifter_pattern_hi = uint16(0x000)
+        self.bg_shifter_attrib_lo = uint16(0x000)
+        self.bg_shifter_attrib_hi = uint16(0x000)
 
         # Increment background tile horizontally by 1 tile
     def IncrementScrollX(self):
@@ -394,16 +371,16 @@ class PPU:
             self.bg_shifter_pattern_hi <<= 1
             self.bg_shifter_attrib_lo <<= 1
             self.bg_shifter_attrib_hi <<= 1
-        # shift sprite pattern when pixel is visible
-        if self.mask.render_sprites and 1 <= self.cycle < 258:
-            j = 0
-            for i in range(self.spriteCount, 4):
-                if self.spriteScanline[i + 3] > 0:
-                    self.spriteScanline[i + 3] -= 1
-                else:
-                    self.sprite_shifter_pattern_lo[j] <<= 1
-                    self.sprite_shifter_pattern_hi[j] <<= 1
-                j += 1
+        # # shift sprite pattern when pixel is visible
+        # if self.mask.render_sprites and 1 <= self.cycle < 258:
+        #     j = 0
+        #     for i in range(self.spriteCount, 4):
+        #         if self.spriteScanline[i + 3] > 0:
+        #             self.spriteScanline[i + 3] -= 1
+        #         else:
+        #             self.sprite_shifter_pattern_lo[j] <<= 1
+        #             self.sprite_shifter_pattern_hi[j] <<= 1
+        #         j += 1
 
     def clock(self):
 
@@ -441,11 +418,11 @@ class PPU:
                 self.bg_next_tile_attrib = self.bg_next_tile_attrib & 0x03
             elif case == 4:
                 self.bg_next_tile_lsb = self.ppuRead((self.control.pattern_background << 12)
-                                                           + (self.bg_next_tile_id << 4)
+                                                           + (uint16(self.bg_next_tile_id) << 4)
                                                            + self.vram_addr.fine_y + 0)
             elif case == 6:
                 self.bg_next_tile_msb = self.ppuRead((self.control.pattern_background << 12)
-                                                           + (self.bg_next_tile_id << 4)
+                                                           + (uint16(self.bg_next_tile_id) << 4)
                                                            + self.vram_addr.fine_y + 8)
             else:
                 self.IncrementScrollX()
@@ -546,7 +523,7 @@ class PPU:
         bg_palette = 0x00
         if self.mask.render_background:
             # offsets all BG by fine x (for horizontal scrolling)
-            bit_mux = 0x8000 >> self.fine_x
+            bit_mux = (uint16(0x8000) >> self.fine_x)
             # extract pixel parts
             p0_pixel = (self.bg_shifter_pattern_lo & bit_mux) > 0
             p1_pixel = (self.bg_shifter_pattern_hi & bit_mux) > 0
@@ -620,7 +597,7 @@ class PPU:
         self.window.setPixel(self.cycle - 1, self.scanline,  self.getColor(palette, pixel))
 
         # DEBUG
-        log_ppu(self.cycle, self.scanline, self.status, self.mask, self.control, self.vram_addr)
+        log_ppu(self.cycle, self.scanline, self.status, self.mask, self.control, self.vram_addr, pixel, palette)
 
         self.cycle += 1
         if self.cycle >= 341:
