@@ -22,8 +22,8 @@ def main():
 	cpu = CPU()
 	ppu = PPU()
 	bus = BUS(cpu, ppu, player1, player2)
-	#cart = Cartridge(sys.argv[1])
-	cart = Cartridge("hangman/hanging.nes")
+	cart = Cartridge(sys.argv[1])
+	#cart = Cartridge("hangman/hanging.nes")
 	bus.insertCartridge(cart)
 	
 	cpu.connectBus(bus)
@@ -33,7 +33,7 @@ def main():
 	done = False
 
 	pygame.init()
-	screen = pygame.display.set_mode((400, 300))
+	screen = pygame.display.set_mode((256, 240))
 	clock = pygame.time.Clock()
 	while done == False:
 		for event in pygame.event.get():
