@@ -21,9 +21,9 @@ class Loopy:
         return loopy
     
     def writeLoopy(self, data):
-        data =  uint16(data)
-        self.fine_y = (data >> 12 | 0)
-        self.nametable_y = (data >> 11 | 0)
-        self.nametable_x = (data >> 10 | 0)
-        self.coarse_y = (data >> 5 | 0)
-        self.coarse_x = (data >> 0 | 0)
+        data = uint16(data)
+        self.fine_y = (data & 0b0111000000000000) >> 12
+        self.nametable_y = (data & 0b0000100000000000) >> 11
+        self.nametable_x = (data & 0b0000010000000000) >> 10
+        self.coarse_y = (data & 0b0000001111100000) >> 5
+        self.coarse_x = (data & 0b0000000000011111)
