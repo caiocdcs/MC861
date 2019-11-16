@@ -599,11 +599,7 @@ class PPU:
         self.window.setPixel(self.cycle - 1, self.scanline,  self.getColor(palette, pixel))
 
         # DEBUG
-<<<<<<< HEAD
-        # log_ppu(self.cycle, self.scanline, self.status, self.mask, self.control, self.vram_addr)
-=======
         log_ppu(self.cycle, self.scanline, self.status, self.mask, self.control, self.vram_addr, pixel, palette)
->>>>>>> 01b3e3112b65c6ca16b6f188c922b1b881674b65
 
         self.cycle += 1
         if self.cycle >= 341:
