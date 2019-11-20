@@ -326,8 +326,29 @@ class PPU:
                     self.nmi = True
                     # TODO: update frame
 
+                    # # print palette
+                    # for i in range(32):
+                    #     print(self.tablePalette[i])
+
+                    # # print nameTable 1
+                    # for i in range(1024):
+                    #     print(self.tableName[0][i])
+
+                    # # print nameTable 2
+                    # for i in range(1024):
+                    #     print(self.tableName[1][i])
+
+                    # # print patternTable 1
+                    # for i in range(4096):
+                    #     print(self.tablePattern[0][i])
+
+                    # # print patternTable 2
+                    # for i in range(4096):
+                    #     print(self.tablePattern[1][i])
+
+
         # and finally draws the pixel
-        self.window.setPixel(self.cycle - 1, self.scanline,  self.getColor(0x00, 0x00))
+        # self.window.setPixel(self.cycle - 1, self.scanline,  self.getColor(0x00, 0x00))
 
         # DEBUG
         # log_ppu(self.cycle, self.scanline, self.status, self.mask, self.control, self.vram_addr, pixel, palette)
