@@ -199,6 +199,8 @@ class PPU:
             pass
 
         elif address >= 0x0000 and address <= 0x1FFF:
+            print('address', address & 0x0FFF)
+            print('data', data)
             self.tablePattern[(address & 0x1000) >> 12][address & 0x0FFF] = data
 
         elif address >= 0x2000 and address <= 0x3EFF:
