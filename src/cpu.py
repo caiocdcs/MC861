@@ -1,6 +1,7 @@
 from utils import log, logls
 from flagController import FlagController
 from stack import Stack
+from defines import *
 
 int8 = int
 int16 = int
@@ -9,7 +10,9 @@ KB = 1024
 
 class CPU:
 
-    def __init__(self):
+    def __init__(self, console):
+        self.console = console
+
         self.sp = int16(253) # SP starts at 0xfd
         self.pc = int16(0)
         self.a = int8(0)
@@ -19,6 +22,8 @@ class CPU:
         self.stack = Stack()
 
         self.address = None
+
+        self.triggerNMI = False
 
         self.cycles = 0
 
@@ -176,9 +181,53 @@ class CPU:
                '00': (self.handleInstructionBrk,7)
             }
 
+    def Read(self, address):
+        if address < 0x2000:
+            return self.console.RAM[address & 0x07FF]
+        elif address < 0x4000:
+            return self.console.PPU.ReadRegister(0x2000 | (address & 0x7))
+        elif address == 0x4014:
+            return self.console.PPU.ReadRegister(address)
+        elif address == 0x4015:
+            pass
+            #return self.console.APU.ReadRegister(address)
+        elif address == 0x4016:
+            return (self.console.Controller1.Read())
+        elif address == 0x4017:
+            return (self.console.Controller2.Read())
+        elif address < 0x6000:
+            pass # [TODO] I/O registers
+        elif address >= 0x6000:
+            return (self.console.Mapper.Read(address))
+        return uint8(0)
+
+    def Write(self, address, value):
+        if address < 0x2000:
+            self.console.RAM[address & 0x07FF] = value
+        elif address < 0x4000:
+            self.console.PPU.WriteRegister(0x2000 | (address & 0x7), value)
+        elif address < 0x4014:
+            pass
+            #self.console.APU.WriteRegister(address, value)
+        elif address == 0x4014:
+            self.console.PPU.WriteRegister(address, value)
+        elif address == 0x4015:
+            pass
+            #self.console.APU.WriteRegister(address, value)
+        elif address == 0x4016:
+            self.console.Controller1.Write(value)
+            self.console.Controller2.Write(value)
+        elif address == 0x4017:
+            pass
+            #self.console.APU.WriteRegister(address, value)
+        elif address < 0x6000:
+            pass # [TODO] I/O registers
+        elif address >= 0x6000:
+            self.console.Mapper.Write(address, value)
+
     def connectBus(self, bus):
         self.bus = bus
-            
+
     def log(self):
         p = self.flagController.getFlagsStatusByte()
         if self.address:
@@ -188,27 +237,27 @@ class CPU:
             log(self.a, self.x, self.y, self.sp, self.pc, p)
 
     def get_next_byte(self):
-        byte = self.bus.cpuRead(self.pc)
+        byte = self.Read(self.pc)
         self.pc = self.pc + 1
 
         return format(byte, '02x').upper()
 
     def _get_address_int(self, address, set_address=False):
-        return self.bus.cpuRead(address)
+        return self.Read(address)
 
     def _get_address_str(self, address, set_address=False):
         return self._get_address_int(int(address, 16), set_address)
 
     def _set_address_int(self, address, data, set_address=False):
-        return self.bus.cpuWrite(address, data)
+        return self.Write(address, data)
 
     def _set_address_str(self, address, data, set_address=False):
         return self._set_address_int(int(address, 16), data, set_address)
 
     def reset(self):
         self.sp = int8(253) # SP starts at 0xfd
-        low_byte = self.bus.cpuRead(0xFFFC)
-        high_byte = self.bus.cpuRead(0xFFFD)
+        low_byte = self.Read(0xFFFC)
+        high_byte = self.Read(0xFFFD)
 
         self.pc = (high_byte << 8) | low_byte
         self.a = int8(0)
@@ -233,14 +282,14 @@ class CPU:
             stackAddress = self.stack.getAddress() + (self.sp)
             self._set_address_int(stackAddress, int8(int(pc_l, 16)))
             self.sp = self.sp - 1
-            
+
             self.flagController.setInterrupDisabledtFlag()
             self.flagController.clearBreakFlag()
             self.flagController.setUnusedFlag()
             self.handleInstructionPHP()
 
-            low_byte = self.bus.cpuRead(0xFFFE)
-            high_byte = self.bus.cpuRead(0xFFFF)
+            low_byte = self.Read(0xFFFE)
+            high_byte = self.Read(0xFFFF)
 
             self.pc = (high_byte << 8) | low_byte
 
@@ -264,30 +313,32 @@ class CPU:
         self.flagController.setUnusedFlag()
         self.handleInstructionPHP()
 
-        low_byte = self.bus.cpuRead(0xFFFA)
-        high_byte = self.bus.cpuRead(0xFFFB)
+        low_byte = self.Read(0xFFFA)
+        high_byte = self.Read(0xFFFB)
         self.pc = (high_byte << 8) | low_byte
 
         self.cycles = 8
 
-    def clock(self):
+    def step(self):
+
+        if self.triggerNMI:
+            self.nmi()
+
+        self.triggerNMI = False
 
         # function if op code doesn't exist
         def noHandler():
             pass
 
-        if (self.cycles == 0):
-            instruction = self.get_next_byte()
+        instruction = self.get_next_byte()
 
-            handler, c = self.handlers.get(instruction, (noHandler, 1))
-            handler()
+        handler, c = self.handlers.get(instruction, (noHandler, 1))
+        handler()
 
-            self.cycles += c
+        # self.log() # TODO: Uncomment later!
+        self.address = None
+        return c
 
-            # self.log() # TODO: Uncomment later!
-            self.address = None
-
-        self.cycles -= 1
 
     ####################################################
     ##########      INSTRUCTION HANDLERS      ##########
@@ -367,8 +418,8 @@ class CPU:
         carry = self.flagController.getCarryFlag()
         aOldValue = self.a
         sum = aOldValue + value + carry
-        self.a = sum & 0xFF                           # set a value limiting to one byte            
-         
+        self.a = sum & 0xFF                           # set a value limiting to one byte
+
         self.flagController.setNegativeIfNeeded(self.a) # set negative flag
         self.flagController.setZeroFlagIfNeeded(self.a) # set zero flag
         self.flagController.setCarryFlagIfNeeded(sum)         # set carry flag
@@ -453,7 +504,7 @@ class CPU:
         carry = self.flagController.getCarryFlag()
         aOldValue = self.a
         result = aOldValue - value - (1-carry)
-        self.a = result & 0xFF                          # set a value limiting to one byte            
+        self.a = result & 0xFF                          # set a value limiting to one byte
         self.flagController.setNegativeIfNeeded(self.a) # set negative flag
         self.flagController.setZeroFlagIfNeeded(self.a) # set zero flag
 
@@ -464,7 +515,7 @@ class CPU:
         else:
             self.flagController.clearOverflowFlag()
             self.flagController.setCarryFlag()
-            
+
     ## AND Instructions
 
     def handleInstructionAndImmediate(self):
@@ -857,7 +908,7 @@ class CPU:
     def handleInstructionASLAccumulator(self):
         carry = 1 if (0b10000000 & self.a) else 0
         self.a = self.a << 1
-        
+
         self.flagController.setCarryFlag() if carry else self.flagController.clearCarryFlag()
         self.flagController.setNegativeIfNeeded(self.a) # set negative flag
         self.flagController.setZeroFlagIfNeeded(self.a) # set zero flag
@@ -915,7 +966,7 @@ class CPU:
     def handleInstructionLSRAccumulator(self):
         carry = 1 if (0b00000001 & self.a) else 0
         self.a = self.a >> 1
-        
+
         self.flagController.setCarryFlag() if carry else self.flagController.clearCarryFlag()
         self.flagController.setNegativeIfNeeded(self.a) # set negative flag
         self.flagController.setZeroFlagIfNeeded(self.a) # set zero flag
@@ -1000,7 +1051,7 @@ class CPU:
         carry = 1 if (0b10000000 & self.a) else 0
         c = self.flagController.getCarryFlag()
         self.a = self.a << 1 | c
-        
+
         self.flagController.setCarryFlag() if carry else self.flagController.clearCarryFlag()
         self.flagController.setNegativeIfNeeded(self.a) # set negative flag
         self.flagController.setZeroFlagIfNeeded(self.a) # set zero flag
@@ -1063,7 +1114,7 @@ class CPU:
         carry = 1 if (0b00000001 & self.a) else 0
         c = self.flagController.getCarryFlag()
         self.a = self.a >> 1 | c * 128
-        
+
         self.flagController.setCarryFlag() if carry else self.flagController.clearCarryFlag()
         self.flagController.setNegativeIfNeeded(self.a) # set negative flag
         self.flagController.setZeroFlagIfNeeded(self.a) # set zero flag
@@ -1163,7 +1214,7 @@ class CPU:
 
         address = (high_byte + low_byte)
         final_address = format((int(address, 16) + self.y), '04x')
-        
+
         mem = self._get_address_str(final_address)
         self.compare(mem)
 
@@ -1194,7 +1245,7 @@ class CPU:
     def compare(self, value):
         self.flagController.clearCarryFlag()
         result = self.a - value
-        res = result & 0xFF                          # set a value limiting to one byte            
+        res = result & 0xFF                          # set a value limiting to one byte
         self.flagController.setNegativeIfNeeded(res) # set negative flag
         self.flagController.setZeroFlagIfNeeded(res) # set zero flag
         if result >= 0:
@@ -1221,7 +1272,7 @@ class CPU:
     def compareX(self, value):
         self.flagController.clearCarryFlag()
         result = self.x - value
-        res = result & 0xFF                          # set a value limiting to one byte            
+        res = result & 0xFF                          # set a value limiting to one byte
         self.flagController.setNegativeIfNeeded(res) # set negative flag
         self.flagController.setZeroFlagIfNeeded(res) # set zero flag
         if result >= 0:
@@ -1248,7 +1299,7 @@ class CPU:
     def compareY(self, value):
         self.flagController.clearCarryFlag()
         result = self.y - value
-        res = result & 0xFF                          # set a value limiting to one byte            
+        res = result & 0xFF                          # set a value limiting to one byte
         self.flagController.setNegativeIfNeeded(res) # set negative flag
         self.flagController.setZeroFlagIfNeeded(res) # set zero flag
         if result >= 0:
@@ -1394,7 +1445,7 @@ class CPU:
     def handleInstructionLDYZeroPage(self):
         address = self.get_next_byte()
         self.y = self._get_address_str(address)
-        
+
         self.flagController.setNegativeIfNeeded(self.y) # set negative flag
         self.flagController.setZeroFlagIfNeeded(self.y) # set zero flag
 
@@ -1557,7 +1608,7 @@ class CPU:
                 address = byte-(1<<8)
             else:
                 address = byte
-            
+
             self.cycles += 1
             self.pc = self.pc + address
 
@@ -1568,7 +1619,7 @@ class CPU:
                 address = byte-(1<<8)
             else:
                 address = byte
-            
+
             self.cycles += 1
             self.pc = self.pc + address
 
@@ -1579,7 +1630,7 @@ class CPU:
                 address = byte-(1<<8)
             else:
                 address = byte
-            
+
             self.cycles += 1
             self.pc = self.pc + address
 
@@ -1590,7 +1641,7 @@ class CPU:
                 address = byte-(1<<8)
             else:
                 address = byte
-            
+
             self.cycles += 1
             self.pc = self.pc + address
 
@@ -1601,7 +1652,7 @@ class CPU:
                 address = byte-(1<<8)
             else:
                 address = byte
-            
+
             self.cycles += 1
             self.pc = self.pc + address
 
@@ -1612,7 +1663,7 @@ class CPU:
                 address = byte-(1<<8)
             else:
                 address = byte
-            
+
             self.cycles += 1
             self.pc = self.pc + address
 
@@ -1623,7 +1674,7 @@ class CPU:
                 address = byte-(1<<8)
             else:
                 address = byte
-            
+
             self.cycles += 1
             self.pc = self.pc + address
 
@@ -1634,7 +1685,7 @@ class CPU:
                 address = byte-(1<<8)
             else:
                 address = byte
-            
+
             self.cycles += 1
             self.pc = self.pc + address
 
@@ -1647,7 +1698,7 @@ class CPU:
 
     def handleInstructionClearInterruptDisable(self):
         self.flagController.clearInterrupDisabledtFlag()
-    
+
     def handleInstructionClearOverflowFlag(self):
         self.flagController.clearOverflowFlag()
 
@@ -1660,7 +1711,7 @@ class CPU:
 
     def handleInstructionSetInterruptDisable(self):
         self.flagController.setInterrupDisabledtFlag()
-        
+
     # Stack instructions
     def handleInstructionTXS(self):
         self.sp = self.x
@@ -1779,7 +1830,7 @@ class CPU:
         self.flagController.clearBreakFlag()
 
         # load IRQ pc value
-        low_byte = self.bus.cpuRead(0xFFFE)
-        high_byte = self.bus.cpuRead(0xFFFF)
+        low_byte = self.Read(0xFFFE)
+        high_byte = self.Read(0xFFFF)
 
         self.pc = (high_byte << 8) | low_byte

@@ -1,19 +1,15 @@
-from ctypes import int8
-from copy import copy
+from defines import *
 
-class Memory:
-    def __init__(self):
-        self.memory = [int8(0)]*1024*64    # 64 KB
+MirrorHorizontal = 0
+MirrorVertical = 1
+MirrorSingle0 = 2
+MirrorSingle1 = 3
+MirrorFour = 4
 
-    def get_memory_at_position_str(self, pos) -> int8:
-        return copy(self.memory[int(pos, 16)])
-    
-    def set_memory_at_position_str(self, pos, data):
-        self.memory[int(pos, 16)] = copy(data)
+MirrorLookup = [[0, 0, 1, 1], [0, 1, 0, 1], [0, 0, 0, 0],[1, 1, 1, 1], [0, 1, 2, 3]]
 
-    def get_memory_at_position_int(self, pos) -> int8:
-        return copy(self.memory[pos])
-    
-    def set_memory_at_position_int(self, pos, data):
-        self.memory[pos] = copy(data)
-        
+def MirrorAddress(mode, address):
+    address = ((address - 0x2000) & 0xFFFF) & 0x0FFF
+    table = (address >> 10)#// 0x0400
+    offset = address & 0x03FF#% 0x0400
+    return (0x2000 + (MirrorLookup[uint8(mode)][table] << 10) + offset) & 0xFFFF

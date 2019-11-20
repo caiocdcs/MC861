@@ -1,34 +1,35 @@
 class Mapper:
+    def Read(self, address):
+        pass
+    def Write(self, address, value):
+        pass
+    def Step(self):
+        pass
+    def Save(self, encoder):
+        pass
+    def Load(self, decoder):
+        pass
 
-    def __init__(self):
-        self.prgBanks = 0
-        self.chrBanks = 0
+from mapper1 import *
+from mapper2 import *
+from mapper3 import *
+from mapper4 import *
+from mapper7 import *
 
-    def connect(self, prgBanks, chrBanks):
-        self.prgBanks = prgBanks
-        self.chrBanks = chrBanks
+Mappers = {
+        0: Mapper2,
+        1: Mapper1,
+        2: Mapper2,
+        3: Mapper3,
+        4: Mapper4,
+        7: Mapper7
+}
 
-    def cpuMapRead(self, address):
-        if address >= 0x8000 and address <= 0xFFFF:
-            mappedAddress = address & (0x7FFF if self.prgBanks > 1 else 0x3FFF)
-            return mappedAddress
-        return None
-
-    def cpuMapWrite(self, address):
-        if address >= 0x8000 and address <= 0xFFFF:
-            mappedAddress = address & (0x7FFF if self.prgBanks > 1 else 0x3FFF)
-            return mappedAddress
-        return None
-
-    def ppuMapRead(self, address):
-        if address >= 0x0000 and address <= 0x1FFF:
-            mappedAddress = address
-            return mappedAddress
-        return None
-
-    def ppuMapWrite(self, address):
-        if address >= 0x000 and address <= 0x1FFF:
-            if self.chrBanks == 0:
-                mappedAddress = address
-                return mappedAddress
-        return None
+def NewMapper(console):
+    cartridge = console.Cartridge
+    if cartridge.Mapper not in Mappers:
+        raise RuntimeError("Unsupported Mapper: %d" % cartridge.Mapper)
+    m = Mappers[cartridge.Mapper]
+    if m == Mapper4:
+        return m(console, cartridge), None
+    return m(cartridge), None
