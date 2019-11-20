@@ -49,31 +49,31 @@ PPU_DATA    =   $2007
 .org $C000
 
 RESET:
-  sei
-  cld
+;  sei
+;  cld
 ; Disable APU frame IRQ
-  ldx #$40
-  stx $4017
-  ldx #$FF
-  txs
-  ldx #$00
+;  ldx #$40
+;  stx $4017
+;  ldx #$FF
+;  txs
+;  ldx #$00
 ; Disable NMI and rendering
-  stx PPU_CTRL
-  stx PPU_MASK
-  stx $4010
+;  stx PPU_CTRL
+;  stx PPU_MASK
+;  stx $4010
 
 ;----------------------------------------------------------------
 ; ENABLE SOUNDS
 ;----------------------------------------------------------------
 
-ClearAPU:
-  lda #$00
-  ldy #$00
-ClearAPULoop:
-  sta $4000, y
-  iny
-  cpy $18
-  bne ClearAPULoop
+;ClearAPU:
+;  lda #$00
+;  ldy #$00
+;ClearAPULoop:
+;  sta $4000, y
+;  iny
+;  cpy $18
+;  bne ClearAPULoop
 
 ;----------------------------------------------------------------
 ; WAIT PPU AND CLEAR MEMORY
@@ -85,20 +85,20 @@ ClearAPULoop:
 ;   bpl vBlankWait1
   
 ; Clear Memory
-ClearLoop:
-  lda #$00
-  sta $0000, X
-  sta $0100, X
-  sta $0200, X
-  sta $0300, X
-  sta $0400, X
-  sta $0500, X
-  sta $0600, X
-  sta $0700, X
-  lda #$FE
-  sta $0200, x
-  inx
-  bne ClearLoop
+;ClearLoop:
+;  lda #$00
+;  sta $0000, X
+;  sta $0100, X
+;  sta $0200, X
+;  sta $0300, X
+;  sta $0400, X
+;  sta $0500, X
+;  sta $0600, X
+;  sta $0700, X
+; lda #$FE
+;  sta $0200, x
+;  inx
+;  bne ClearLoop
 
 ; Wait for PPU
 ; vBlankWait2:
@@ -153,24 +153,24 @@ LoadBackgroundTile1:
   inx
   cpx #$00
   bne LoadBackgroundTile1
-; LoadBackgroundTile2:
-;   lda bg2, x
-;   sta PPU_DATA
-;   inx
-;   cpx #$00
-;   bne LoadBackgroundTile2
-; LoadBackgroundTile3:
-;   lda bg3, x
-;   sta PPU_DATA
-;   inx
-;   cpx #$00
-;   bne LoadBackgroundTile3
-; LoadBackgroundTile4:
-;   lda bg4, x
-;   sta PPU_DATA
-;   inx
-;   cpx #$c0
-;   bne LoadBackgroundTile4
+LoadBackgroundTile2:
+   lda bg2, x
+   sta PPU_DATA
+   inx
+   cpx #$00
+   bne LoadBackgroundTile2
+ LoadBackgroundTile3:
+   lda bg3, x
+   sta PPU_DATA
+   inx
+   cpx #$00
+   bne LoadBackgroundTile3
+ LoadBackgroundTile4:
+   lda bg4, x
+   sta PPU_DATA
+   inx
+   cpx #$c0
+   bne LoadBackgroundTile4
 
 ;----------------------------------------------------------------
 ; LOAD ATTRIBUTES
@@ -232,6 +232,7 @@ NMI:
 ;   lda #$00        ; load $00 to A
 ;   sta OAM_ADDR    ; store first part in 2003
 ;   sta OAM_ADDR    ; store second part in 2003
+RTI
 
 ;----------------------------------------------------------------
 ; END NMI
