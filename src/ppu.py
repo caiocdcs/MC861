@@ -131,25 +131,18 @@ class PPU:
     def cpuWrite(self, address, data):
         data = uint16(data)
         if address == 0x0000:       # Control
-            # print("CONTROL DATA", bin(data)) # DEBUG
             self.control.writeControl(data)
             self.tram_addr.nametable_x = self.control.nametable_x
             self.tram_addr.nametable_y = self.control.nametable_y
-            print("cpuWrite: 0")
         elif address == 0x0001:     # Mask
-            # print("MASK DATA", bin(data)) # DEBUG
             self.mask.writeMask(data)
-            print("cpuWrite: 1")
         elif address == 0x0002:     # Status
-            print("cpuWrite: 2")
+            pass
         elif address == 0x0003:     # OAM Address
-            print("cpuWrite: 3")
             self.oam_address = data
         elif address == 0x0004:     # OAM Data
-            print("cpuWrite: 4")
             self.oam[self.oam_address] = data
         elif address == 0x0005:     # Scroll
-            print("cpuWrite: 5")
             if self.address_latch == 0:
                 self.fine_x = data & 0x07
                 self.tram_addr.coarse_x = data >> 3
@@ -166,35 +159,30 @@ class PPU:
                 self.tram_addr.writeLoopy((self.tram_addr.readLoopy() & 0xFF00) | data)
                 self.vram_addr = self.tram_addr
                 self.address_latch = 0
-            print("cpuWrite: 6")
         elif address == 0x0007:     # PPU Data
-            print("cpuWrite: 7")
             self.ppuWrite(self.vram_addr.readLoopy(), data)
             self.vram_addr.writeLoopy(self.vram_addr.readLoopy() + (32 if self.control.increment_mode else 1))
 
     def cpuRead(self, address):
         data = uint16(0x0000)
         if address == 0x0000:       # Control
-            print("cpuRead: 0")
+            pass
         elif address == 0x0001:     # Mask
-            print("cpuRead: 1")
+            pass
         elif address == 0x0002:     # Status
             data = (self.status.readStatus() | (self.ppu_data_buffer & 0x1F))
             self.status.vertical_blank = 0
             self.address_latch = 0
-            print("cpuRead: 2")
         elif address == 0x0003:     # OAM Address
-            print("cpuRead: 3")
             data = self.oam_address
         elif address == 0x0004:     # OAM Data
             data = self.oam[self.oam_address]
-            print("cpuRead: 4")
         elif address == 0x0005:     # Scroll
-            print("cpuRead: 5")
+            pass
         elif address == 0x0006:     # PPU Address
-            print("cpuRead: 6")
+            pass
         elif address == 0x0007:     # PPU Data
-            print("cpuRead: 7")
+            pass
             data = self.ppu_data_buffer
             self.ppu_data_buffer = self.ppuRead(self.vram_addr.readLoopy())
             if self.vram_addr.readLoopy() >= 0x3F00:
@@ -205,7 +193,6 @@ class PPU:
 
     def ppuWrite(self, address, data):
         data = uint16(data)
-        print("ppuWrite")
         address = address & 0x3FFF
 
         if self.cartridge.ppuWrite(address, data):
