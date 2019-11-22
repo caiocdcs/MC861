@@ -4,7 +4,7 @@ class FlagController:
     def __init__(self):
         self.carryFlag = 0
         self.zeroFlag = 0
-        self.interrupDisabledtFlag = 1
+        self.interruptDisabledFlag = 1
         self.decimalFlag = 0
         self.breakFlag = 1
         self.unusedFlag = 1
@@ -15,7 +15,7 @@ class FlagController:
         flagsByte = 0
         flagsByte = flagsByte | (self.carryFlag << 0)
         flagsByte = flagsByte | (self.zeroFlag << 1)
-        flagsByte = flagsByte | (self.interrupDisabledtFlag << 2)
+        flagsByte = flagsByte | (self.interruptDisabledFlag << 2)
         flagsByte = flagsByte | (self.decimalFlag << 3)
         flagsByte = flagsByte | (self.breakFlag << 4)
         flagsByte = flagsByte | (self.unusedFlag << 5)
@@ -27,7 +27,7 @@ class FlagController:
     def setFlagsStatusByte(self, value):
         self.carryFlag = 1 if (0b00000001 & value) else 0
         self.zeroFlag = 1 if (0b00000010 & value) else 0
-        self.interrupDisabledtFlag = 1 if (0b00000100 & value) else 0
+        self.interruptDisabledFlag = 1 if (0b00000100 & value) else 0
         self.decimalFlag = 1 if (0b00001000 & value) else 0
         self.breakFlag = 1 if (0b00010000 & value) else 0
         self.unusedFlag = 1 # if (0b00100000 & value) else 0
@@ -43,8 +43,8 @@ class FlagController:
     def getZeroFlag(self) -> int:
         return self.zeroFlag
     
-    def geInterrupDisabledtFlag(self) -> int:
-        return self.interrupDisabledtFlag
+    def geInterruptDisabledFlag(self) -> int:
+        return self.interruptDisabledFlag
 
     def getDecimalFlag(self) -> int:
         return self.decimalFlag
@@ -71,8 +71,8 @@ class FlagController:
     def setZeroFlag(self):
         self.zeroFlag = 1
     
-    def setInterrupDisabledtFlag(self):
-        self.interrupDisabledtFlag = 1
+    def setInterruptDisabledFlag(self):
+        self.interruptDisabledFlag = 1
 
     def setDecimalFlag(self):
         self.decimalFlag = 1
@@ -99,8 +99,8 @@ class FlagController:
     def clearZeroFlag(self):
         self.zeroFlag = 0
     
-    def clearInterrupDisabledtFlag(self):
-        self.interrupDisabledtFlag = 0
+    def clearInterruptDisabledFlag(self):
+        self.interruptDisabledFlag = 0
 
     def clearDecimalFlag(self):
         self.decimalFlag = 0

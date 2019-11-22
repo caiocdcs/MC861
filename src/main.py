@@ -3,7 +3,6 @@ import glfw
 from OpenGL.GL import *
 from emulator import *
 
-
 def main():
 
 	if len(sys.argv) != 2:
@@ -22,7 +21,6 @@ def main():
 	emulator = Emulator(window)
 	emulator.start(sys.argv[1])
 	glEnable(GL_TEXTURE_2D)
-
 
 if __name__ == "__main__":
 	main()

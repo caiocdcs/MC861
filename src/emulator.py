@@ -3,7 +3,6 @@ import glfw
 from OpenGL.GL import *
 from view import *
 
-
 class Emulator:
     def __init__(self, window):
         self.window = window

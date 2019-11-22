@@ -1,10 +1,10 @@
 from controller import *
+from cartridge import *
 from mapper import *
 from cpu import CPU
 from ppu import PPU
 from palette import *
 import struct
-from cartridge import *
 
 CPUFrequency = 1789773
 iNESFileMagic = b'NES\x1a'
@@ -12,7 +12,6 @@ iNESFileMagic = b'NES\x1a'
 uint8 = int
 ordc = lambda c: c if type(c) ==int else ord(c)
 fromstring = lambda x, dtype : [dtype(ordc(c)) for c in x]
-
 
 class Bus:
     def __init__(self, path):
@@ -99,5 +98,7 @@ class Bus:
 
     def setButtons1(self, buttons):
         self.Controller1.setButtons(buttons)
+
     def setButtons2(self, buttons):
         self.Controller2.setButtons(buttons)
+        
