@@ -49,18 +49,18 @@ PPU_DATA    =   $2007
 .org $C000
 
 RESET:
-;  sei
-;  cld
+  sei
+  cld
 ; Disable APU frame IRQ
-;  ldx #$40
-;  stx $4017
-;  ldx #$FF
-;  txs
-;  ldx #$00
+  ldx #$40
+  stx $4017
+  ldx #$FF
+  txs
+  ldx #$00
 ; Disable NMI and rendering
-;  stx PPU_CTRL
-;  stx PPU_MASK
-;  stx $4010
+  stx PPU_CTRL
+  stx PPU_MASK
+  stx $4010
 
 ;----------------------------------------------------------------
 ; ENABLE SOUNDS
@@ -80,9 +80,9 @@ RESET:
 ;----------------------------------------------------------------
 
 ; Wait for PPU
-; vBlankWait1:
-;   bit PPU_STATUS
-;   bpl vBlankWait1
+;vBlankWait1:
+;  bit PPU_STATUS
+;  bpl vBlankWait1
   
 ; Clear Memory
 ;ClearLoop:
@@ -95,15 +95,15 @@ RESET:
 ;  sta $0500, X
 ;  sta $0600, X
 ;  sta $0700, X
-; lda #$FE
+;  lda #$FE
 ;  sta $0200, x
 ;  inx
 ;  bne ClearLoop
 
 ; Wait for PPU
-; vBlankWait2:
-;   bit PPU_STATUS
-;   bpl vBlankWait2
+;vBlankWait2:
+;  bit PPU_STATUS
+;  bpl vBlankWait2
 
 ;----------------------------------------------------------------
 ; LOAD PALETTES
@@ -127,14 +127,14 @@ LoadPalette:
 ; LOAD SPRITES
 ;----------------------------------------------------------------
 
-; LoadSprites:
-;   ldx #$00              ; start at 0
-; LoadSprite:
-;   lda sprites, x        ; load data from address (sprites +  x)
-;   sta $0200, x          ; store into RAM address ($0200 + x)
-;   inx                   ; X = X + 1
-;   cpx #$c0              ; Compare X to hex $c0 (each 4 is a sprite) -- change here if more sprites are needed
-;   bne LoadSprite        ; Branch to LoadSprite if compare was Not Equal to zero
+LoadSprites:
+  ldx #$00              ; start at 0
+LoadSprite:
+  lda sprites, x        ; load data from address (sprites +  x)
+  sta $0200, x          ; store into RAM address ($0200 + x)
+  inx                   ; X = X + 1
+  cpx #$c0              ; Compare X to hex $c0 (each 4 is a sprite) -- change here if more sprites are needed
+  bne LoadSprite        ; Branch to LoadSprite if compare was Not Equal to zero
 
 ;----------------------------------------------------------------
 ; LOAD BACKGROUND 
@@ -154,41 +154,41 @@ LoadBackgroundTile1:
   cpx #$00
   bne LoadBackgroundTile1
 LoadBackgroundTile2:
-   lda bg2, x
-   sta PPU_DATA
-   inx
-   cpx #$00
-   bne LoadBackgroundTile2
- LoadBackgroundTile3:
-   lda bg3, x
-   sta PPU_DATA
-   inx
-   cpx #$00
-   bne LoadBackgroundTile3
- LoadBackgroundTile4:
-   lda bg4, x
-   sta PPU_DATA
-   inx
-   cpx #$c0
-   bne LoadBackgroundTile4
+  lda bg2, x
+  sta PPU_DATA
+  inx
+  cpx #$00
+  bne LoadBackgroundTile2
+LoadBackgroundTile3:
+  lda bg3, x
+  sta PPU_DATA
+  inx
+  cpx #$00
+  bne LoadBackgroundTile3
+LoadBackgroundTile4:
+  lda bg4, x
+  sta PPU_DATA
+  inx
+  cpx #$c0
+  bne LoadBackgroundTile4
 
 ;----------------------------------------------------------------
 ; LOAD ATTRIBUTES
 ;----------------------------------------------------------------
 
-; LoadAttributes:
-;   lda $2002
-;   lda #$23
-;   sta $2006
-;   lda #$c0
-;   sta $2006
-;   lda #$00
-;   ldy #$00
-; LoadAttribute:
-;   sta $2007
-;   iny
-;   cpy #$40
-;   bne LoadAttribute
+LoadAttributes:
+  lda $2002
+  lda #$23
+  sta $2006
+  lda #$c0
+  sta $2006
+  lda #$00
+  ldy #$00
+LoadAttribute:
+  sta $2007
+  iny
+  cpy #$40
+  bne LoadAttribute
 
 ;----------------------------------------------------------------
 ; PPU CONFIGURATION
@@ -216,6 +216,125 @@ ConfigurePPU:
 ; $0500 + the letter code choosed will be the place to store if the current letter was guessed right, beginning in $0520
 Initialize:
 
+; code to generate a ramdom number and pick a word
+RandomNumber:
+	ldx #2     ; iteration count (generates 2 bits)
+	lda seed+0
+
+	asl        ; shift the register
+	rol seed+1
+	bcc :+
+	eor #$2D   ; apply XOR feedback whenever a 1 bit is shifted out
+
+	dex
+	bne :--
+	sta seed+0
+	cmp #0     ; reload flags
+  and #$00000011
+  asl
+  asl
+  asl
+
+GetWord:
+  tax
+  lda words
+  sta $0500
+  ldy #00
+GetWordLoop:
+  lda words, x
+  sta $0508, y
+  inx
+  iny
+  cpy $0500
+  bne GetWordLoop ; load last letter
+
+  lda #$00
+  sta $0505 ; position for count the tile position that will be drawn, each sprite has 4 bytes
+
+  ; Controller counter c initialization (as 0)
+  lda #$00
+  sta $0302
+
+
+InitAlphabet:
+  lda #$0205
+  sta $0330
+
+  lda #$0209
+  sta $0331
+
+  lda #$020d
+  sta $0332
+
+  lda #$0211
+  sta $0333
+
+  lda #$0215
+  sta $0334
+
+  lda #$0219
+  sta $0335
+
+  lda #$021d
+  sta $0336
+
+  lda #$0221
+  sta $0337
+
+  lda #$0225
+  sta $0338
+
+  lda #$0229
+  sta $0339
+
+  lda #$022d
+  sta $0340
+
+  lda #$0231
+  sta $0341
+
+  lda #$0235
+  sta $0342
+
+  lda #$0239
+  sta $0343
+
+  lda #$023d
+  sta $0344
+
+  lda #$0241
+  sta $0345
+
+  lda #$0245
+  sta $0346
+
+  lda #$0249
+  sta $0347
+
+  lda #$024d
+  sta $0348
+
+  lda #$0251
+  sta $0349
+
+  lda #$0255
+  sta $0350
+
+  lda #$0259
+  sta $0351
+
+  lda #$025d
+  sta $0352
+
+  lda #$0261
+  sta $0353
+
+  lda #$0265
+  sta $0354
+
+  lda #$0269
+  sta $0355
+
 ;----------------------------------------------------------------
 ; INFINITE LOOP
 ;----------------------------------------------------------------
@@ -224,23 +343,396 @@ Forever:
   jmp Forever
 
 ;----------------------------------------------------------------
+; SOUNDS
+;----------------------------------------------------------------
+
+.include "sounds.asm"
+
+;----------------------------------------------------------------
 ; NMI (Non-Maskable Interrupt)
 ;----------------------------------------------------------------
 
 NMI:
-; SetUpOAMAddr:
-;   lda #$00        ; load $00 to A
-;   sta OAM_ADDR    ; store first part in 2003
-;   sta OAM_ADDR    ; store second part in 2003
-RTI
+SetUpOAMAddr:
+  lda #$00        ; load $00 to A
+  sta OAM_ADDR    ; store first part in 2003
+  sta OAM_ADDR    ; store second part in 2003
+SetUpControllers:
+  lda #$02
+  sta $4014   ; set the high byte (02) of the RAM address, start the transfer
+
+  jsr DrawErrors
+  jsr DrawWord
+  jmp EndNMI
+
+;----------------------------------------------------------------
+; DRAW ERRORS & WORD
+;----------------------------------------------------------------
+
+DrawWord:
+  ldy #00
+DrawWordLoop: 
+  ldx $0508, y
+  lda $0500, x
+  cmp #$01
+  bne DrawWordNotGuessed
+
+  txa
+  ldx $0505
+  sta $02A5, x
+  jmp DrawWordEndLoop
+
+DrawWordNotGuessed:
+  lda #$1D
+  ldx $0505
+  sta $02A5, x
+
+DrawWordEndLoop:
+  txa
+  clc
+  adc #$04
+  sta $0505
+
+  iny
+  cpy $0500
+  bne DrawWordLoop
+
+  lda #00
+  sta $0505
+  rts
+
+DrawErrors:
+  lda $0502
+  cmp #$01
+  beq DrawErrorHead
+  cmp #$02
+  beq DrawErrorBody
+  cmp #$03
+  beq DrawErrorLeftArm
+  cmp #$04
+  beq DrawErrorRightArm
+  cmp #$05
+  beq DrawErrorLeftLeg
+  cmp #$06
+  beq DrawErrorRightLeg
+  jmp DrawErrorEnd
+DrawErrorRightLeg:
+  jsr DrawRightLeg
+DrawErrorLeftLeg:
+  jsr DrawLeftLeg
+DrawErrorRightArm:
+  jsr DrawRightArm
+DrawErrorLeftArm:
+  jsr DrawLeftArm
+DrawErrorBody:
+  jsr DrawBody
+DrawErrorHead:
+  jsr DrawHead
+DrawErrorEnd:
+  rts
+
+;----------------------------------------------------------------
+; DRAWING FUNCTIONS
+;----------------------------------------------------------------
+
+.include "drawing.asm"
 
 ;----------------------------------------------------------------
 ; END NMI
 ;----------------------------------------------------------------
 
 EndNMI:
+
+;----------------------------------------------------------------
+; CONTROLLERS
+;----------------------------------------------------------------
+
+; $0300 saves the selector's offset horizontal position
+; $0301 saves the selector's offset vertical position 
+; $0302 alphabet counter
+
+LatchController:
+  LDA #$01
+  STA $4016
+  LDA #$00
+  STA $4016
+
+; Pressed A
+ReadA: 
+  LDA $4016           ; player 1 - A
+  AND #%00000001      ; only look at bit 0
+  BEQ ReadADone       ; branch to ReadADone if button is NOT pressed (0)
+                      ; add instructions here to do something when button IS pressed (1)
+SelectLetter:
+  LDA $0302           ; counter c = c * 2
+  STA $0303
+  ASL $0303           
+  LDA $0303
+  ADC #$20            ; x = c + 32
+  STA $0501           ; selecionar letra
+ReadADone:            ; handling this button is done
   
-  jmp Forever
+; Pressed B
+ReadB: 
+  LDA $4016           ; player 1 - B
+  AND #%00000001      ; only look at bit 0
+  BEQ ReadBDone       ; branch to ReadBDone if button is NOT pressed (0)
+                      ; add instructions here to do something when button IS pressed (1)
+  lda $0310
+  clc
+  adc $0311
+  beq ReadBDone
+  jmp RESET
+ReadBDone:            ; handling this button is done
+
+; Pressed Select
+ReadSelect: 
+  LDA $4016           ; player 1 - Select
+  AND #%00000001      ; only look at bit 0
+  BEQ ReadSelectDone  ; branch to ReadBDone if button is NOT pressed (0)
+                      ; add instructions here to do something when button IS pressed (1)
+ReadSelectDone:       ; handling this button is done
+
+; Pressed Start
+ReadStart: 
+  LDA $4016           ; player 1 - Select
+  AND #%00000001      ; only look at bit 0
+  BEQ ReadStartDone   ; branch to ReadBDone if button is NOT pressed (0)
+                      ; add instructions here to do something when button IS pressed (1)
+SelectLetterUsingStart:
+  LDA $0302           ; counter c = c * 2
+  STA $0303
+  ASL $0303           
+  LDA $0303
+  ADC #$20            ; x = c + 32
+  STA $0501           ; selecionar letra
+ReadStartDone:        ; handling this button is done
+
+CheckIfWin:
+  lda $0310
+  beq CheckIfGameOver
+  jmp ControllersDone
+
+CheckIfGameOver:
+  lda $0311
+  beq ReadUp
+  jmp ControllersDone
+
+
+; Pressed Up
+ReadUp: 
+  LDA $4016           ; player 1 - Up
+  AND #%00000001      ; only look at bit 0
+  BEQ ReadUpDone      ; branch to ReadUpDone if button is NOT pressed (0)
+CanMoveUp:
+  LDA $0301           ; load selector y position
+  SEC
+  SBC #1              ; move up y = y - 1
+  BMI ReadUpDone      ; if negative, dont move selector
+  STA $0301           ; else, move onde postion up
+IterateAlphabetUp:
+  LDA $0302           ; load alphabet counter c
+  SEC
+  SBC #7              ; c = c - 7
+  BMI ReadUpDone      ; if negative, dont move selector
+  STA $0302           ; else, move onde postion up
+MoveUp:
+  LDA $0200           ; load sprite Y position
+  SEC                 ; make sure carry flag is set
+  SBC #$10            ; A = A - 16
+  STA $0200           ; save sprite Y position
+  jsr MoveSound
+ReadUpDone:           ; handling this button is done
+
+; Pressed Down
+ReadDown: 
+  LDA $4016           ; player 1 - Down
+  AND #%00000001      ; only look at bit 0
+  BEQ ReadDownDone    ; branch to ReadDownDone if button is NOT pressed (0)
+CanMoveDown:
+  LDA $0301           ; load selector y position
+  CLC
+  ADC #1              ; move down y = y - 1
+  CMP #$4             ; if y > 4
+  BPL ReadDownDone    ; dont move the selector
+; Cannot move outside of boundaries
+  tax
+  lda $0300
+  cmp #$5             ; if x < 5
+  bmi ContinueMoveDown
+  lda $0301
+  cmp #$2             ; if y < 2
+  bmi ContinueMoveDown
+  jmp ReadDownDone
+ContinueMoveDown:
+  stx $0301
+IterateAlphabetDown:
+  LDA $0302           ; load alphabet counter c
+  CLC
+  ADC #7              ; c = c + 7
+  CMP #$26            ; if c > 26
+  BPL ReadDownDone    ; dont move the selector
+  STA $0302           ; else, move onde postion down
+MoveDown:
+  LDA $0200           ; load sprite Y position
+  CLC                 ; make sure carry flag is set
+  ADC #$10            ; A = A + 16
+  STA $0200           ; save sprite Y position
+  jsr MoveSound
+ReadDownDone:         ; handling this button is done
+
+; Pressed Left
+ReadLeft: 
+  LDA $4016           ; player 1 - Left
+  AND #%00000001      ; only look at bit 0
+  BEQ ReadLeftDone    ; branch to ReadLeftDone if button is NOT pressed (0)
+CanMoveLeft:
+  LDA $0300           ; load selector x position
+  SEC
+  SBC #1              ; move left x = x - 1
+  BMI ReadLeftDone    ; if negative, dont move selector      
+  STA $0300           ; else, move onde postion left
+IterateAlphabetLeft:
+  LDA $0302           ; load alphabet counter c
+  SEC
+  SBC #1              ; c = c - 1
+  BMI ReadLeftDone    ; if negative, dont move selector
+  STA $0302           ; else, move onde postion left
+MoveLeft:
+  LDA $0203           ; load sprite X position
+  SEC                 ; make sure carry flag is set
+  SBC #$10            ; A = A - 16
+  STA $0203           ; save sprite X position
+  jsr MoveSound
+ReadLeftDone:         ; handling this button is done
+
+; Pressed Right
+ReadRight: 
+  LDA $4016           ; player 1 - Right
+  AND #%00000001      ; only look at bit 0
+  BEQ ReadRightDone   ; branch to ReadRightDone if button is NOT pressed (0)
+CanMoveRight:
+  LDA $0300           ; load selector x position
+  CLC
+  ADC #1              ; move right x = x + 1
+  CMP #$7             ; if x > 7
+  BPL ReadRightDone   ; dont move the selector
+; Cannot move outside of boundaries
+  tax
+  lda $0301
+  cmp #$3             ; if y < 3
+  bmi ContinueMoveRight
+  lda $0300
+  cmp #$4             ; if x < 4
+  bmi ContinueMoveRight
+  jmp ReadRightDone
+ContinueMoveRight:
+  stx $0300
+IterateAlphabetRight:
+  LDA $0302           ; load alphabet counter c
+  CLC
+  ADC #1              ; c = c + 1
+  CMP #$26            ; if c > 26
+  BPL ReadRightDone   ; dont move the selector
+  STA $0302           ; else, move onde postion right
+MoveRight:           
+  LDA $0203           ; load sprite X position
+  CLC                 ; make sure carry flag is set
+  ADC #$10            ; A = A + 16
+  STA $0203           ; save sprite X position
+  jsr MoveSound
+ReadRightDone:        ; handling this button is done
+
+ControllersDone:
+
+;----------------------------------------------------------------
+; GAME LOGIC
+;----------------------------------------------------------------
+
+DisableLetter:
+  lda $0501
+  beq CheckWin
+  sec
+  sbc #$20
+  sta $0320
+  lda $0320
+  clc
+  adc $0320
+  sta $0320
+
+  ldx $0320
+  lda $0501
+  clc
+  adc #1
+  sta $0205, x
+
+CheckCurrentLetter:
+  ldx #$00
+  lda $0501
+  cmp #$00
+  beq CheckCurrentLetterEnd
+CheckCurrentLetterLoop:
+  lda $0508, x
+  cmp $0501
+  bne CheckCurrenterLetterIncX
+  ; check if is the first time the letter is guessed
+SetCorrectLetter:
+  tay
+  lda #$01
+  sta $0503                 ; set that a letter was guessed
+  lda $0500, y
+  cmp #$01
+  beq CheckCurrenterLetterIncX
+  inc $0504
+CheckCurrenterLetterIncX:
+  inx
+  cpx $0500                 ; iterate with the size of the word to guess
+  bne CheckCurrentLetterLoop
+  ; check if a letter was guessed
+  lda $0503
+  cmp #$01
+  beq CheckCurrentLetterGuessed ; if equals a letter was guessed and the value is equal to one, don't make a sound
+  ldy $0501
+  lda $0500, y
+  cmp #$02
+  beq CheckCurrentLetterEnd
+  lda #$02
+  sta $0500, y
+  inc $0502                 ; inc error count to game over
+  jsr WrongLetterSound
+  jmp CheckCurrentLetterEnd
+CheckCurrentLetterGuessed:
+  lda #$01
+  sta $0500, y
+  jsr CorrectLetterSound
+CheckCurrentLetterEnd:
+  lda #$00
+  sta $0503
+  sta $0501
+
+
+CheckWin:
+  lda $0504
+  cmp $0500
+  beq Win
+  lda $0502
+  cmp #06
+  beq GameOver
+  jmp Fim
+
+Win:
+  jsr DrawWin
+  lda #1
+  sta $0311
+  jmp Fim
+
+GameOver:
+  jsr DrawGameOver
+  lda #1
+  sta $0311
+
+Fim:
+    rti
 
 ;----------------------------------------------------------------
 ; IRQ
@@ -341,7 +833,7 @@ seed:
 ;----------------------------------------------------------------
 
 background:
-  .include "bg.asm"
+  .include "background.asm"
 
 ;----------------------------------------------------------------
 ; INTERRUPT VECTORS
