@@ -1,12 +1,19 @@
 from memory import *
 from palette import *
-from defines import *
+from numpy import uint8, uint16, uint32, uint64
+import numpy as np
+
+uint8 = uint8
+uint16 = uint16
+uint32 = uint32
+uint64 = uint64
+
 
 class PPU:
-    def __init__(self, console):
-        self.console = console
-        self.Cycle = 0
-        self.ScanLine = 0
+    def __init__(self, bus):
+        self.bus = bus
+        self.cycle = 0
+        self.scanline = 0
         self.Frame = uint64(0)
 
         # storage variables 
@@ -64,29 +71,14 @@ class PPU:
         self.oamAddress = uint8(0)
         self.bufferedData = uint8(0)
 
-        # width: 256
-        # height: 240
-        #self.front = np.zeros((240, 256, 3), dtype = np.uint8)
-        #self.back = np.zeros((240, 256, 3), dtype = np.uint8)
         self.front = np.zeros(240*256*3, dtype=uint8)
         self.back = np.zeros(240*256*3, dtype=uint8)
 
-        self.Reset()
+        self.reset()
 
-        '''
-        self.step_func = [self.storeTileData, self.fetchNameTableByte, 
-                          self.emptyFunc, self.fetchAttributeTableByte, 
-                          self.emptyFunc, self.fetchLowTileByte,
-                          self.emptyFunc, self.fetchHighTileByte ]
-        self.write_reg_ops = [self.writeControl, self.writeMask, self.emptyFunc_b, self.writeOAMAddress, self.writeOAMData, self.writeScroll, self.writeAddress, self.writeData]
-        '''
-    def emptyFunc(self):
-        pass
-    def emptyFunc_b(self, uint8):
-        pass
-    def Reset(self):
-        self.Cycle = 340
-        self.ScanLine = 240
+    def reset(self):
+        self.cycle = 340
+        self.scanline = 240
         self.Frame = 0
         self.writeControl(0)
         self.writeMask(0)
@@ -95,25 +87,22 @@ class PPU:
     def Read(self, address):
         address = address & 0x3FFF
         if address < 0x2000:
-            return self.console.Mapper.Read(address)
+            return self.bus.Mapper.Read(address)
         elif address < 0x3F00:
-            mode = self.console.Cartridge.Mirror
+            mode = self.bus.Cartridge.Mirror
             return self.nameTableData[MirrorAddress(mode, address) & 0x7FF]
         elif address < 0x4000:
             return self.readPalette(address & 0x1F)
-        raise RuntimeError("Unhandled PPU Memory read at address: 0x%04X" % address)
 
     def Write(self, address, value):
         address = address & 0x3FFF
         if address < 0x2000:
-            self.console.Mapper.Write(address, value)
+            self.bus.Mapper.Write(address, value)
         elif address < 0x3F00:
-            mode = self.console.Cartridge.Mirror
+            mode = self.bus.Cartridge.Mirror
             self.nameTableData[MirrorAddress(mode, address) & 0x7FF] = value
         elif address < 0x4000:
             self.writePalette(address & 0x1F, value)
-        else:
-            raise RuntimeError("Unhandled PPU Memory write at address: 0x%04X" % address)
 
     def readPalette(self, address):
         address = uint16(address)
@@ -158,20 +147,6 @@ class PPU:
             self.writeAddress(value)
         elif address == 0x2007:
             self.writeData(value)
-            #self.write_reg_ops[address - 0x2000](value)
-        '''
-        ops = {
-                0x2000: self.writeControl,
-                0x2001: self.writeMask,
-                0x2003: self.writeOAMAddress,
-                0x2004: self.writeOAMData,
-                0x2005: self.writeScroll,
-                0x2006: self.writeAddress,
-                0x2007: self.writeData,
-                0x4014: self.writeDMA
-        }
-        ops[address](value)
-        '''
 
     def writeControl(self, value):
         self.flagNameTable = (value >> 0) & 3
@@ -258,27 +233,27 @@ class PPU:
             self.v = uint16(self.v + uint16(32))
 
     def writeDMA(self, value):
-        cpu = self.console.CPU
+        # TODO add cycles spent
+        cpu = self.bus.CPU
         address = uint16(uint16(value) << uint16(8))
         for _ in range(256):
             self.oamData[self.oamAddress] = cpu.Read(address)
             self.oamAddress = (self.oamAddress + 1)
             address = (address + 1)
-        # self.oamAddress = 0
 
     def incrementX(self):
         if self.v & uint16(0x001F) == uint16(31):
             self.v &= uint16(0xFFE0)
             self.v ^= uint16(0x0400)
         else:
-            self.v = (self.v + uint16(1))
+            self.v = uint16(self.v + uint16(1))
 
     def incrementY(self):
         if self.v & uint16(0x7000) != uint16(0x7000):
             self.v = (self.v + uint16(0x1000))
         else:
             self.v &= uint16(0x8FFF)
-            y = uint16(self.v & uint16(0x03E0)) >> uint16(5)
+            y = uint16((self.v & uint16(0x03E0)) >> uint16(5))
             if y == uint16(29):
                 y = uint16(0)
                 self.v ^= uint16(0x0800)
@@ -289,10 +264,10 @@ class PPU:
             self.v = (self.v & uint16(0xFC1F)) | (y << uint16(5))
 
     def copyX(self):
-        self.v = (self.v & uint16(0xFBE0)) | (self.t & uint16(0x041F))
+        self.v = uint16(self.v & uint16(0xFBE0)) | (self.t & uint16(0x041F))
 
     def copyY(self):
-        self.v = (self.v & uint16(0x841F)) | (self.t & uint16(0x7BE0))
+        self.v = uint16(self.v & uint16(0x841F)) | (self.t & uint16(0x7BE0))
 
     def nmiChange(self):
         nmi = (self.nmiOutput and self.nmiOccurred)
@@ -356,7 +331,7 @@ class PPU:
         if self.flagShowSprites == 0:
             return 0,0 
         for i in range(self.spriteCount):
-            offset = (self.Cycle - 1) - self.spritePositions[i]
+            offset = (self.cycle - 1) - self.spritePositions[i]
             if offset < 0 or offset > 7:
                 continue
             offset = 7 - offset
@@ -364,11 +339,11 @@ class PPU:
             if color & 0x3 == 0:
                 continue
             return i, color
-        return 0,0 
+        return 0, 0
 
     def renderPixel(self):
-        x = self.Cycle - 1
-        y = self.ScanLine
+        x = self.cycle - 1
+        y = self.scanline
         background = self.backgroundPixel()
         i, sprite = self.spritePixel()
         if x < 8 and self.flagShowLeftBackground == 0:
@@ -383,14 +358,11 @@ class PPU:
             if not s:
                 color = 0
             else:
-                # not b and s
                 color = sprite | 0x10
         else:
             if not s:
-                # b and not s
                 color = background
             else:
-                # b and s
                 if self.spriteIndexes[i] == 0 and x < 255:
                     self.flagSpriteZeroHit = 1 
                 if self.spritePriorities[i] == 0:
@@ -450,7 +422,7 @@ class PPU:
             y = self.oamData[k]
             a = self.oamData[k + 2]
             x = self.oamData[k + 3]
-            row = self.ScanLine - y
+            row = self.scanline - y
             if row < 0 or row >= h:
                 continue
             if count < 8:
@@ -464,53 +436,47 @@ class PPU:
             self.flagSpriteOverflow = 1
         self.spriteCount = count
 
-    def tick(self):
+    def Step(self):
+        # tick
         if self.nmiDelay > 0:
-            self.nmiDelay -= 1 
+            self.nmiDelay -= 1
             if self.nmiDelay == 0 and self.nmiOutput and self.nmiOccurred:
-                self.console.CPU.triggerNMI = True
+                self.bus.CPU.triggerNMI = True
 
         if self.flagShowBackground != 0 or self.flagShowSprites != 0:
-            if self.f == 1 and self.ScanLine == 261 and self.Cycle == 339:
-                self.Cycle = 0
-                self.ScanLine = 0
+            if self.f == 1 and self.scanline == 261 and self.cycle == 339:
+                self.cycle = 0
+                self.scanline = 0
                 self.Frame += 1
                 self.f ^= 1
                 return
 
-        self.Cycle += 1
-        if self.Cycle > 340:
-            self.Cycle = 0
-            self.ScanLine += 1
-            if self.ScanLine > 261:
-                self.ScanLine = 0
+        self.cycle += 1
+        if self.cycle > 340:
+            self.cycle = 0
+            self.scanline += 1
+            if self.scanline > 261:
+                self.scanline = 0
                 self.Frame += 1
                 self.f ^= 1
 
-    def Step(self):
-        self.tick()
-
+        # step
         renderingEnabled = (self.flagShowBackground != 0) or (self.flagShowSprites != 0)
-        preLine = (self.ScanLine == 261)
-        visibleLine = (self.ScanLine < 240)
+        preLine = (self.scanline == 261)
+        visibleLine = (self.scanline < 240)
 
         # background logic
         if renderingEnabled:
-            preFetchCycle = (self.Cycle >= 321) and (self.Cycle <= 336)
-            visibleCycle = (self.Cycle >= 1) and (self.Cycle <= 256)
+            preFetchCycle = (self.cycle >= 321) and (self.cycle <= 336)
+            visibleCycle = (self.cycle >= 1) and (self.cycle <= 256)
             fetchCycle = preFetchCycle or visibleCycle
             renderLine = preLine or visibleLine
             if visibleLine and visibleCycle:
                 self.renderPixel()
             if renderLine and fetchCycle:
                 self.tileData <<= uint64(4)
-                c = self.Cycle & 0x7
-                '''
-                self.step_func = [self.storeTileData, self.fetchNameTableByte, 
-                                  self.emptyFunc, self.fetchAttributeTableByte, 
-                                  self.emptyFunc, self.fetchLowTileByte,
-                                  self.emptyFunc, self.fetchHighTileByte ]
-                '''
+                c = self.cycle & 0x7
+
                 if c == 0:
                     self.storeTileData()
                 elif c == 1:
@@ -521,28 +487,27 @@ class PPU:
                     self.fetchLowTileByte()
                 elif c == 7:
                     self.fetchHighTileByte()
-                #self.step_func[c]()
 
-            if preLine and self.Cycle >= 280 and self.Cycle <= 304:
+            if preLine and self.cycle >= 280 and self.cycle <= 304:
                 self.copyY()
             if renderLine:
-                if fetchCycle and self.Cycle & 0x7 == 0:
+                if fetchCycle and self.cycle & 0x7 == 0:
                     self.incrementX()
-                if self.Cycle == 256:
+                if self.cycle == 256:
                     self.incrementY()
-                if self.Cycle == 257:
+                if self.cycle == 257:
                     self.copyX()
             # sprite logic
-            if self.Cycle == 257:
+            if self.cycle == 257:
                 if visibleLine:
                     self.evaluateSprites()
                 else:
                     self.spriteCount = 0
 
         # vblank logic
-        if self.ScanLine == 241 and self.Cycle == 1:
+        if self.scanline == 241 and self.cycle == 1:
             self.setVerticalBlank()
-        if preLine and self.Cycle == 1:
+        if preLine and self.cycle == 1:
             self.clearVerticalBlank()
             self.flagSpriteZeroHit = 0
             self.flagSpriteOverflow = 0

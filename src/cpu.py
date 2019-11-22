@@ -1,7 +1,12 @@
 from utils import log, logls
 from flagController import FlagController
 from stack import Stack
-from defines import *
+from numpy import uint8, uint16, uint32, uint64
+
+uint8 = uint8
+uint16 = uint16
+uint32 = uint32
+uint64 = uint64
 
 int8 = int
 int16 = int
@@ -10,8 +15,8 @@ KB = 1024
 
 class CPU:
 
-    def __init__(self, console):
-        self.console = console
+    def __init__(self, bus):
+        self.bus = bus
 
         self.sp = int16(253) # SP starts at 0xfd
         self.pc = int16(0)
@@ -24,6 +29,7 @@ class CPU:
         self.address = None
 
         self.triggerNMI = False
+        self.triggerIRQ = False
 
         self.cycles = 0
 
@@ -183,47 +189,47 @@ class CPU:
 
     def Read(self, address):
         if address < 0x2000:
-            return self.console.RAM[address & 0x07FF]
+            return self.bus.RAM[address & 0x07FF]
         elif address < 0x4000:
-            return self.console.PPU.ReadRegister(0x2000 | (address & 0x7))
+            return self.bus.PPU.ReadRegister(0x2000 | (address & 0x7))
         elif address == 0x4014:
-            return self.console.PPU.ReadRegister(address)
+            return self.bus.PPU.ReadRegister(address)
         elif address == 0x4015:
             pass
-            #return self.console.APU.ReadRegister(address)
+            #return self.bus.APU.ReadRegister(address)
         elif address == 0x4016:
-            return (self.console.Controller1.Read())
+            return (self.bus.Controller1.Read())
         elif address == 0x4017:
-            return (self.console.Controller2.Read())
+            return (self.bus.Controller2.Read())
         elif address < 0x6000:
             pass # [TODO] I/O registers
         elif address >= 0x6000:
-            return (self.console.Mapper.Read(address))
+            return (self.bus.Mapper.Read(address))
         return uint8(0)
 
     def Write(self, address, value):
         if address < 0x2000:
-            self.console.RAM[address & 0x07FF] = value
+            self.bus.RAM[address & 0x07FF] = value
         elif address < 0x4000:
-            self.console.PPU.WriteRegister(0x2000 | (address & 0x7), value)
+            self.bus.PPU.WriteRegister(0x2000 | (address & 0x7), value)
         elif address < 0x4014:
             pass
-            #self.console.APU.WriteRegister(address, value)
+            #self.bus.APU.WriteRegister(address, value)
         elif address == 0x4014:
-            self.console.PPU.WriteRegister(address, value)
+            self.bus.PPU.WriteRegister(address, value)
         elif address == 0x4015:
             pass
-            #self.console.APU.WriteRegister(address, value)
+            #self.bus.APU.WriteRegister(address, value)
         elif address == 0x4016:
-            self.console.Controller1.Write(value)
-            self.console.Controller2.Write(value)
+            self.bus.Controller1.Write(value)
+            self.bus.Controller2.Write(value)
         elif address == 0x4017:
             pass
-            #self.console.APU.WriteRegister(address, value)
+            #self.bus.APU.WriteRegister(address, value)
         elif address < 0x6000:
             pass # [TODO] I/O registers
         elif address >= 0x6000:
-            self.console.Mapper.Write(address, value)
+            self.bus.Mapper.Write(address, value)
 
     def connectBus(self, bus):
         self.bus = bus
@@ -324,6 +330,10 @@ class CPU:
         if self.triggerNMI:
             self.nmi()
 
+        if self.triggerIRQ:
+            self.irq()
+
+        self.triggerIRQ = False
         self.triggerNMI = False
 
         # function if op code doesn't exist
@@ -1391,7 +1401,6 @@ class CPU:
         self.flagController.setZeroFlagIfNeeded(self.a) # set zero flag
 
     def handleInstructionLDXImmediate(self):
-        print("Chegooooou")
         byte = self.get_next_byte()
         immediate = int(byte, 16)
         self.x = immediate

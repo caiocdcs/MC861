@@ -6,11 +6,3 @@ class Cartridge:
         self.Mapper = mapper
         self.Mirror = mirror
         self.Battery = battery
-
-    def Save(self, encoder):
-        encoder.Encode(self.SRAM)
-        encoder.Encode(self.Mirror)
-
-    def Load(self, decoder):
-        decoder.Decode(self.SRAM)
-        decoder.Decode(self.Mirror)

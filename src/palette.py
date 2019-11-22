@@ -1,4 +1,10 @@
-from defines import *
+from numpy import uint8, uint16, uint32, uint64
+import numpy as np
+
+uint8 = uint8
+uint16 = uint16
+uint32 = uint32
+uint64 = uint64
 
 Palette = np.zeros((64, 3), dtype=uint16)
 
