@@ -12,7 +12,7 @@ def main():
 	if not glfw.init():
 		raise RuntimeError("GLFW Init Error")
 
-	title = "bus"
+	title = "CDS - NES Emulator"
 	scale = 3
 
 	window = glfw.create_window(256 * 3, 240 * scale, title, None, None)
